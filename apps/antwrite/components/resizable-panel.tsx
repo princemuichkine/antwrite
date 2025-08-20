@@ -26,7 +26,7 @@ export function ResizablePanel({
   const [size, setSize] = useState(defaultSize);
   const [isResizing, setIsResizing] = useState(false);
 
-  const { open: isOpen } = useSidebarWithSide(side);
+  const { open: isOpen, setOpen: setSidebarOpen } = useSidebarWithSide(side);
 
   // Handle mouse down on resize handle
   const startResizing = (e: React.MouseEvent) => {
@@ -66,6 +66,13 @@ export function ResizablePanel({
         newSize = e.clientX;
       }
 
+      // Check if panel should be closed (when dragged very small)
+      const closeThreshold = 100; // Close panel if dragged smaller than 100px
+      if (newSize < closeThreshold) {
+        setSidebarOpen(false);
+        return;
+      }
+
       // Apply constraints
       const constrainedSize = Math.max(minSize, Math.min(maxSize, newSize));
       setSize(constrainedSize);
@@ -100,7 +107,7 @@ export function ResizablePanel({
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
-  }, [isResizing, minSize, maxSize, side]);
+  }, [isResizing, minSize, maxSize, side, setSidebarOpen]);
 
   return (
     <div className="flex flex-row h-full">

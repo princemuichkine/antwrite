@@ -33,7 +33,7 @@ export async function createDocument(request: NextRequest, body: any) {
     // --- Input Validation ---
     const {
       id: providedId,
-      title = 'Untitled Document', // Default title
+      title = 'Untitled document', // Default title
       content = '', // Default content
       kind = 'text', // Default kind
       chatId, // Optional chatId

@@ -119,19 +119,19 @@ export function FeedbackWidget({ className }: { className?: string }) {
                 {status === 'success' ? (
                   <motion.div
                     key="success"
-                    className="flex size-[240px] flex-col items-center justify-center px-5"
+                    className="flex size-[220px] flex-col items-center justify-center px-6"
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
                     transition={TRANSITION_CONTENT}
                   >
-                    <div className="rounded-sm bg-green-500/10 p-3">
+                    <div className="rounded-full bg-green-500/10 p-3">
                       <SealCheck className="size-8 text-green-500" />
                     </div>
-                    <p className="text-foreground mt-5 mb-2 text-center text-base font-medium">
+                    <p className="text-foreground mt-5 mb-2 text-center text-sm font-medium">
                       Thank you for your feedback!
                     </p>
-                    <p className="text-muted-foreground text-center text-sm max-w-[250px]">
+                    <p className="text-muted-foreground text-center text-xs max-w-[240px]">
                       Your input helps make Antwrite better for everyone.
                     </p>
                   </motion.div>

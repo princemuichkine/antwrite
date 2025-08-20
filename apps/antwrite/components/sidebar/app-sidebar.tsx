@@ -46,12 +46,16 @@ export function AppSidebar({
               className="flex items-center gap-2 hover:bg-accent rounded-sm px-2 py-1 transition-colors"
             >
               <Image
-                // src={theme === 'dark' ? '/brand/antwrite-ltw.webp' : '/brand/antwrite-ltb.webp'}
                 src={
                   theme === 'dark'
-                    ? '/brand/logo/antwrite-tw.webp'
-                    : '/brand/logo/antwrite-tb.webp'
+                    ? '/brand/antwrite-ltw.webp'
+                    : '/brand/antwrite-ltb.webp'
                 }
+                // src={
+                //   theme === 'dark'
+                //     ? '/brand/logo/antwrite-tw.webp'
+                //     : '/brand/logo/antwrite-tb.webp'
+                // }
                 alt="Antwrite"
                 width={120}
                 height={32}

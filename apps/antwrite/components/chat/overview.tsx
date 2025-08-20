@@ -1,6 +1,10 @@
 import { motion } from 'framer-motion';
+import Image from 'next/image';
+import { useTheme } from '@/hooks/use-theme';
 
 export const Overview = () => {
+  const { resolvedTheme } = useTheme();
+
   return (
     <motion.div
       key="overview"
@@ -11,6 +15,19 @@ export const Overview = () => {
       transition={{ delay: 0.3 }}
     >
       <div className="rounded-sm p-6 flex flex-col gap-4 leading-relaxed text-center max-w-md bg-card/50 border shadow-sm dark:border-white/10">
+        <div className="flex justify-center mb-2">
+          <Image
+            src={
+              resolvedTheme === 'dark'
+                ? '/brand/logo/antwrite-tw.webp'
+                : '/brand/logo/antwrite-tb.webp'
+            }
+            alt="Antwrite"
+            width={120}
+            height={40}
+            className="object-contain"
+          />
+        </div>
         <h2 className="text-xl font-medium">Welcome to Antwrite</h2>
 
         <p className="text-sm text-muted-foreground">

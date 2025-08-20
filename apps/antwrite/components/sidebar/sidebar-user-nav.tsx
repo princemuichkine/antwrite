@@ -3,7 +3,7 @@ import { ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { authClient } from '@/lib/auth-client';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/hooks/use-theme';
 import { toast } from '@/components/toast';
 import type { ClientUser as User } from '@/lib/auth-client';
 import { LottieIcon } from '@/components/ui/lottie-icon';

@@ -41,7 +41,7 @@ export default async function DocumentsLayout({
           <ResizablePanel
             side="right"
             defaultSize={400}
-            minSize={320}
+            minSize={300}
             maxSize={600}
             className="border-l subtle-border transition-all duration-200"
           >

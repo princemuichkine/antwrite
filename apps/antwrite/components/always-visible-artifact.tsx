@@ -307,7 +307,7 @@ export function AlwaysVisibleArtifact({
       if (isCreatingDocument) return;
       try {
         await createDocument({
-          title: 'Untitled Document',
+          title: 'Untitled document',
           content: '',
           kind: 'text',
           chatId: null,
@@ -328,7 +328,7 @@ export function AlwaysVisibleArtifact({
       const newDocId = generateUUID();
       try {
         await createDocument({
-          title: 'Untitled Document',
+          title: 'Untitled document',
           content: initialContent,
           kind: 'text',
           chatId: null,
@@ -523,7 +523,7 @@ export function AlwaysVisibleArtifact({
                 initialLastSaved={
                   latestDocument ? new Date(latestDocument.updatedAt) : null
                 }
-                onStatusChange={(newSaveState: SaveState) => {}}
+                onStatusChange={(newSaveState: SaveState) => { }}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
               />
             </Suspense>

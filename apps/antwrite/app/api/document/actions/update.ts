@@ -94,7 +94,7 @@ export async function updateDocument(
       });
 
       let shouldUpdateCurrent = false;
-      let titleForNewVersion = 'Untitled Document';
+      let titleForNewVersion = 'Untitled document';
 
       if (currentVersion?.updatedAt) {
         titleForNewVersion = currentVersion.title;

@@ -138,10 +138,10 @@ const PureDocumentItem = ({
                   onToggleSelect(document.id, !!checked)
                 }
                 aria-label={`Select ${document.title}`}
-                className="mr-2 shrink-0"
+                className="mr-1 shrink-0"
               />
             )}
-            <span className="truncate">{document.title}</span>
+            <span className="truncate max-w-[calc(100%-1rem)] block">{document.title}</span>
           </Link>
         </SidebarMenuButton>
       </div>
@@ -161,11 +161,12 @@ const PureDocumentItem = ({
           <DropdownMenuContent
             side="bottom"
             align="end"
-            className="w-[--radix-popper-anchor-width] min-w-[180px]"
+            className="w-[--radix-popper-anchor-width] min-w-[114px]"
             sideOffset={8}
+            alignOffset={-6}
           >
             <DropdownMenuItem
-              className="cursor-pointer text-accent-foreground hover:bg-accent/50 transition-colors duration-200"
+              className="cursor-pointer hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 mb-1"
               onSelect={() =>
                 onStar(document.id, !(document as any).is_starred)
               }
@@ -176,14 +177,15 @@ const PureDocumentItem = ({
                 loop={false}
                 autoplay={false}
                 initialFrame={0}
-                className="mr-2"
+                className="mr-1"
+              // customColor={[0.7059, 0.3255, 0.0353]} // amber-700 #b45309
               />
               <span>{(document as any).is_starred ? 'Unstar' : 'Star'}</span>
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              className="cursor-pointer text-accent-foreground hover:bg-accent/50 transition-colors duration-200"
-              onSelect={() => onClone(document.id, `${document.title} (Copy)`)}
+              className="cursor-pointer hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 mb-1"
+              onSelect={() => onClone(document.id, `${document.title}`)}
             >
               <LottieIcon
                 animationData={animations.cube}
@@ -191,7 +193,8 @@ const PureDocumentItem = ({
                 loop={false}
                 autoplay={false}
                 initialFrame={0}
-                className="mr-2"
+                className="mr-1"
+              // customColor={[0.0549, 0.4549, 0.5647]} // cyan-700 #0e7490
               />
               <span>Clone</span>
             </DropdownMenuItem>
@@ -206,7 +209,8 @@ const PureDocumentItem = ({
                 loop={false}
                 autoplay={false}
                 initialFrame={0}
-                className="mr-2"
+                className="mr-1"
+              // customColor={[0.7451, 0.0941, 0.3647]} // pink-700 #be185d
               />
               <span>Delete</span>
             </DropdownMenuItem>
@@ -673,7 +677,7 @@ export function SidebarDocuments({
   if (isLoading && documents.length === 0) {
     return (
       <SidebarGroup>
-        <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
+        <div className="px-0 py-1 text-xs text-sidebar-foreground/50">
           Loading...
         </div>
         <SidebarGroupContent>
@@ -681,7 +685,7 @@ export function SidebarDocuments({
             {[44, 32, 28, 64, 52].map((item) => (
               <div
                 key={item}
-                className="rounded-sm h-8 flex gap-2 px-2 items-center"
+                className="rounded-sm h-8 flex gap-2 px-0 items-center"
               >
                 <div
                   className="h-4 rounded-sm flex-1 max-w-[--skeleton-width] bg-sidebar-accent-foreground/10"
@@ -703,12 +707,12 @@ export function SidebarDocuments({
   if (hasEmptyDocuments && !searchTerm) {
     return (
       <SidebarGroup>
-        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/70 transition-colors duration-200">
+        <div className="px-0 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/70 transition-colors duration-200">
           <span>Documents</span>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
-            className="size-5 hover:bg-accent/50 transition-colors duration-200 text-accent-foreground border border-border"
+            className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer"
             onClick={createNewDocument}
             disabled={isCreatingDocument}
           >
@@ -732,7 +736,7 @@ export function SidebarDocuments({
             ) : (
               <LottieIcon
                 animationData={animations.fileplus}
-                size={12}
+                size={13}
                 loop={false}
                 autoplay={false}
                 initialFrame={0}
@@ -741,7 +745,7 @@ export function SidebarDocuments({
           </Button>
         </div>
         <SidebarGroupContent>
-          <div className="px-2 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2 py-4">
+          <div className="px-0 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2 py-4">
             No documents yet
           </div>
         </SidebarGroupContent>
@@ -755,7 +759,7 @@ export function SidebarDocuments({
         <div
           role="button"
           tabIndex={0}
-          className="px-2 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/70 transition-colors duration-200"
+          className="px-0 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/70 transition-colors duration-200"
           onClick={() => setIsExpanded(!isExpanded)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -765,8 +769,8 @@ export function SidebarDocuments({
           }}
         >
           <span className="font-medium">
-            Documents{' '}
-            {documents && documents.length > 0 && (
+            {documents && documents.length === 1 ? 'Document' : 'Documents'}{' '}
+            {documents && documents.length > 1 && (
               <span className="text-sidebar-foreground/30">
                 ({documents.length})
               </span>
@@ -774,9 +778,9 @@ export function SidebarDocuments({
           </span>
           <div className="flex items-center gap-0.5">
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="size-5 hover:bg-accent/50 transition-colors duration-200 text-accent-foreground border border-border"
+              className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 createNewDocument();
@@ -803,7 +807,7 @@ export function SidebarDocuments({
               ) : (
                 <LottieIcon
                   animationData={animations.fileplus}
-                  size={12}
+                  size={13}
                   loop={false}
                   autoplay={false}
                   initialFrame={0}
@@ -831,9 +835,9 @@ export function SidebarDocuments({
 
         {isExpanded && (
           <>
-            <div className="px-2 mt-1 mb-2">
+            <div className="px-0 mt-1 mb-2">
               <Input
-                placeholder="Search documents..."
+                placeholder={documents && documents.length === 1 ? "Search" : "Search documents..."}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="h-10 text-sm border data-[state=open]:border-border text-accent-foreground bg-background hover:bg-accent/50 transition-colors duration-200"
@@ -841,7 +845,7 @@ export function SidebarDocuments({
             </div>
 
             {filteredDocuments.length > 0 && (
-              <div className="flex flex-wrap items-center justify-start px-2 py-1 mb-2 gap-2">
+              <div className="flex flex-wrap items-center justify-start px-0 py-1 mb-2 gap-2">
                 {!isSelectionMode && (
                   <Button
                     variant="outline"
@@ -857,7 +861,7 @@ export function SidebarDocuments({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={handleSelectAll}
+                      onClick={selectedDocuments.size === filteredDocuments.length ? handleToggleSelectionMode : handleSelectAll}
                       className="h-6 text-xs px-1.5 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hover:text-cyan-800 dark:hover:text-cyan-200 border border-cyan-200 dark:border-cyan-800 transition-colors duration-200"
                     >
                       {selectedDocuments.size === filteredDocuments.length
@@ -874,36 +878,12 @@ export function SidebarDocuments({
                       disabled={selectedDocuments.size === 0}
                       className="h-6 text-xs px-1.5 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 border border-pink-200 dark:border-pink-800 transition-colors duration-200 disabled:opacity-50"
                     >
-                      <LottieIcon
-                        animationData={animations.trash}
-                        size={12}
-                        loop={false}
-                        autoplay={false}
-                        initialFrame={0}
-                        className="mr-1"
-                      />
                       Delete
                       {selectedDocuments.size > 1
                         ? ` (${selectedDocuments.size})`
                         : ''}
                     </Button>
-                    {selectedDocuments.size > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleToggleSelectionMode}
-                        className="size-6 flex items-center justify-center text-accent-foreground hover:bg-accent/50 transition-colors duration-200 rounded-sm"
-                        title="Cancel selection"
-                      >
-                        <LottieIcon
-                          animationData={animations.cross}
-                          size={12}
-                          loop={false}
-                          autoplay={false}
-                          initialFrame={0}
-                        />
-                      </Button>
-                    )}
+
                   </>
                 )}
               </div>
@@ -913,7 +893,7 @@ export function SidebarDocuments({
               <SidebarMenu>
                 {searchTerm.trim() ? (
                   filteredDocuments.length === 0 ? (
-                    <div className="px-2 text-zinc-500 text-sm text-center py-4">
+                    <div className="px-0 text-zinc-500 text-sm text-center py-4">
                       No documents found matching &quot;{searchTerm}&quot;
                     </div>
                   ) : (
@@ -944,15 +924,15 @@ export function SidebarDocuments({
                       <>
                         {groupedDocuments.favorites.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium flex items-center gap-1">
-                              <LottieIcon
+                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium flex items-center gap-1">
+                              {/* <LottieIcon
                                 animationData={animations.star}
                                 size={12}
                                 loop={false}
                                 autoplay={false}
                                 initialFrame={0}
-                              />
-                              Favorites
+                              /> */}
+                              {groupedDocuments.favorites.length === 1 ? 'Favorite' : 'Favorites'}
                             </div>
                             {groupedDocuments.favorites.map((doc) => (
                               <DocumentItem
@@ -977,7 +957,7 @@ export function SidebarDocuments({
 
                         {groupedDocuments.today.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium">
+                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium">
                               Today
                             </div>
                             {groupedDocuments.today.map((doc) => (
@@ -1003,7 +983,7 @@ export function SidebarDocuments({
 
                         {groupedDocuments.yesterday.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
+                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
                               Yesterday
                             </div>
                             {groupedDocuments.yesterday.map((doc) => (
@@ -1029,7 +1009,7 @@ export function SidebarDocuments({
 
                         {groupedDocuments.lastWeek.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
+                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
                               Last 7 days
                             </div>
                             {groupedDocuments.lastWeek.map((doc) => (
@@ -1055,7 +1035,7 @@ export function SidebarDocuments({
 
                         {groupedDocuments.lastMonth.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
+                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
                               Last 30 days
                             </div>
                             {groupedDocuments.lastMonth.map((doc) => (
@@ -1081,7 +1061,7 @@ export function SidebarDocuments({
 
                         {groupedDocuments.older.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
+                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
                               Older
                             </div>
                             {groupedDocuments.older.map((doc) => (
@@ -1125,7 +1105,12 @@ export function SidebarDocuments({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 border border-pink-200 dark:border-pink-800 transition-colors duration-200"
+            >
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

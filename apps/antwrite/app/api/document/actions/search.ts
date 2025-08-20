@@ -106,7 +106,7 @@ export async function searchDocuments({
     const results =
       documents?.map((doc) => ({
         id: doc.id,
-        title: doc.title || 'Untitled Document',
+        title: doc.title || 'Untitled document',
         type: 'document', // Assuming a type identifier is needed
       })) || [];
 

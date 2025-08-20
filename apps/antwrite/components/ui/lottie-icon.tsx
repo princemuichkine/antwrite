@@ -29,13 +29,14 @@ const LottieIconComponent = ({
   const [isLoading, setIsLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lottieRef = useRef<any>(null);
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
-  const isDark = theme === 'dark';
-  const color = useMemo(
-    () => (isDark ? ([1, 1, 1] as [number, number, number]) : customColor),
-    [isDark, customColor],
-  );
+  const isDark = resolvedTheme === 'dark';
+  const color = useMemo(() => {
+    if (customColor) return customColor;
+    // Default to current text color - we'll use a neutral approach that works with CSS
+    return isDark ? ([1, 1, 1] as [number, number, number]) : ([0, 0, 0] as [number, number, number]);
+  }, [isDark, customColor]);
 
   // Use external hover state if provided, otherwise use internal state
   const isHovered =
@@ -141,9 +142,8 @@ const LottieIconComponent = ({
     <div
       role="button"
       tabIndex={0}
-      className={`inline-flex items-center justify-center transition-all duration-200 ease-out ${
-        isHovered ? 'scale-110' : ''
-      } ${className}`}
+      className={`inline-flex items-center justify-center transition-all duration-200 ease-out ${isHovered ? 'scale-110' : ''
+        } ${className}`}
       style={{ width: size, height: size }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

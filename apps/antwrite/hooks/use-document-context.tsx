@@ -30,7 +30,7 @@ const DocumentContext = createContext<DocumentContextType>({
   documentContent: '',
   documentKind: 'text',
   isLoading: false,
-  updateDocument: () => {},
+  updateDocument: () => { },
 });
 
 export function DocumentProvider({ children }: { children: ReactNode }) {
@@ -77,7 +77,7 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
           .then((documents) => {
             if (documents && documents.length > 0) {
               const doc = documents[documents.length - 1];
-              setDocumentTitle(doc.title || 'Untitled Document');
+              setDocumentTitle(doc.title || 'Untitled document');
               setDocumentContent(doc.content || '');
               setDocumentKind((doc.kind as ArtifactKind) || 'text');
             } else if (documentId !== 'init' && documents !== null) {
