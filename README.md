@@ -4,14 +4,6 @@ Monorepo:
 - **apps/antwrite**: Next.js app
 - **packages/db**: Drizzle schema & migrations
 
-## Tech Stack
-- Next.js (App Router), TypeScript, React
-- TailwindCSS, Shadcn UI
-- PostgreSQL, Drizzle ORM
-- Better Auth 
-- Vercel AI SDK
-- Tavily (for web search)
-
 ## Setup
 
 From the project root:
@@ -66,7 +58,3 @@ From the project root:
 1. Fork the repo.
 2. Create a branch (`feature/...` or `fix/...`).
 3. Commit, push, and open a PR.
-
-## License
-
-Apache License 2.0. See [LICENSE](LICENSE) for details.

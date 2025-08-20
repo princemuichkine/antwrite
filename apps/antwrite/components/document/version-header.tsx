@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useSWRConfig } from 'swr';
 import { RotateCcw, Clock, Loader2 } from 'lucide-react';
 import {
@@ -147,7 +147,7 @@ export const VersionHeader = ({
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 text-sm text-primary/90 font-medium">
               {/* Display version based on currentVersionIndex */}
-              <span className="rounded-full bg-primary/10 w-5 h-5 flex items-center justify-center text-[10px] text-primary">
+              <span className="rounded-full bg-primary/10 size-5 flex items-center justify-center text-[10px] text-primary">
                 {currentVersionIndex + 1}
               </span>
               <span>{dateString}</span>
@@ -157,7 +157,7 @@ export const VersionHeader = ({
             </div>
 
             <div className="flex items-center text-xs text-muted-foreground gap-1">
-              <Clock className="w-3 h-3" />
+              <Clock className="size-3" />
               <span>{relativeTimeString}</span>
             </div>
           </div>
@@ -172,9 +172,9 @@ export const VersionHeader = ({
                   disabled={isMutating}
                 >
                   {isMutating ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <Loader2 className="size-3 animate-spin" />
                   ) : (
-                    <RotateCcw className="h-3 w-3" />
+                    <RotateCcw className="size-3" />
                   )}
                   <span>Restore</span>
                 </Button>

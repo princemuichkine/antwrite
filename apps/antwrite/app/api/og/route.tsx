@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
             color: '#1f2937',
           }}
         >
-          snow leopard
+          Antwrite
         </div>
         <div
           style={{

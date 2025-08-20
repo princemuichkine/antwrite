@@ -14,7 +14,6 @@ import {
 import { toast } from 'sonner';
 import { useArtifact } from '@/hooks/use-artifact';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 // Lazy-load diff viewer to keep initial bundle small.
 const DiffView = dynamic(() => import('./diffview').then((m) => m.DiffView), {
@@ -104,7 +103,7 @@ function PureDocumentToolResult({
     // Optimistically apply locally
     setArtifact((current) => ({
       ...current,
-      content: result.newContent!,
+      content: result.newContent,
     }));
     window.dispatchEvent(
       new CustomEvent('apply-document-update', {
@@ -150,10 +149,10 @@ function PureDocumentToolResult({
   if (result.error) {
     return (
       <div className="bg-background border border-destructive/50 rounded-xl w-full max-w-md flex flex-row items-center text-sm overflow-hidden p-3 gap-3">
-        <div className="text-destructive flex-shrink-0">
+        <div className="text-destructive shrink-0">
           <MessageIcon size={16} />
         </div>
-        <div className="flex-grow">
+        <div className="grow">
           <div className="text-destructive font-medium">
             {`Failed to ${type} document${result.title ? ` "${result.title}"` : ''}`}
           </div>
@@ -169,10 +168,10 @@ function PureDocumentToolResult({
     return (
       <div className="bg-background border rounded-xl w-full max-w-md flex flex-col items-start text-sm overflow-hidden">
         <div className="p-3 flex flex-row gap-3 items-start w-full border-b bg-muted/30">
-          <div className="text-muted-foreground mt-0.5 flex-shrink-0">
+          <div className="text-muted-foreground mt-0.5 shrink-0">
             <PencilEditIcon size={16} />
           </div>
-          <div className="text-left flex-grow text-foreground">
+          <div className="text-left grow text-foreground">
             {`${getActionText(type, 'past')} "${result.title ?? 'document'}"`}
             {result.status && (
               <span className="text-xs text-muted-foreground ml-1">
@@ -238,10 +237,10 @@ function PureDocumentToolResult({
 
   return (
     <div className="bg-background border rounded-xl w-full max-w-md flex flex-row items-center text-sm overflow-hidden p-3 gap-3">
-      <div className="text-green-600 flex-shrink-0">
+      <div className="text-green-600 shrink-0">
         <SuccessIcon size={16} />
       </div>
-      <div className="flex-grow">
+      <div className="grow">
         <div className="text-foreground">
           {`${getActionText(type, 'past')} ${result.title ? `"${result.title}"` : '(active document)'}`}
         </div>
@@ -287,14 +286,14 @@ function PureDocumentToolCall({
   return (
     <div className="bg-background border rounded-xl w-full max-w-md flex flex-row items-center justify-between gap-3 text-sm overflow-hidden">
       <div className="p-3 flex flex-row gap-3 items-center w-full bg-muted/30">
-        <div className="text-muted-foreground flex-shrink-0">
+        <div className="text-muted-foreground shrink-0">
           <CallIcon size={16} />
         </div>
-        <div className="text-left flex-grow text-foreground">
+        <div className="text-left grow text-foreground">
           {`${getActionText(type, 'present')}`}{' '}
           {displayTitle ? `"${displayTitle}"` : '(active document)'}
         </div>
-        <div className="animate-spin text-muted-foreground flex-shrink-0">
+        <div className="animate-spin text-muted-foreground shrink-0">
           <LoaderIcon size={16} />
         </div>
       </div>

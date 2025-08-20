@@ -1,5 +1,5 @@
 import { tool, generateText } from 'ai';
-import { Session } from '@/lib/auth';
+import type { Session } from '@/lib/auth';
 import { z } from 'zod';
 import { getDocumentById } from '@/lib/db/queries';
 import { myProvider } from '@/lib/ai/providers';
@@ -73,7 +73,7 @@ export const updateDocument = ({
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         return {
-          error: 'Failed to generate document update: ' + errorMessage,
+          error: `Failed to generate document update: ${errorMessage}`,
         };
       }
     },

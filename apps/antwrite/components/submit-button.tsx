@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
-import { LoaderIcon } from './icons';
 
 interface SubmitButtonProps {
   isSuccessful: boolean;

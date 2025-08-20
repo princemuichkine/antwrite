@@ -1,6 +1,6 @@
-import { DataStreamWriter, tool } from 'ai';
+import { type DataStreamWriter, tool } from 'ai';
 import { z } from 'zod';
-import { Session } from '@/lib/auth';
+import type { Session } from '@/lib/auth';
 import {
   artifactKinds,
   documentHandlersByArtifactKind,

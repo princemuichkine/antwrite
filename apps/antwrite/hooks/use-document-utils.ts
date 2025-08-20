@@ -6,7 +6,7 @@ import { useArtifact } from './use-artifact';
 import { toast } from 'sonner';
 import { generateUUID } from '@/lib/utils';
 import { useSidebar } from '@/components/ui/sidebar';
-import { ArtifactKind } from '@/components/artifact';
+import type { ArtifactKind } from '@/components/artifact';
 
 interface CreateDocumentParams {
   title: string;

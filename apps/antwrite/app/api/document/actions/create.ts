@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth'; // Import Better Auth
 import { headers } from 'next/headers'; // Import headers
 import {

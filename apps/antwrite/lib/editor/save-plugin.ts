@@ -1,5 +1,5 @@
-import { Plugin, PluginKey, Transaction, EditorState } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
+import { Plugin, PluginKey, } from 'prosemirror-state';
+import type { EditorView } from 'prosemirror-view';
 import { buildContentFromDocument } from './functions';
 
 export const savePluginKey = new PluginKey<SaveState>('save');
@@ -107,6 +107,7 @@ export function savePlugin({
       apply(tr, pluginState, oldState, newState): SaveState {
         const meta = tr.getMeta(savePluginKey);
         let shouldTriggerSave = false;
+        let newPluginState = pluginState;
         if (meta) {
           if (meta.triggerSave === true) {
             shouldTriggerSave = true;
@@ -115,11 +116,11 @@ export function savePlugin({
           if (meta.createDocument === false) {
             return { ...pluginState, ...meta, initialContent: '' };
           }
-          pluginState = { ...pluginState, ...meta };
+          newPluginState = { ...pluginState, ...meta };
         }
 
         if (!tr.docChanged && !shouldTriggerSave) {
-          return pluginState;
+          return newPluginState;
         }
 
         if (shouldTriggerSave) {
@@ -137,7 +138,7 @@ export function savePlugin({
             '[SavePlugin] Initial input detected for "init" document. Triggering creation.',
           );
           return {
-            ...pluginState,
+            ...newPluginState,
             status: 'idle',
             isDirty: false,
             createDocument: true,
@@ -152,13 +153,13 @@ export function savePlugin({
 
         let newStatus: SaveStatus = 'debouncing';
 
-        if (pluginState.status === 'saving' && inflightRequest) {
+        if (newPluginState.status === 'saving' && inflightRequest) {
           console.log(
             '[SavePlugin] Doc changed/triggered while saving, keeping saving status.',
           );
           newStatus = 'saving';
         } else {
-          pluginState = { ...pluginState, errorMessage: null };
+          newPluginState = { ...newPluginState, errorMessage: null };
         }
 
         const docActuallyChanged = tr.docChanged;
@@ -219,9 +220,9 @@ export function savePlugin({
         }, debounceMs);
 
         return {
-          ...pluginState,
+          ...newPluginState,
           status: newStatus,
-          isDirty: pluginState.isDirty || docActuallyChanged,
+          isDirty: newPluginState.isDirty || docActuallyChanged,
         };
       },
     },

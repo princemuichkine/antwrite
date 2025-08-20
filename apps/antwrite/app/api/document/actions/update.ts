@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { differenceInMinutes } from 'date-fns';
@@ -9,7 +9,7 @@ import {
   getChatExists,
   getLatestDocumentById, // To return the final state
 } from '@/lib/db/queries';
-import { Document } from '@antwrite/db';
+import type { Document } from '@antwrite/db';
 
 const VERSION_THRESHOLD_MINUTES = 10;
 
@@ -96,7 +96,7 @@ export async function updateDocument(
       let shouldUpdateCurrent = false;
       let titleForNewVersion = 'Untitled Document';
 
-      if (currentVersion && currentVersion.updatedAt) {
+      if (currentVersion?.updatedAt) {
         titleForNewVersion = currentVersion.title;
 
         const minutesSinceLastUpdate = differenceInMinutes(

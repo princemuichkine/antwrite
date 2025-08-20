@@ -4,13 +4,10 @@ import { isToday, isYesterday, subMonths, subWeeks } from 'date-fns';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { User } from '@/lib/auth';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
-import useSWR from 'swr';
 import { cn, fetcher } from '@/lib/utils';
 import {
-  CheckCircleFillIcon,
-  FileIcon,
   MoreHorizontalIcon,
   PlusIcon,
   TrashIcon,
@@ -42,17 +39,12 @@ import {
 } from '@/components/ui/sidebar';
 import type { Document } from '@antwrite/db';
 import { useArtifact } from '@/hooks/use-artifact';
-import { ArtifactKind } from '@/components/artifact';
+import type { ArtifactKind } from '@/components/artifact';
 import { useDocumentUtils } from '@/hooks/use-document-utils';
-import { useDocumentContext } from '@/hooks/use-document-context';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { MessageSquare as MessageSquareIcon } from 'lucide-react';
-import { ArrowRightCircle } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
 import useSWRInfinite from 'swr/infinite';
-import { motion } from 'framer-motion';
 
 type GroupedDocuments = {
   today: Document[];
@@ -224,9 +216,13 @@ export function SidebarDocuments({
     },
   );
 
-  const documents = paginatedDocumentsData
-    ? paginatedDocumentsData.flatMap((page) => page.documents)
-    : [];
+  const documents = useMemo(
+    () =>
+      paginatedDocumentsData
+        ? paginatedDocumentsData.flatMap((page) => page.documents)
+        : [],
+    [paginatedDocumentsData],
+  );
   const lastPage = paginatedDocumentsData?.[paginatedDocumentsData.length - 1];
   const hasReachedEnd = lastPage ? !lastPage.hasMore : false;
   const hasEmptyDocuments =
@@ -482,7 +478,7 @@ export function SidebarDocuments({
         setArtifact((curr: any) => ({ ...curr, status: 'idle' }));
       }
     },
-    [documents, setArtifact, router, setOpenMobile, activeDocumentId],
+    [documents, setArtifact, router, setOpenMobile],
   );
 
   const filterDocuments = (docs: Document[]) => {
@@ -491,8 +487,7 @@ export function SidebarDocuments({
     return docs.filter(
       (doc) =>
         doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (doc.content &&
-          doc.content.toLowerCase().includes(searchTerm.toLowerCase())),
+        (doc.content?.toLowerCase().includes(searchTerm.toLowerCase())),
     );
   };
 
@@ -606,8 +601,16 @@ export function SidebarDocuments({
     <>
       <SidebarGroup>
         <div
+          role="button"
+          tabIndex={0}
           className="px-2 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer"
           onClick={() => setIsExpanded(!isExpanded)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setIsExpanded(!isExpanded);
+            }
+          }}
         >
           <span>
             Documents{' '}
@@ -657,7 +660,7 @@ export function SidebarDocuments({
               strokeLinejoin="round"
               className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`}
             >
-              <polyline points="6 9 12 15 18 9"></polyline>
+              <polyline points="6 9 12 15 18 9" />
             </svg>
           </div>
         </div>
@@ -669,7 +672,7 @@ export function SidebarDocuments({
                 placeholder="Search documents..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-7 text-xs border border-r bg-sidebar-accent"
+                className="h-7 text-xs borderbg-sidebar-accent"
               />
             </div>
 

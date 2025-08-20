@@ -27,10 +27,10 @@ function PureHighlightTool({ toolInvocation }: HighlightToolProps) {
   return (
     <div className="bg-background border rounded-xl w-full max-w-md flex flex-col items-start text-sm overflow-hidden">
       <div className="p-3 flex items-center gap-3 w-full bg-muted/30 border-b">
-        <div className="flex-shrink-0 text-muted-foreground">
+        <div className="shrink-0 text-muted-foreground">
           <SearchIcon size={16} />
         </div>
-        <span className="flex-grow text-foreground font-medium">
+        <span className="grow text-foreground font-medium">
           {isCalling ? 'Finding reference in text...' : 'Reference found'}
         </span>
         {isCalling && (

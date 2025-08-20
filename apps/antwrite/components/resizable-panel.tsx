@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { GripVertical } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -39,9 +39,9 @@ export function ResizablePanel({
     try {
       const savedSize = localStorage.getItem(`resizable-panel-size-${side}`);
       if (savedSize) {
-        const parsedSize = parseInt(savedSize);
+        const parsedSize = Number.parseInt(savedSize);
         if (
-          !isNaN(parsedSize) &&
+          !Number.isNaN(parsedSize) &&
           parsedSize >= minSize &&
           parsedSize <= maxSize
         ) {
@@ -59,7 +59,7 @@ export function ResizablePanel({
       if (!isResizing) return;
 
       // Calculate the new width based on side of the panel
-      let newSize;
+      let newSize: number;
       if (side === 'right') {
         newSize = window.innerWidth - e.clientX;
       } else {
@@ -107,7 +107,7 @@ export function ResizablePanel({
       {/* Left side panel */}
       {side === 'left' && (
         <div
-          className={cn('h-full flex-shrink-0', className)}
+          className={cn('h-full shrink-0', className)}
           style={{ width: `${size}px` }}
         >
           {children}
@@ -117,6 +117,8 @@ export function ResizablePanel({
       {/* Resize handle - only show for right panel when open or animating */}
       {(side === 'left' || isOpen) && (
         <div
+          role="button"
+          tabIndex={0}
           onMouseDown={startResizing}
           className={cn(
             'group relative flex w-2.5 cursor-col-resize items-center justify-center rounded-full',
@@ -128,7 +130,7 @@ export function ResizablePanel({
         >
           <GripVertical
             className={cn(
-              'h-4 w-4 text-muted-foreground/40 transition-colors',
+              'size-4 text-muted-foreground/40 transition-colors',
               isResizing
                 ? 'text-primary'
                 : 'group-hover:text-primary/80 dark:group-hover:text-primary',
@@ -153,7 +155,7 @@ export function ResizablePanel({
               right: isOpen ? '0px' : `-${size}px`,
             }}
           >
-            <div className="h-full w-full">{children}</div>
+            <div className="size-full">{children}</div>
           </div>
         </>
       )}

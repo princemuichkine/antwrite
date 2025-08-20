@@ -2,7 +2,6 @@
 
 import { SidebarUserNav } from '@/components/sidebar/sidebar-user-nav';
 import { SidebarDocuments } from '@/components/sidebar/sidebar-documents';
-import type { Document } from '@antwrite/db';
 import {
   Sidebar,
   SidebarContent,

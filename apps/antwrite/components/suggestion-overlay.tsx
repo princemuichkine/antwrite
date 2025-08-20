@@ -75,7 +75,7 @@ export default function SuggestionOverlay({
   const truncateText = (text: string, wordCount = 5) => {
     const words = text.split(/\s+/);
     if (words.length <= wordCount) return text;
-    return words.slice(0, wordCount).join(' ') + '...';
+    return `${words.slice(0, wordCount).join(' ')}...`;
   };
 
   // Update current position when initial position prop changes
@@ -437,6 +437,7 @@ export default function SuggestionOverlay({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
+                      type="button"
                       onClick={onClose}
                       className="text-muted-foreground hover:text-foreground transition-colors p-2"
                       aria-label="Close"
@@ -455,6 +456,7 @@ export default function SuggestionOverlay({
             {selectedText && (
               <div className="border rounded-md overflow-hidden bg-muted/30">
                 <button
+                  type="button"
                   onClick={() => setIsSelectionExpanded(!isSelectionExpanded)}
                   className="w-full px-3 py-2 flex items-center justify-between text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
                 >
@@ -524,6 +526,7 @@ export default function SuggestionOverlay({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
+                            type="button"
                             onClick={onClose}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-destructive"
                           >
@@ -538,6 +541,7 @@ export default function SuggestionOverlay({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
+                            type="button"
                             onClick={() => handleAcceptSuggestion(suggestion)}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-primary"
                           >
@@ -557,7 +561,7 @@ export default function SuggestionOverlay({
                 {isGenerating && (
                   <div className="flex justify-center items-center p-2 border-t bg-background/50">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <Loader2 className="size-3 animate-spin" />
                       <span>Generating suggestion...</span>
                     </div>
                   </div>

@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { streamText, smoothStream } from 'ai';
 import { getDocumentById } from '@/lib/db/queries';
 import { myProvider } from '@/lib/ai/providers';
@@ -13,7 +13,7 @@ async function handleSuggestionRequest(
   suggestionLength: 'short' | 'medium' | 'long' = 'medium',
   customInstructions?: string | null,
   writingStyleSummary?: string | null,
-  applyStyle: boolean = true,
+  applyStyle = true,
 ) {
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();

@@ -65,12 +65,12 @@ async function createEnhancedSystemPrompt({
   let contextAdded = false;
 
   if (customInstructions) {
-    basePrompt = customInstructions + '\n\n' + basePrompt;
+    basePrompt = `${customInstructions}\n\n${basePrompt}`;
   }
 
   if (applyStyle && writingStyleSummary) {
     const styleBlock = `PERSONAL STYLE GUIDE\n• Emulate the author\'s tone, rhythm, sentence structure, vocabulary choice, and punctuation habits.\n• Do NOT copy phrases or introduce topics from the reference text.\n• Only transform wording to match style; keep semantic content from the current conversation.\nStyle description: ${writingStyleSummary}`;
-    basePrompt = styleBlock + '\n\n' + basePrompt;
+    basePrompt = `${styleBlock}\n\n${basePrompt}`;
   }
 
   if (activeDocumentId) {

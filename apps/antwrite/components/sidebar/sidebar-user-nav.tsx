@@ -1,13 +1,11 @@
 'use client';
 import { ChevronUp, Loader2 } from 'lucide-react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { useTheme } from 'next-themes';
 import { toast } from '@/components/toast';
 import type { ClientUser as User } from '@/lib/auth-client';
-import { cn } from '@/lib/utils';
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -220,7 +218,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger asChild disabled={isLoading}>
-              <SidebarMenuButton className="border border-r data-[state=open]:border-border text-accent-foreground data-[state=open]:text-sidebar-accent-foreground h-10">
+              <SidebarMenuButton className="border data-[state=open]:border-border text-accent-foreground data-[state=open]:text-sidebar-accent-foreground size-10">
                 <span className="truncate">{user.email ?? 'User'}</span>
                 <ChevronUp className="ml-auto" />
               </SidebarMenuButton>
@@ -240,12 +238,13 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                       {statusText}
                     </p>
                     <button
+                      type="button"
                       onClick={ctaAction}
                       disabled={ctaLoading}
                       className="mt-2 text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
                     >
                       {ctaLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin inline-block mr-1 text-muted-foreground" />
+                        <Loader2 className="size-4 animate-spin inline-block mr-1 text-muted-foreground" />
                       ) : (
                         ctaText
                       )}
@@ -270,7 +269,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
               >
                 {isSignOutLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing
+                    <Loader2 className="mr-2 size-4 animate-spin" /> Signing
                     out...
                   </>
                 ) : (

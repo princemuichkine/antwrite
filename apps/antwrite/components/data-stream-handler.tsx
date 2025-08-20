@@ -3,7 +3,7 @@
 import { useChat } from '@ai-sdk/react';
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { artifactDefinitions, ArtifactKind } from './artifact';
+import { artifactDefinitions, } from './artifact';
 import { initialArtifactData, useArtifact } from '@/hooks/use-artifact';
 
 export type DataStreamDelta = {
@@ -72,7 +72,7 @@ export function DataStreamHandler({ id }: { id: string }) {
             }
             return draftArtifact;
 
-          case 'id':
+          case 'id': {
             console.log(
               `[DataStreamHandler] Received ID delta: ${delta.content}. Updating artifact state.`,
             );
@@ -85,6 +85,7 @@ export function DataStreamHandler({ id }: { id: string }) {
               ...draftArtifact,
               documentId: newDocId,
             };
+          }
 
           case 'force-save':
             if (

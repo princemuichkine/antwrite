@@ -3,7 +3,7 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { LogoGoogle, GitIcon, LoaderIcon } from '@/components/icons';
+import { LogoGoogle, GitIcon, LoaderIcon, LogoLinkedIn, LogoTwitter, LogoMicrosoft } from '@/components/icons';
 import type { ReactNode } from 'react';
 
 interface AuthFormProps {
@@ -13,7 +13,10 @@ interface AuthFormProps {
   showSocialLogins?: boolean;
   googleEnabled?: boolean;
   githubEnabled?: boolean;
-  onSocialLogin?: (provider: 'google' | 'github') => void;
+  linkedinEnabled?: boolean;
+  twitterEnabled?: boolean;
+  microsoftEnabled?: boolean;
+  onSocialLogin?: (provider: 'google' | 'github' | 'linkedin' | 'twitter' | 'microsoft') => void;
   isSocialLoading?: string | null;
   isEmailLoading?: boolean;
 }
@@ -25,11 +28,14 @@ export function AuthForm({
   showSocialLogins = false,
   googleEnabled = false,
   githubEnabled = false,
-  onSocialLogin = () => {},
+  linkedinEnabled = false,
+  twitterEnabled = false,
+  microsoftEnabled = false,
+  onSocialLogin = () => { },
   isSocialLoading = null,
   isEmailLoading = false,
 }: AuthFormProps) {
-  const anySocialEnabled = googleEnabled || githubEnabled;
+  const anySocialEnabled = googleEnabled || githubEnabled || linkedinEnabled || twitterEnabled || microsoftEnabled;
   const isLoading = !!isSocialLoading || isEmailLoading;
 
   return (
@@ -70,7 +76,7 @@ export function AuthForm({
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {googleEnabled && (
               <Button
                 type="button"
@@ -80,11 +86,11 @@ export function AuthForm({
                 disabled={isLoading}
               >
                 {isSocialLoading === 'google' ? (
-                  <span className="mr-2 h-4 w-4">
+                  <span className="mr-2 size-4">
                     <LoaderIcon size={16} />
                   </span>
                 ) : (
-                  <span className="mr-2 h-4 w-4">
+                  <span className="mr-2 size-4">
                     <LogoGoogle size={16} />
                   </span>
                 )}{' '}
@@ -100,15 +106,75 @@ export function AuthForm({
                 disabled={isLoading}
               >
                 {isSocialLoading === 'github' ? (
-                  <span className="mr-2 h-4 w-4">
+                  <span className="mr-2 size-4">
                     <LoaderIcon size={16} />
                   </span>
                 ) : (
-                  <span className="mr-2 h-4 w-4">
+                  <span className="mr-2 size-4">
                     <GitIcon />
                   </span>
                 )}{' '}
                 GitHub
+              </Button>
+            )}
+            {linkedinEnabled && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => onSocialLogin('linkedin')}
+                disabled={isLoading}
+              >
+                {isSocialLoading === 'linkedin' ? (
+                  <span className="mr-2 size-4">
+                    <LoaderIcon size={16} />
+                  </span>
+                ) : (
+                  <span className="mr-2 size-4">
+                    <LogoLinkedIn size={16} />
+                  </span>
+                )}{' '}
+                LinkedIn
+              </Button>
+            )}
+            {twitterEnabled && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => onSocialLogin('twitter')}
+                disabled={isLoading}
+              >
+                {isSocialLoading === 'twitter' ? (
+                  <span className="mr-2 size-4">
+                    <LoaderIcon size={16} />
+                  </span>
+                ) : (
+                  <span className="mr-2 size-4">
+                    <LogoTwitter size={16} />
+                  </span>
+                )}{' '}
+                Twitter
+              </Button>
+            )}
+            {microsoftEnabled && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => onSocialLogin('microsoft')}
+                disabled={isLoading}
+              >
+                {isSocialLoading === 'microsoft' ? (
+                  <span className="mr-2 size-4">
+                    <LoaderIcon size={16} />
+                  </span>
+                ) : (
+                  <span className="mr-2 size-4">
+                    <LogoMicrosoft size={16} />
+                  </span>
+                )}{' '}
+                Microsoft
               </Button>
             )}
           </div>

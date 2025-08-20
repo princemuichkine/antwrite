@@ -12,10 +12,10 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   useAiOptions,
   useAiOptionsValue,
-  SuggestionLength,
+  type SuggestionLength,
 } from '@/hooks/ai-options';
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, fetcher } from '@/lib/utils';
 import {
   Tooltip,
   TooltipContent,
@@ -25,7 +25,6 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import useSWR from 'swr';
-import { fetcher } from '@/lib/utils';
 import { Paywall } from '@/components/paywall';
 
 export function AiSettingsMenu() {
@@ -114,7 +113,7 @@ export function AiSettingsMenu() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="h-8 w-8 p-0 flex items-center justify-center border rounded-md hover:bg-muted"
+              className="size-8 p-0 flex items-center justify-center border rounded-md hover:bg-muted"
             >
               <Settings className="size-4" />
             </Button>

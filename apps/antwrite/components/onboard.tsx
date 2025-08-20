@@ -75,17 +75,17 @@ export function Onboard({
         <div className="grid grid-cols-1 md:grid-cols-2">
           <div className="relative h-64 md:h-full overflow-hidden">
             <Image
-              src="/images/snowleopards.jpg"
+              src="/images/antwrite.webp"
               alt="Antwrite"
               layout="fill"
               objectFit="cover"
-              className="filter grayscale contrast-110 brightness-90"
+              className="grayscale contrast-110 brightness-90"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent md:bg-gradient-to-r md:from-black/40 md:via-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent md:bg-gradient-to-r md:from-black/40 md:via-transparent" />
             <div className="absolute top-8 left-8 z-10">
               <h1 className="text-lg font-normal text-white/80">
-                snow leopard
+                Antwrite
               </h1>
             </div>
           </div>

@@ -2,14 +2,16 @@ import 'server-only';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
-import { db, user as schemaUser } from '@antwrite/db';
-import * as schema from '@antwrite/db';
+import { db, } from '@antwrite/db';
 import Stripe from 'stripe';
 import { stripe } from '@better-auth/stripe';
 import { Resend } from 'resend';
 
 const googleEnabled = process.env.GOOGLE_ENABLED === 'true';
 const githubEnabled = process.env.GITHUB_ENABLED === 'true';
+const linkedinEnabled = process.env.LINKEDIN_ENABLED === 'true';
+const twitterEnabled = process.env.TWITTER_ENABLED === 'true';
+const microsoftEnabled = process.env.MICROSOFT_ENABLED === 'true';
 
 const stripeEnabled =
   process.env.STRIPE_ENABLED === 'true' ||
@@ -88,6 +90,36 @@ if (githubEnabled) {
   console.log('GitHub OAuth ENABLED');
 }
 
+if (linkedinEnabled) {
+  if (!process.env.LINKEDIN_CLIENT_ID)
+    throw new Error('Missing LINKEDIN_CLIENT_ID because LINKEDIN_ENABLED is true');
+  if (!process.env.LINKEDIN_CLIENT_SECRET)
+    throw new Error(
+      'Missing LINKEDIN_CLIENT_SECRET because LINKEDIN_ENABLED is true',
+    );
+  console.log('LinkedIn OAuth ENABLED');
+}
+
+if (twitterEnabled) {
+  if (!process.env.TWITTER_CLIENT_ID)
+    throw new Error('Missing TWITTER_CLIENT_ID because TWITTER_ENABLED is true');
+  if (!process.env.TWITTER_CLIENT_SECRET)
+    throw new Error(
+      'Missing TWITTER_CLIENT_SECRET because TWITTER_ENABLED is true',
+    );
+  console.log('Twitter OAuth ENABLED');
+}
+
+if (microsoftEnabled) {
+  if (!process.env.MICROSOFT_CLIENT_ID)
+    throw new Error('Missing MICROSOFT_CLIENT_ID because MICROSOFT_ENABLED is true');
+  if (!process.env.MICROSOFT_CLIENT_SECRET)
+    throw new Error(
+      'Missing MICROSOFT_CLIENT_SECRET because MICROSOFT_ENABLED is true',
+    );
+  console.log('Microsoft OAuth ENABLED');
+}
+
 console.log('--- Checking env vars in lib/auth.ts ---');
 console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'MISSING!');
 console.log(
@@ -102,7 +134,11 @@ console.log('-----------------------------------------\n'); // Added newline for
 
 let stripeClient: Stripe | undefined;
 if (stripeEnabled) {
-  stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeSecretKey) {
+    throw new Error('STRIPE_SECRET_KEY is required when Stripe is enabled');
+  }
+  stripeClient = new Stripe(stripeSecretKey, {
     apiVersion: '2025-02-24.acacia',
   });
 }
@@ -115,8 +151,8 @@ const resend =
 const plans = [
   {
     name: 'antwrite',
-    priceId: process.env.STRIPE_PRO_MONTHLY_PRICE_ID!,
-    annualDiscountPriceId: process.env.STRIPE_PRO_YEARLY_PRICE_ID!,
+    priceId: process.env.STRIPE_PRO_MONTHLY_PRICE_ID || '',
+    annualDiscountPriceId: process.env.STRIPE_PRO_YEARLY_PRICE_ID || '',
   },
 ];
 
@@ -127,10 +163,15 @@ type HookUser = {
 
 const authPlugins: any[] = [];
 
-authPlugins.push(
-  stripe({
-    stripeClient: stripeClient!,
-    stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
+if (stripeEnabled && stripeClient) {
+  const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!stripeWebhookSecret) {
+    throw new Error('STRIPE_WEBHOOK_SECRET is required when Stripe is enabled');
+  }
+  authPlugins.push(
+    stripe({
+      stripeClient: stripeClient,
+      stripeWebhookSecret: stripeWebhookSecret,
     createCustomerOnSignUp: true,
     subscription: {
       enabled: process.env.STRIPE_ENABLED === 'true',
@@ -139,23 +180,65 @@ authPlugins.push(
     },
   }),
 );
+}
 
 authPlugins.push(nextCookies());
 
 const socialProviders: Record<string, any> = {};
 
 if (googleEnabled) {
-  socialProviders.google = {
-    clientId: process.env.GOOGLE_CLIENT_ID!,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  };
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (clientId && clientSecret) {
+    socialProviders.google = {
+      clientId,
+      clientSecret,
+    };
+  }
 }
 
 if (githubEnabled) {
-  socialProviders.github = {
-    clientId: process.env.GITHUB_CLIENT_ID!,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-  };
+  const clientId = process.env.GITHUB_CLIENT_ID;
+  const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+  if (clientId && clientSecret) {
+    socialProviders.github = {
+      clientId,
+      clientSecret,
+    };
+  }
+}
+
+if (linkedinEnabled) {
+  const clientId = process.env.LINKEDIN_CLIENT_ID;
+  const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+  if (clientId && clientSecret) {
+    socialProviders.linkedin = {
+      clientId,
+      clientSecret,
+    };
+  }
+}
+
+if (twitterEnabled) {
+  const clientId = process.env.TWITTER_CLIENT_ID;
+  const clientSecret = process.env.TWITTER_CLIENT_SECRET;
+  if (clientId && clientSecret) {
+    socialProviders.twitter = {
+      clientId,
+      clientSecret,
+    };
+  }
+}
+
+if (microsoftEnabled) {
+  const clientId = process.env.MICROSOFT_CLIENT_ID;
+  const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+  if (clientId && clientSecret) {
+    socialProviders.microsoft = {
+      clientId,
+      clientSecret,
+    };
+  }
 }
 
 export const auth = betterAuth({
@@ -191,8 +274,12 @@ export const auth = betterAuth({
             );
             console.log(`Verification URL: ${url}`);
             try {
+              const emailFrom = process.env.EMAIL_FROM;
+              if (!emailFrom) {
+                throw new Error('EMAIL_FROM environment variable is required for email verification');
+              }
               const { data, error } = await resend.emails.send({
-                from: process.env.EMAIL_FROM!,
+                from: emailFrom,
                 to: [user.email],
                 subject: 'Verify your email for Antwrite',
                 html: `<p>Welcome! Please click the link below to verify your email address:</p><p><a href="${url}">Verify Email</a></p><p>If the link doesn't work, copy and paste this URL into your browser: ${url}</p>`,

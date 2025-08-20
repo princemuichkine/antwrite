@@ -1,11 +1,10 @@
 'use client';
 
-import { ChatRequestOptions, Message } from 'ai';
+import type { ChatRequestOptions, Message } from 'ai';
 import { Button } from '../ui/button';
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from 'react';
 import { Textarea } from '../ui/textarea';
 import { deleteTrailingMessages } from '@/app/api/chat/actions/chat';
-import { toast } from 'sonner';
 
 export type MessageEditorProps = {
   message: Message;

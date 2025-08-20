@@ -1,6 +1,6 @@
 'use client';
 
-import { EditorState, Transaction } from 'prosemirror-state';
+import { EditorState, type Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import React, { memo, useEffect, useRef, useCallback, useState } from 'react';
 import {
@@ -18,7 +18,7 @@ import {
 } from '@/lib/editor/save-plugin';
 import { createEditorPlugins } from '@/lib/editor/editor-plugins';
 import { createInlineSuggestionCallback } from '@/lib/editor/inline-suggestion-plugin';
-import { type FormatState } from '@/lib/editor/format-plugin';
+import type { FormatState } from '@/lib/editor/format-plugin';
 
 type EditorProps = {
   content: string;
@@ -60,9 +60,118 @@ function PureEditor({
     currentDocumentIdRef.current = documentId;
   }, [documentId]);
 
-  const performSave = useCallback(createSaveFunction(currentDocumentIdRef), []);
+  const performSave = useCallback(
+    async (contentToSave: string) => {
+      const docId = currentDocumentIdRef.current;
+      if (!docId || docId === 'init' || docId === 'undefined' || docId === 'null') {
+        console.warn(
+          '[Save Function] Attempted to save with invalid or init documentId:',
+          docId,
+        );
+        return null;
+      }
+
+      try {
+        const response = await fetch('/api/document', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: docId, content: contentToSave }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || response.statusText);
+        }
+
+        const data = await response.json();
+        return { updatedAt: data.updatedAt || new Date().toISOString() };
+      } catch (error) {
+        console.error('[Save Function] Error saving document:', error);
+        throw error;
+      }
+    },
+    [currentDocumentIdRef],
+  );
+
   const requestInlineSuggestionCallback = useCallback(
-    createInlineSuggestionCallback(documentId),
+    async (
+      state: any,
+      abortControllerRef: React.MutableRefObject<AbortController | null>,
+      editorRef: React.MutableRefObject<any | null>,
+    ) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      try {
+        const { selection } = state;
+        const { head } = selection;
+
+        const $head = state.doc.resolve(head);
+        const startOfNode = $head.start();
+        const contextBefore = state.doc.textBetween(startOfNode, head, '\n');
+        const endOfNode = $head.end();
+        const contextAfter = state.doc.textBetween(head, endOfNode, '\n');
+        const fullContent = state.doc.textContent;
+
+        const response = await fetch('/api/inline-suggestion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            documentId,
+            contextBefore,
+            contextAfter,
+            fullContent,
+          }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch inline suggestion');
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Response body is not readable');
+        }
+
+        const decoder = new TextDecoder();
+        let suggestion = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.type === 'suggestion-delta') {
+                  suggestion += data.content;
+                }
+              } catch (e) {
+                console.error('Error parsing SSE data:', e);
+              }
+            }
+          }
+        }
+
+        return suggestion;
+      } catch (error) {
+        if ((error as any).name === 'AbortError') {
+          console.log('Inline suggestion request aborted');
+        } else {
+          console.error('Error fetching inline suggestion:', error);
+        }
+        return null;
+      }
+    },
     [documentId],
   );
 

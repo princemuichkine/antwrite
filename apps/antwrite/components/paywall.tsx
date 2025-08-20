@@ -13,10 +13,9 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { toast } from '@/components/toast';
-import { CheckCircle, X, Loader2, Check, MoreHorizontal } from 'lucide-react';
+import { Loader2, Check, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -107,7 +106,7 @@ export function Paywall({
     }
   };
 
-  const handleUpgrade = async (planName: string, annual: boolean = false) => {
+  const handleUpgrade = async (planName: string, annual = false) => {
     const displayPlan = displayPlans.find(
       (p) =>
         p.planName.toLowerCase() === planName.toLowerCase() &&
@@ -178,17 +177,17 @@ export function Paywall({
         <div className="grid grid-cols-1 md:grid-cols-2">
           <div className="relative h-48 md:h-full overflow-hidden">
             <Image
-              src="/images/snowleopards.jpg"
+              src="/images/antwrite.webp"
               alt="Antwrite"
               layout="fill"
               objectFit="cover"
-              className="filter grayscale contrast-110 brightness-90"
+              className="grayscale contrast-110 brightness-90"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent md:bg-gradient-to-r md:from-black/40 md:via-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent md:bg-gradient-to-r md:from-black/40 md:via-transparent" />
             <div className="absolute top-8 left-8 z-10">
               <h1 className="text-lg font-normal text-white/80">
-                snow leopard
+                Antwrite
               </h1>
             </div>
           </div>
@@ -223,7 +222,7 @@ export function Paywall({
               </div>
             )}
 
-            <div className="flex-grow">
+            <div className="grow">
               <DialogHeader className="mb-6 text-left">
                 <DialogTitle className="text-xl md:text-2xl font-semibold">
                   Upgrade to Pro
@@ -247,7 +246,7 @@ export function Paywall({
                       { 'bg-muted/30': plan.annual },
                     )}
                   >
-                    <div className="flex-grow">
+                    <div className="grow">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-semibold text-lg">
                           {plan.displayName}
@@ -277,7 +276,7 @@ export function Paywall({
                             key={feature}
                             className="flex items-center gap-3 text-sm text-muted-foreground"
                           >
-                            <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                            <Check className="size-4 text-green-500 shrink-0" />
                             <span>{feature}</span>
                           </li>
                         ))}
@@ -310,10 +309,7 @@ export function Paywall({
             </div>
 
             <DialogFooter className="mt-6 pt-4 border-t flex flex-col sm:flex-row items-center gap-2 sm:gap-0">
-              <p className="text-xs text-muted-foreground flex-shrink-0">
-                much love, will - founder of snow leopard
-              </p>
-              <div className="flex-grow" />
+              <div className="grow" />
               <Button
                 variant="ghost"
                 className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5" // Style from overview.tsx

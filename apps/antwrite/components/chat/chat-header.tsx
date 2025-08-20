@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
@@ -9,12 +9,10 @@ import useSWR from 'swr';
 
 import { ModelSelector } from '@/components/chat/model-selector';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, ClockRewind, MessageIcon } from '../icons';
+import { PlusIcon, ClockRewind, } from '../icons';
 import { useSidebar } from '../ui/sidebar';
-import { memo } from 'react';
-import { cn } from '@/lib/utils';
 import { useDocumentUtils } from '@/hooks/use-document-utils';
-import { fetcher } from '@/lib/utils';
+import { cn, fetcher } from '@/lib/utils';
 import type { Chat } from '@antwrite/db';
 import {
   DropdownMenu,
@@ -64,13 +62,13 @@ function PureChatHeader({
   return (
     <header
       className={cn(
-        'flex sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b border-border border-r border-border items-center px-3 h-[45px] gap-2 transition-all duration-200',
+        'flex sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b border-border border-r items-center px-3 h-[45px] gap-2 transition-all duration-200',
         className,
       )}
     >
       <Button
         variant="outline"
-        className="h-8 flex items-center justify-center dark:hover:bg-zinc-700 w-8 p-0 border-r border-border"
+        className="size-8 flex items-center justify-center dark:hover:bg-zinc-700 p-0 border-r border-border"
         onClick={handleResetChat}
         disabled={isCreatingChat}
         title="New Chat"
@@ -101,7 +99,7 @@ function PureChatHeader({
       </Button>
 
       {!isReadonly && mounted && (
-        <div className="transition-all duration-200 min-w-0 flex-shrink">
+        <div className="transition-all duration-200 min-w-0 shrink">
           <ModelSelector
             selectedModelId={selectedModelId}
             className={cn('ml-0', {
@@ -158,7 +156,7 @@ function PureChatHeader({
                         day: 'numeric',
                         year:
                           new Date(chat.createdAt).getFullYear() !==
-                          new Date().getFullYear()
+                            new Date().getFullYear()
                             ? 'numeric'
                             : undefined,
                       })}
@@ -167,57 +165,57 @@ function PureChatHeader({
                   {(chat.document_context?.active ||
                     (chat.document_context?.mentioned &&
                       chat.document_context.mentioned.length > 0)) && (
-                    <div className="mt-1.5 pt-1.5 border-t border-border/50 text-xs flex flex-col gap-1 overflow-hidden">
-                      {chat.document_context.active && (
-                        <div className="flex items-center gap-1.5 text-muted-foreground truncate">
-                          <span className="font-medium text-foreground/80 flex-shrink-0">
-                            Active:
-                          </span>
-                          <Link
-                            href={`/documents/${chat.document_context.active}`}
-                            className="truncate hover:underline text-blue-500 dark:text-blue-400"
-                            onClick={(e) => e.stopPropagation()}
-                            title={
-                              chat.document_context.activeTitle ||
-                              chat.document_context.active
-                            }
-                          >
-                            {chat.document_context.activeTitle ||
-                              chat.document_context.active}
-                          </Link>
-                        </div>
-                      )}
-                      {chat.document_context.mentioned &&
-                        chat.document_context.mentioned.length > 0 && (
-                          <div className="flex items-start gap-1.5 text-muted-foreground">
-                            <span className="font-medium text-foreground/80 flex-shrink-0 pt-px">
-                              Mentioned:
+                      <div className="mt-1.5 pt-1.5 border-t border-border/50 text-xs flex flex-col gap-1 overflow-hidden">
+                        {chat.document_context.active && (
+                          <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+                            <span className="font-medium text-foreground/80 shrink-0">
+                              Active:
                             </span>
-                            <div className="flex flex-wrap gap-x-2 gap-y-1 overflow-hidden">
-                              {chat.document_context.mentioned.map(
-                                (docId: string, index: number) => (
-                                  <Link
-                                    key={docId}
-                                    href={`/documents/${docId}`}
-                                    className="truncate hover:underline text-blue-500 dark:text-blue-400"
-                                    onClick={(e) => e.stopPropagation()} // Prevent dropdown item click
-                                    title={
-                                      chat.document_context.mentionedTitles?.[
-                                        index
-                                      ] || docId
-                                    }
-                                  >
-                                    {chat.document_context.mentionedTitles?.[
-                                      index
-                                    ] || docId}
-                                  </Link>
-                                ),
-                              )}
-                            </div>
+                            <Link
+                              href={`/documents/${chat.document_context.active}`}
+                              className="truncate hover:underline text-blue-500 dark:text-blue-400"
+                              onClick={(e) => e.stopPropagation()}
+                              title={
+                                chat.document_context.activeTitle ||
+                                chat.document_context.active
+                              }
+                            >
+                              {chat.document_context.activeTitle ||
+                                chat.document_context.active}
+                            </Link>
                           </div>
                         )}
-                    </div>
-                  )}
+                        {chat.document_context.mentioned &&
+                          chat.document_context.mentioned.length > 0 && (
+                            <div className="flex items-start gap-1.5 text-muted-foreground">
+                              <span className="font-medium text-foreground/80 shrink-0 pt-px">
+                                Mentioned:
+                              </span>
+                              <div className="flex flex-wrap gap-x-2 gap-y-1 overflow-hidden">
+                                {chat.document_context.mentioned.map(
+                                  (docId: string, index: number) => (
+                                    <Link
+                                      key={docId}
+                                      href={`/documents/${docId}`}
+                                      className="truncate hover:underline text-blue-500 dark:text-blue-400"
+                                      onClick={(e) => e.stopPropagation()} // Prevent dropdown item click
+                                      title={
+                                        chat.document_context.mentionedTitles?.[
+                                        index
+                                        ] || docId
+                                      }
+                                    >
+                                      {chat.document_context.mentionedTitles?.[
+                                        index
+                                      ] || docId}
+                                    </Link>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    )}
                 </div>
               </DropdownMenuItem>
             ))

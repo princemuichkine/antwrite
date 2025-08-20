@@ -14,13 +14,12 @@ import useSWR, { useSWRConfig } from 'swr';
 import { useWindowSize } from 'usehooks-ts';
 import type { Document } from '@antwrite/db';
 import { fetcher } from '@/lib/utils';
-import { MultimodalInput } from './chat/multimodal-input';
 import { Toolbar } from './toolbar';
 import { ArtifactActions } from './artifact-actions';
 import { useArtifact } from '@/hooks/use-artifact';
 import { textArtifact } from '@/artifacts/text/client';
 import equal from 'fast-deep-equal';
-import { UseChatHelpers } from '@ai-sdk/react';
+import type { UseChatHelpers } from '@ai-sdk/react';
 import { Button } from './ui/button';
 import { CheckIcon } from './icons';
 import { toast } from 'sonner';
@@ -469,54 +468,54 @@ export function PureArtifact({
             initial={
               isMobile
                 ? {
-                    opacity: 1,
-                    x: artifact.boundingBox.left,
-                    y: artifact.boundingBox.top,
-                    height: artifact.boundingBox.height,
-                    width: artifact.boundingBox.width,
-                    borderRadius: 50,
-                  }
+                  opacity: 1,
+                  x: artifact.boundingBox.left,
+                  y: artifact.boundingBox.top,
+                  height: artifact.boundingBox.height,
+                  width: artifact.boundingBox.width,
+                  borderRadius: 50,
+                }
                 : {
-                    opacity: 1,
-                    x: artifact.boundingBox.left,
-                    y: artifact.boundingBox.top,
-                    height: artifact.boundingBox.height,
-                    width: artifact.boundingBox.width,
-                    borderRadius: 50,
-                  }
+                  opacity: 1,
+                  x: artifact.boundingBox.left,
+                  y: artifact.boundingBox.top,
+                  height: artifact.boundingBox.height,
+                  width: artifact.boundingBox.width,
+                  borderRadius: 50,
+                }
             }
             animate={
               isMobile
                 ? {
-                    opacity: 1,
-                    x: 0,
-                    y: 0,
-                    height: windowHeight,
-                    width: windowWidth ? windowWidth : 'calc(100dvw)',
-                    borderRadius: 0,
-                    transition: {
-                      delay: 0,
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 30,
-                      duration: 5000,
-                    },
-                  }
+                  opacity: 1,
+                  x: 0,
+                  y: 0,
+                  height: windowHeight,
+                  width: windowWidth ? windowWidth : 'calc(100dvw)',
+                  borderRadius: 0,
+                  transition: {
+                    delay: 0,
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 30,
+                    duration: 5000,
+                  },
+                }
                 : {
-                    opacity: 1,
-                    x: 0,
-                    y: 0,
-                    height: windowHeight,
-                    width: windowWidth,
-                    borderRadius: 0,
-                    transition: {
-                      delay: 0,
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 30,
-                      duration: 5000,
-                    },
-                  }
+                  opacity: 1,
+                  x: 0,
+                  y: 0,
+                  height: windowHeight,
+                  width: windowWidth,
+                  borderRadius: 0,
+                  transition: {
+                    delay: 0,
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 30,
+                    duration: 5000,
+                  },
+                }
             }
             exit={{
               opacity: 0,
@@ -534,9 +533,9 @@ export function PureArtifact({
                     setArtifact((currentArtifact) =>
                       currentArtifact.status === 'streaming'
                         ? {
-                            ...currentArtifact,
-                            isVisible: false,
-                          }
+                          ...currentArtifact,
+                          isVisible: false,
+                        }
                         : { ...currentArtifact, isVisible: false },
                     );
                   }}
@@ -553,7 +552,7 @@ export function PureArtifact({
                       fill="currentColor"
                       fillRule="evenodd"
                       clipRule="evenodd"
-                    ></path>
+                    />
                   </svg>
                 </Button>
 
@@ -573,7 +572,7 @@ export function PureArtifact({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="size-6"
                         onClick={handleSaveTitle}
                         disabled={isRenamingDocument}
                       >
@@ -604,7 +603,7 @@ export function PureArtifact({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="size-6"
                         onClick={handleCancelEditTitle}
                       >
                         <XIcon size={12} />
@@ -612,16 +611,17 @@ export function PureArtifact({
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <div
-                        className="font-medium cursor-pointer hover:underline"
+                      <button
+                        type="button"
+                        className="font-medium cursor-pointer hover:underline bg-transparent border-none p-0"
                         onClick={handleEditTitle}
                       >
                         {artifact.title}
-                      </div>
+                      </button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-5 w-5"
+                        className="size-5"
                         onClick={handleEditTitle}
                       >
                         <PencilIcon size={12} />
@@ -629,12 +629,13 @@ export function PureArtifact({
                     </div>
                   )}
 
-                  <div
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground h-4 cursor-pointer"
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground h-4 cursor-pointer bg-transparent border-none p-0"
                     onClick={handleStatusClick}
                   >
                     {getSaveStatusDisplay()}
-                  </div>
+                  </button>
                 </div>
               </div>
 

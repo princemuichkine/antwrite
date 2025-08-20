@@ -4,7 +4,6 @@ import { schema } from 'prosemirror-schema-basic';
 import { addListNodes } from 'prosemirror-schema-list';
 import OrderedMap from 'orderedmap';
 import { DiffType } from './diff';
-import { buildContentFromDocument } from './functions';
 
 const diffMarkSpec = {
   attrs: { type: { default: '' } },

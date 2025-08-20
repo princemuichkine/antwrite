@@ -1,5 +1,5 @@
-import { Plugin, EditorState } from 'prosemirror-state';
-import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
+import { Plugin, type EditorState } from 'prosemirror-state';
+import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 
 export function placeholderPlugin(text: string) {
   const placeholderClass = 'is-placeholder-empty';

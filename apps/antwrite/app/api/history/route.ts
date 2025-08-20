@@ -36,7 +36,7 @@ export async function GET() {
 
     // 3. Fetch titles for these documents (using existing Drizzle getDocumentsById)
     const uniqueDocIds = Array.from(docIds);
-    let documentTitles: { [id: string]: string } = {};
+    const documentTitles: { [id: string]: string } = {};
     if (uniqueDocIds.length > 0) {
       try {
         // getDocumentsById already uses Drizzle and checks userId

@@ -9,11 +9,10 @@ import {
   primaryKey,
   integer,
   pgEnum,
-  unique,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { relations, Many, One } from 'drizzle-orm';
-import { InferSelectModel } from 'drizzle-orm';
+import { relations, } from 'drizzle-orm';
+import type { InferSelectModel } from 'drizzle-orm';
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),

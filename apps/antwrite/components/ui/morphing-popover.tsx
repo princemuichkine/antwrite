@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { AnimatePresence, HTMLMotionProps, motion } from 'framer-motion';
+import { AnimatePresence, type HTMLMotionProps, motion } from 'framer-motion';
 
 export interface MorphingPopoverProps {
   children: React.ReactNode;

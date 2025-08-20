@@ -5,9 +5,9 @@ import React, {
   useContext,
   useState,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from 'react';
-import { ArtifactKind } from '@/components/artifact';
+import type { ArtifactKind } from '@/components/artifact';
 import { useParams, useRouter } from 'next/navigation';
 
 interface DocumentContextType {

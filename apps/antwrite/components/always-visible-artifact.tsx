@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { Loader2, FileText, PlusIcon } from 'lucide-react';
+import { Loader2, } from 'lucide-react';
 
 import type { Document } from '@antwrite/db';
 import { generateUUID } from '@/lib/utils';
@@ -23,13 +23,13 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Input } from './ui/input';
 import { useDocumentContext } from '@/hooks/use-document-context';
-import { ArtifactKind } from '@/components/artifact';
+import type { ArtifactKind } from '@/components/artifact';
 import { AiSettingsMenu } from './ai-settings-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { SaveState } from '@/lib/editor/save-plugin';
 import type { User } from '@/lib/auth';
 import { PublishSettingsMenu } from '@/components/publish-settings-menu';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Card, } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Editor = dynamic(
@@ -42,11 +42,11 @@ const Editor = dynamic(
 
 const EditorSkeleton = () => (
   <div className="space-y-4 animate-pulse">
-    <div className="h-6 bg-muted rounded w-3/4"></div>
-    <div className="h-4 bg-muted rounded w-full"></div>
-    <div className="h-4 bg-muted rounded w-5/6"></div>
-    <div className="h-4 bg-muted rounded w-full"></div>
-    <div className="h-4 bg-muted rounded w-1/2"></div>
+    <div className="h-6 bg-muted rounded w-3/4" />
+    <div className="h-4 bg-muted rounded w-full" />
+    <div className="h-4 bg-muted rounded w-5/6" />
+    <div className="h-4 bg-muted rounded w-full" />
+    <div className="h-4 bg-muted rounded w-1/2" />
   </div>
 );
 
@@ -155,6 +155,7 @@ export function AlwaysVisibleArtifact({
     setArtifact,
     startTransition,
     artifact.documentId,
+    showCreateDocumentForId,
   ]);
 
   useEffect(() => {
@@ -248,7 +249,7 @@ export function AlwaysVisibleArtifact({
       setEditingTitle(false);
       if (!trimmedNewTitle) setNewTitle(latestDocument.title);
     }
-  }, [newTitle, latestDocument, documents, renameDocument, setArtifact]);
+  }, [newTitle, latestDocument, documents, renameDocument]);
 
   const handleCancelEditTitle = useCallback(() => {
     if (!latestDocument) return;
@@ -433,7 +434,7 @@ export function AlwaysVisibleArtifact({
         <div className="flex flex-row gap-2 items-center min-w-0">
           <SidebarTrigger />
           {isPending ? (
-            <div className="h-4 w-32 bg-muted rounded animate-pulse"></div>
+            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
           ) : (
             <div className="flex flex-col min-w-0">
               <div className="h-6 flex items-center">
@@ -442,7 +443,7 @@ export function AlwaysVisibleArtifact({
                     ref={titleInputRef}
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
-                    className="h-6 py-0 px-1 text-sm font-medium flex-grow bg-transparent border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-75"
+                    className="h-6 py-0 px-1 text-sm font-medium grow bg-transparent border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-75"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleSaveTitle();
                       if (e.key === 'Escape') handleCancelEditTitle();
@@ -452,10 +453,12 @@ export function AlwaysVisibleArtifact({
                     aria-label="Edit document title"
                   />
                 ) : (
-                  <div
-                    className={`font-medium truncate h-6 leading-6 px-1 ${latestDocument ? 'cursor-pointer hover:underline' : 'text-muted-foreground'}`}
+                  <button
+                    type="button"
+                    className={`font-medium truncate h-6 leading-6 px-1 bg-transparent border-none text-left w-full ${latestDocument ? 'cursor-pointer hover:underline' : 'text-muted-foreground'}`}
                     onClick={latestDocument ? handleEditTitle : undefined}
                     onDoubleClick={latestDocument ? handleEditTitle : undefined}
+                    disabled={!latestDocument}
                     title={
                       latestDocument
                         ? `Rename "${latestDocument.title}"`
@@ -465,13 +468,13 @@ export function AlwaysVisibleArtifact({
                     }
                   >
                     {latestDocument?.title ?? artifact.title ?? 'Document'}
-                  </div>
+                  </button>
                 )}
               </div>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           {documents && documents.length > 0 && (
             <ArtifactActions
               artifact={artifact}
@@ -520,7 +523,7 @@ export function AlwaysVisibleArtifact({
                 initialLastSaved={
                   latestDocument ? new Date(latestDocument.updatedAt) : null
                 }
-                onStatusChange={(newSaveState: SaveState) => {}}
+                onStatusChange={(newSaveState: SaveState) => { }}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
               />
             </Suspense>

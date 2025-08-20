@@ -1,5 +1,4 @@
-import { ReactNode } from 'react';
-import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import { db } from '@antwrite/db';
 import * as schema from '@antwrite/db';
 import { eq, and } from 'drizzle-orm';

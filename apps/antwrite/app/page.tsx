@@ -8,15 +8,10 @@ import { authClient } from '@/lib/auth-client';
 import { CardHeader, Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GripVertical, X, Check } from 'lucide-react';
+import { LogoGoogle, GitIcon, LogoLinkedIn, LogoTwitter, LogoMicrosoft, LoaderIcon } from '@/components/icons';
+import { toast } from '@/components/toast';
 import Image from 'next/image';
 import { motion, useInView } from 'framer-motion';
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from '@/components/ui/tooltip';
-import Script from 'next/script';
 import { Switch } from '@/components/ui/switch';
 
 const crimson = Crimson_Text({
@@ -24,6 +19,13 @@ const crimson = Crimson_Text({
   subsets: ['latin'],
   display: 'swap',
 });
+
+// Environment variables for enabled providers
+const googleEnabled = process.env.NEXT_PUBLIC_GOOGLE_ENABLED === 'true';
+const githubEnabled = process.env.NEXT_PUBLIC_GITHUB_ENABLED === 'true';
+const linkedinEnabled = process.env.NEXT_PUBLIC_LINKEDIN_ENABLED === 'true';
+const twitterEnabled = process.env.NEXT_PUBLIC_TWITTER_ENABLED === 'true';
+const microsoftEnabled = process.env.NEXT_PUBLIC_MICROSOFT_ENABLED === 'true';
 
 const StyleToggleDemo = ({ inView }: { inView: boolean }) => {
   const [isEnabled, setIsEnabled] = useState(false);
@@ -66,6 +68,7 @@ export default function Home() {
   const card6InView = useInView(card6Ref, { once: true, amount: 0.5 });
 
   const [hasSession, setHasSession] = useState<boolean>(false);
+  const [isSocialLoading, setIsSocialLoading] = useState<string | null>(null);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -94,6 +97,30 @@ export default function Home() {
     }
   };
 
+  const handleSocialLogin = async (provider: 'google' | 'github' | 'linkedin' | 'twitter' | 'microsoft') => {
+    await authClient.signIn.social(
+      {
+        provider,
+        callbackURL: '/documents',
+        errorCallbackURL: '/?error=social_signin_failed',
+      },
+      {
+        onRequest: () => {
+          setIsSocialLoading(provider);
+        },
+        onError: (ctx) => {
+          setIsSocialLoading(null);
+          console.error(`Social Login Error (${provider}):`, ctx.error);
+          toast({
+            type: 'error',
+            description:
+              ctx.error.message || `Failed to sign in with ${provider}.`,
+          });
+        },
+      },
+    );
+  };
+
   const modelNames = ['Llama', 'Kimi', 'Deepseek', 'Claude'] as const;
   const proIndex = 3;
 
@@ -103,7 +130,7 @@ export default function Home() {
       <header className="absolute top-0 w-full z-10 py-4">
         <div className="container mx-auto flex justify-between items-center px-6 md:px-8 lg:px-12">
           <h1 className="text-xl font-normal tracking-tighter text-foreground/90">
-            snow leopard
+            Antwrite
           </h1>
           <Button
             variant="outline"
@@ -117,7 +144,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section id="hero" className="pt-20 pb-20 bg-background">
+      <section id="hero" className="py-20 bg-background">
         <div className="container mx-auto px-6 md:px-8 lg:px-12 flex flex-col items-center text-center">
           {/* Title Group */}
           <div className="space-y-0">
@@ -154,7 +181,7 @@ export default function Home() {
               className="rounded-full"
             >
               <Link href="/login">
-                Begin{' '}
+                Get Started{' '}
                 <span className="inline-block ml-2 text-xs transition-transform group-hover:translate-x-0.5">
                   ›
                 </span>
@@ -178,6 +205,119 @@ export default function Home() {
               </Link>
             </Button>
           </div>
+
+          {/* Social Authentication Section */}
+          {!hasSession && (googleEnabled || githubEnabled || linkedinEnabled || twitterEnabled || microsoftEnabled) && (
+            <>
+              <div className="relative mt-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-gray-500">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 mt-6 w-full max-w-xs mx-auto">
+                {/* Google OAuth Button */}
+                {googleEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('google')}
+                    disabled={isSocialLoading !== null}
+                    className="w-full h-10 px-3 rounded-md bg-[#EA4335] hover:bg-[#d33b2c] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSocialLoading === 'google' ? (
+                        <LoaderIcon size={16} />
+                      ) : (
+                        <LogoGoogle size={16} />
+                      )}
+                      <span className="ml-2">Continue with Google</span>
+                    </div>
+                  </button>
+                )}
+
+                {/* GitHub OAuth Button */}
+                {githubEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('github')}
+                    disabled={isSocialLoading !== null}
+                    className="w-full h-10 px-3 rounded-md bg-[#333] hover:bg-[#444] dark:bg-[#171515] dark:hover:bg-[#2b2a2a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSocialLoading === 'github' ? (
+                        <LoaderIcon size={16} />
+                      ) : (
+                        <GitIcon />
+                      )}
+                      <span className="ml-2">Continue with GitHub</span>
+                    </div>
+                  </button>
+                )}
+
+                {/* LinkedIn OAuth Button */}
+                {linkedinEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('linkedin')}
+                    disabled={isSocialLoading !== null}
+                    className="w-full h-10 px-3 rounded-md bg-[#0077B5] hover:bg-[#006699] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSocialLoading === 'linkedin' ? (
+                        <LoaderIcon size={16} />
+                      ) : (
+                        <LogoLinkedIn size={16} />
+                      )}
+                      <span className="ml-2">Continue with LinkedIn</span>
+                    </div>
+                  </button>
+                )}
+
+                {/* Twitter OAuth Button */}
+                {twitterEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('twitter')}
+                    disabled={isSocialLoading !== null}
+                    className="w-full h-10 px-3 rounded-md bg-[#000000] hover:bg-[#1a1a1a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSocialLoading === 'twitter' ? (
+                        <LoaderIcon size={16} />
+                      ) : (
+                        <LogoTwitter size={16} />
+                      )}
+                      <span className="ml-2">Continue with Twitter</span>
+                    </div>
+                  </button>
+                )}
+
+                {/* Microsoft OAuth Button */}
+                {microsoftEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('microsoft')}
+                    disabled={isSocialLoading !== null}
+                    className="w-full h-10 px-3 rounded-md bg-white hover:bg-gray-50 dark:bg-white dark:hover:bg-gray-50 text-gray-600 dark:text-gray-600 border border-gray-300 text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSocialLoading === 'microsoft' ? (
+                        <LoaderIcon size={16} />
+                      ) : (
+                        <LogoMicrosoft size={16} />
+                      )}
+                      <span className="ml-2">Continue with Microsoft</span>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </>
+          )}
 
           <div className="mt-16 flex justify-center w-full">
             <div className="hero-frame">
@@ -228,13 +368,13 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={card1InView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="w-full h-full"
+              className="size-full"
             >
               <Card className="h-full flex flex-col min-h-[320px] rounded-xl overflow-visible">
                 <CardHeader className="p-6 text-base font-medium">
                   Real-time Inline Suggestions
                 </CardHeader>
-                <CardContent className="p-6 text-sm text-muted-foreground flex-grow">
+                <CardContent className="p-6 text-sm text-muted-foreground grow">
                   <p className="demo-prose-mirror-style">
                     <span className="demo-text-base">
                       You start typing, and the AI offers
@@ -243,7 +383,7 @@ export default function Home() {
                       <span
                         className="demo-inline-suggestion-animated"
                         data-suggestion=" a helpful completion."
-                      ></span>
+                      />
                       <kbd className="inline-tab-icon">Tab</kbd>
                     </span>
                   </p>
@@ -257,13 +397,13 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={card2InView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="w-full h-full"
+              className="size-full"
             >
               <Card className="h-full flex flex-col min-h-[320px] rounded-xl overflow-visible">
                 <CardHeader className="p-6 text-base font-medium">
                   Powerful Selection Edits
                 </CardHeader>
-                <CardContent className="p-6 text-sm text-muted-foreground flex-grow relative overflow-visible">
+                <CardContent className="p-6 text-sm text-muted-foreground grow relative overflow-visible">
                   <p className="demo-prose-mirror-style">
                     <span className="demo-text-base">
                       This phrasing{' '}
@@ -281,7 +421,7 @@ export default function Home() {
                       />
                       <h3 className="text-xs font-medium">Suggestion</h3>
                     </div>
-                    <div className="demo-overlay-input-placeholder"></div>
+                    <div className="demo-overlay-input-placeholder" />
                     <div className="demo-overlay-diff-view">
                       <span className="text-red-500 line-through dark:text-red-400/70">
                         is a bit weak and verbose.
@@ -319,13 +459,13 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={card3InView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="w-full h-full"
+              className="size-full"
             >
               <Card className="h-full flex flex-col min-h-[320px] rounded-xl overflow-visible">
                 <CardHeader className="p-6 text-base font-medium">
                   Instant Synonym Finder
                 </CardHeader>
-                <CardContent className="p-6 text-sm text-muted-foreground flex-grow">
+                <CardContent className="p-6 text-sm text-muted-foreground grow">
                   <p className="demo-prose-mirror-style relative">
                     <span className="demo-text-base">
                       Find better words with ease. The AI presents contextually
@@ -353,14 +493,14 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={card4InView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="w-full h-full"
+              className="size-full"
             >
               <Card className="h-full flex flex-col min-h-[320px] rounded-xl overflow-visible">
                 <CardHeader className="p-6 text-base font-medium">
                   AI Writing That Sounds Like You
                 </CardHeader>
-                <CardContent className="p-6 text-sm text-muted-foreground flex-grow flex flex-col justify-between items-center">
-                  <div className="w-full flex flex-col items-center flex-grow justify-center">
+                <CardContent className="p-6 text-sm text-muted-foreground grow flex flex-col justify-between items-center">
+                  <div className="w-full flex flex-col items-center grow justify-center">
                     <StyleToggleDemo inView={card4InView} />
                   </div>
                   <p className="text-center w-full mt-8">
@@ -376,13 +516,13 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={card5InView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.25 }}
-              className="w-full h-full"
+              className="size-full"
             >
               <Card className="h-full flex flex-col min-h-[320px] rounded-xl">
                 <CardHeader className="p-6 text-base font-medium">
                   Access Premium Models
                 </CardHeader>
-                <CardContent className="p-6 text-sm text-muted-foreground flex-grow flex flex-col justify-between items-center">
+                <CardContent className="p-6 text-sm text-muted-foreground grow flex flex-col justify-between items-center">
                   <div
                     className="w-full flex items-center justify-center gap-0"
                     style={{ height: '112px' }}
@@ -399,16 +539,16 @@ export default function Home() {
                           animate={
                             card5InView
                               ? {
-                                  opacity: 1,
-                                  rotate: rot,
-                                  y,
-                                  transition: {
-                                    delay: 0.2 + i * 0.1,
-                                    type: 'spring',
-                                    stiffness: 140,
-                                    damping: 15,
-                                  },
-                                }
+                                opacity: 1,
+                                rotate: rot,
+                                y,
+                                transition: {
+                                  delay: 0.2 + i * 0.1,
+                                  type: 'spring',
+                                  stiffness: 140,
+                                  damping: 15,
+                                },
+                              }
                               : {}
                           }
                           className="w-20 h-28 bg-background border border-border rounded-lg flex items-center justify-center mx-[-4px] shadow-sm relative"
@@ -437,13 +577,13 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={card6InView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="w-full h-full"
+              className="size-full"
             >
               <Card className="h-full flex flex-col min-h-[320px] rounded-xl">
                 <CardHeader className="p-6 text-base font-medium">
                   One-Click Publish & Share
                 </CardHeader>
-                <CardContent className="p-6 text-sm text-muted-foreground flex-grow flex flex-col justify-between items-center">
+                <CardContent className="p-6 text-sm text-muted-foreground grow flex flex-col justify-between items-center">
                   <div className="w-full flex flex-col items-center">
                     {/* Mini page preview */}
                     <div className="relative w-44 h-32 rounded-lg border border-border bg-background shadow-sm overflow-hidden">
@@ -473,111 +613,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Social Proof Section */}
-      <section id="social-proof" className="py-20 bg-background">
-        <div className="container mx-auto px-6 md:px-8 lg:px-12">
-          <div className="text-center mb-14">
-            <h2
-              className={`text-4xl md:text-5xl font-medium ${crimson.className} tracking-tight text-foreground`}
-            >
-              Loved by many
-            </h2>
-          </div>
-
-          <TooltipProvider>
-            <div className="flex flex-col items-center justify-center gap-5 max-w-3xl mx-auto">
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-x-2 gap-y-2 text-base text-muted-foreground">
-                <span>Used by</span>
-                <Link
-                  href="https://twitter.com/dps"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                >
-                  <Image
-                    src="/images/dps.jpg"
-                    alt="David Singleton"
-                    width={28}
-                    height={28}
-                    className="size-7 rounded-full object-cover"
-                  />
-                  <span className="text-sm">@dps</span>
-                </Link>
-                <span>the ex-CTO of</span>
-                <Image
-                  src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg"
-                  alt="Stripe"
-                  width={64}
-                  height={26}
-                  className="h-5 w-auto opacity-85"
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-x-2 gap-y-2 text-base text-muted-foreground">
-                <span>Part of the</span>
-                <Link
-                  href="https://vercel.com/ai-accelerator"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-foreground hover:underline underline-offset-2"
-                >
-                  Vercel AI Accelerator
-                </Link>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
-                      & used by the Vercel team
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-sm font-normal">
-                    Including{' '}
-                    <a
-                      href="https://twitter.com/leerob"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-blue-600 hover:text-blue-700"
-                    >
-                      @leerob
-                    </a>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-x-2.5 gap-y-2 text-base text-muted-foreground">
-                <span>We&apos;re open-source & self-hostable</span>
-                <a
-                  className="github-button"
-                  href="https://github.com/princemuichkine/antwrite"
-                  data-icon="octicon-star"
-                  data-size="large"
-                  data-show-count="true"
-                  aria-label="Star will-lp1/antwrite on GitHub"
-                >
-                  Star
-                </a>
-                <Script
-                  async
-                  defer
-                  src="https://buttons.github.io/buttons.js"
-                />
-              </div>
-            </div>
-          </TooltipProvider>
-          <div className="mt-10 text-center">
-            <Button
-              variant="secondary"
-              size="lg"
-              className="rounded-full px-8 py-3"
-              onClick={handleBeginClick}
-            >
-              {hasSession ? 'Open Antwrite' : 'Get Started'}
-            </Button>
-            <p className="mt-2 text-xs text-muted-foreground">
-              No credit card required
-            </p>
-          </div>
-        </div>
-      </section>
 
       <footer className="w-full border-t border-border bg-background/80 backdrop-blur-sm py-4 mt-8">
         <div className="container mx-auto px-6 md:px-8 lg:px-12 flex items-center justify-between text-sm text-muted-foreground">

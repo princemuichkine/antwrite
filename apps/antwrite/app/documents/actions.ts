@@ -1,11 +1,10 @@
 'use server';
 
-import { generateText, Message } from 'ai';
-import { cookies } from 'next/headers';
+import { generateText, } from 'ai';
 
 import { getDocumentById, saveDocument } from '@/lib/db/queries';
 import { myProvider } from '@/lib/ai/providers';
-import { ArtifactKind } from '@/components/artifact';
+import type { ArtifactKind } from '@/components/artifact';
 
 export async function generateDocumentTitleFromContent({
   content,

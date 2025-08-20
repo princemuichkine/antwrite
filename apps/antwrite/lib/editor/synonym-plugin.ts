@@ -1,6 +1,6 @@
-import { Plugin, PluginKey, EditorState, Transaction } from 'prosemirror-state';
-import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
-import { Node as ProseMirrorNode } from 'prosemirror-model';
+import { Plugin, PluginKey, type EditorState, type Transaction } from 'prosemirror-state';
+import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
+import type { Node as ProseMirrorNode } from 'prosemirror-model';
 
 export const synonymsPluginKey = new PluginKey<SynonymPluginState>(
   'synonymsPlugin',
@@ -22,7 +22,8 @@ function buildDecorations(
     if (!node.isText || !node.text) return;
     const text = node.text;
     let match: RegExpExecArray | null;
-    while ((match = wordRegex.exec(text)) !== null) {
+    match = wordRegex.exec(text);
+    while (match !== null) {
       const start = pos + match.index;
       const end = start + match[0].length;
       const isLoading = loadingPos?.from === start && loadingPos?.to === end;
@@ -34,6 +35,7 @@ function buildDecorations(
           'data-to': String(end),
         }),
       );
+      match = wordRegex.exec(text);
     }
   });
 
@@ -100,7 +102,7 @@ export function synonymsPlugin(): Plugin<SynonymPluginState> {
         hideOverlay();
         view.focus();
       });
-      overlayContainer!.appendChild(btn);
+      overlayContainer?.appendChild(btn);
     });
 
     closeOverlayListener = (event: MouseEvent) => {
@@ -114,7 +116,11 @@ export function synonymsPlugin(): Plugin<SynonymPluginState> {
       }
     };
     setTimeout(
-      () => document.addEventListener('mousedown', closeOverlayListener!),
+      () => {
+        if (closeOverlayListener) {
+          document.addEventListener('mousedown', closeOverlayListener);
+        }
+      },
       0,
     );
 
@@ -155,10 +161,7 @@ export function synonymsPlugin(): Plugin<SynonymPluginState> {
           };
         }
 
-        if (
-          nextLoadingPos === pluginState.loadingPos &&
-          pluginState.decorationSet === pluginState.decorationSet
-        ) {
+        if (nextLoadingPos === pluginState.loadingPos) {
           return pluginState;
         }
 
@@ -237,8 +240,8 @@ export function synonymsPlugin(): Plugin<SynonymPluginState> {
           if (currentSentEnd < paragraphEnd) currentSentEnd++; // Include punctuation
 
           // Find previous sentence boundaries
-          let prevSentStart = -1,
-            prevSentEnd = -1;
+          let prevSentStart = -1;
+          let prevSentEnd = -1;
           if (currentSentStart > paragraphStart) {
             prevSentEnd = currentSentStart;
             while (
@@ -261,8 +264,8 @@ export function synonymsPlugin(): Plugin<SynonymPluginState> {
           }
 
           // Find next sentence boundaries
-          let nextSentStart = -1,
-            nextSentEnd = -1;
+          let nextSentStart = -1;
+          let nextSentEnd = -1;
           if (currentSentEnd < paragraphEnd) {
             nextSentStart = currentSentEnd;
             while (

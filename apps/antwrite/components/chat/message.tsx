@@ -8,13 +8,10 @@ import {
   DocumentToolCall,
   DocumentToolResult,
 } from '@/components/document/document';
-import { PencilEditIcon, SparklesIcon, FileIcon } from '../icons';
 import { Markdown } from '../markdown';
 import { MessageActions } from './message-actions';
 import equal from 'fast-deep-equal';
 import { cn } from '@/lib/utils';
-import { Button } from '../ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { MessageReasoning } from './message-reasoning';
 import Image from 'next/image';
 
@@ -28,13 +25,14 @@ function formatMessageWithMentions(content: string) {
   if (parts.length <= 1) return content;
 
   const formattedContent = [];
-  let i = 0;
+  const i = 0;
 
-  let match;
+  let match: RegExpExecArray | null;
   let lastIndex = 0;
   const regex = new RegExp(mentionRegex);
 
-  while ((match = regex.exec(content)) !== null) {
+  match = regex.exec(content);
+  while (match !== null) {
     if (match.index > lastIndex) {
       formattedContent.push(content.substring(lastIndex, match.index));
     }
@@ -52,6 +50,7 @@ function formatMessageWithMentions(content: string) {
     );
 
     lastIndex = match.index + match[0].length;
+    match = regex.exec(content);
   }
 
   if (lastIndex < content.length) {
@@ -322,6 +321,7 @@ function WebSearchResult({
       <div className="flex items-center justify-between">
         <span>Search completed for &quot;{query}&quot;</span>
         <button
+          type="button"
           onClick={() => setOpen(!open)}
           className="text-blue-600 hover:underline"
         >
@@ -331,7 +331,7 @@ function WebSearchResult({
       {open && (
         <ul className="list-disc pl-5 mt-2 space-y-1 max-h-60 overflow-auto">
           {results.map((item, idx) => (
-            <li key={idx}>
+            <li key={item.url || `result-${idx}`}>
               {item.title ? (
                 <a
                   href={item.url}

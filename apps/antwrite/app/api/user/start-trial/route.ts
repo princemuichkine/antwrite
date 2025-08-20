@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/app/(auth)/auth';
 import { db } from '@antwrite/db';
 import * as schema from '@antwrite/db';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 import { eq, inArray, desc, and } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';

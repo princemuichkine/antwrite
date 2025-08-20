@@ -1,13 +1,9 @@
 'use server';
 
-import { generateText, Message } from 'ai';
+import { generateText, type Message } from 'ai';
 import { cookies } from 'next/headers';
 
 import {
-  deleteChatById,
-  saveChat,
-  saveMessages,
-  getMessagesByChatId,
   getMessageById,
   deleteMessagesByChatIdAfterTimestamp,
 } from '@/lib/db/queries';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,17 +9,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
+import { cn, fetcher } from '@/lib/utils';
 import { Loader2, GlobeIcon, CopyIcon, Edit2, Check } from 'lucide-react';
 import type { Document } from '@antwrite/db';
 import type { User } from '@/lib/auth';
 import useSWR from 'swr';
 import debounce from 'lodash.debounce';
 import { toast } from 'sonner';
-import { fetcher } from '@/lib/utils';
 import useSWRMutation from 'swr/mutation';
 import { Paywall } from '@/components/paywall';
-import { googleFonts, FontOption } from '@/lib/fonts';
+import { googleFonts, type FontOption } from '@/lib/fonts';
 import {
   Select,
   SelectTrigger,
@@ -39,13 +38,13 @@ interface PublishSettingsMenuProps {
 // Utility to convert hex to HSL components
 function hexToHSL(H: string) {
   // Remove '#'
-  let r = 0,
-    g = 0,
-    b = 0;
+  let r = 0;
+  let g = 0;
+  let b = 0;
   if (H.length === 7) {
-    r = parseInt(H.slice(1, 3), 16) / 255;
-    g = parseInt(H.slice(3, 5), 16) / 255;
-    b = parseInt(H.slice(5, 7), 16) / 255;
+    r = Number.parseInt(H.slice(1, 3), 16) / 255;
+    g = Number.parseInt(H.slice(3, 5), 16) / 255;
+    b = Number.parseInt(H.slice(5, 7), 16) / 255;
   }
   const cMin = Math.min(r, g, b);
   const cMax = Math.max(r, g, b);
@@ -105,10 +104,10 @@ export function PublishSettingsMenu({
   useEffect(() => {
     setSlug(
       document.slug ||
-        document.title
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, ''),
+      document.title
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, ''),
     );
     const styleObj = (document.style as any) || {};
     setFont(styleObj.font || 'montserrat');
@@ -165,12 +164,22 @@ export function PublishSettingsMenu({
     [],
   );
 
-  const debouncedCheck = useCallback(
-    debounce((name: string, controller: AbortController) => {
-      checkUsername(name, controller.signal);
-    }, 300),
-    [checkUsername],
-  );
+  const debouncedCheck = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const debouncedFn = (name: string, controller: AbortController) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        checkUsername(name, controller.signal);
+      }, 300);
+    };
+
+    debouncedFn.cancel = () => {
+      clearTimeout(timeoutId);
+    };
+
+    return debouncedFn;
+  }, [checkUsername]);
 
   useEffect(() => {
     if (!sanitizedUsername || sanitizedUsername === user.username) {
@@ -387,7 +396,7 @@ export function PublishSettingsMenu({
                     <Button
                       size="icon"
                       variant="outline"
-                      className="h-8 w-8 flex-shrink-0"
+                      className="size-8 shrink-0"
                       onClick={claimUsername}
                       disabled={claiming}
                     >
@@ -402,7 +411,7 @@ export function PublishSettingsMenu({
                   <Button
                     size="icon"
                     variant="outline"
-                    className="h-8 w-8 flex-shrink-0"
+                    className="size-8 shrink-0"
                     onClick={() => {
                       setHasUsername(false);
                       setUsernameCheck({ checking: false, available: null });

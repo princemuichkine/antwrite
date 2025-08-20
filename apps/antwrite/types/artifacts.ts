@@ -1,4 +1,4 @@
-import { ArtifactMetadata } from './metadata';
+import type { ArtifactMetadata } from './metadata';
 
 export interface ArtifactContent<
   T extends ArtifactMetadata = ArtifactMetadata,

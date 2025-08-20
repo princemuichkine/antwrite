@@ -3,7 +3,6 @@
 import type {
   Attachment,
   ChatRequestOptions,
-  CreateMessage,
   Message,
 } from 'ai';
 import cx from 'classnames';
@@ -26,17 +25,13 @@ import {
   type SuggestionDataItem,
   type MentionsInputProps,
 } from 'react-mentions';
-
-import { sanitizeUIMessages } from '@/lib/utils';
-
-import { ArrowUpIcon, StopIcon, FileIcon } from '../icons';
+import { sanitizeUIMessages, cn } from '@/lib/utils';
+import { ArrowUpIcon, StopIcon, } from '../icons';
 import { Button } from '../ui/button';
-import { Textarea } from '../ui/textarea';
 import { SuggestedActions } from '../suggested-actions';
 import equal from 'fast-deep-equal';
-import { UseChatHelpers, UseChatOptions } from '@ai-sdk/react';
+import type { UseChatHelpers, } from '@ai-sdk/react';
 import { useDocumentContext } from '@/hooks/use-document-context';
-import { cn, generateUUID } from '@/lib/utils';
 
 interface DocumentSuggestion extends SuggestionDataItem {
   id: string;
@@ -197,9 +192,11 @@ function PureMultimodalInput({
   const parseMentionsFromMarkup = (markup: string): MentionedDocument[] => {
     const mentionRegex = /@\[([^)]+)\]\\((\\S+)\\)/g;
     const mentions: MentionedDocument[] = [];
-    let match;
-    while ((match = mentionRegex.exec(markup)) !== null) {
+    let match: RegExpExecArray | null;
+    match = mentionRegex.exec(markup);
+    while (match !== null) {
       mentions.push({ title: match[1], id: match[2] });
+      match = mentionRegex.exec(markup);
     }
     return mentions;
   };
@@ -394,6 +391,8 @@ function PureMultimodalInput({
     <div
       className="relative w-full flex flex-col gap-4"
       onKeyDown={handleKeyDown}
+      role="textbox"
+      tabIndex={0}
     >
       {messages.length === 0 &&
         attachments.length === 0 &&

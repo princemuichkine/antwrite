@@ -3,7 +3,7 @@
 import {
   createContext,
   useContext,
-  ReactNode,
+  type ReactNode,
   useState,
   useCallback,
   useEffect,
@@ -159,7 +159,7 @@ export function SuggestionOverlayProvider({
 
         const activeEditorView = getActiveEditorView();
 
-        if (activeEditorView && activeEditorView.state) {
+        if (activeEditorView?.state) {
           const { state } = activeEditorView;
           const { from, to, empty } = state.selection;
 

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { checkUsernameAvailability } from '@/lib/db/queries';
 
 export async function checkUsernameAction(request: NextRequest) {

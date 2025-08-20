@@ -1,5 +1,5 @@
 import { Plugin, PluginKey } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
+import type { EditorView } from 'prosemirror-view';
 import {
   buildContentFromDocument,
   buildDocumentFromContent,
@@ -11,7 +11,7 @@ export const diffPluginKey = new PluginKey('diff');
 
 export function diffPlugin(documentId: string): Plugin {
   let previewOriginalContentRef: string | null = null;
-  let previewActiveRef: boolean = false;
+  let previewActiveRef = false;
   let lastPreviewContentRef: string | null = null;
 
   return new Plugin({
@@ -85,7 +85,7 @@ export function diffPlugin(documentId: string): Plugin {
 
         const finalizeApply = async () => {
           const { state } = editorView;
-          let tr = state.tr;
+          const tr = state.tr;
           const diffMarkType = state.schema.marks.diffMark;
           const { DiffType } = await import('./diff');
 

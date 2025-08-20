@@ -11,13 +11,13 @@ interface WebSearchCallProps {
 export function WebSearchCall({ args }: WebSearchCallProps) {
   return (
     <div className="bg-background border rounded-xl w-full max-w-md flex items-center p-3 gap-3 text-sm">
-      <div className="text-muted-foreground flex-shrink-0">
+      <div className="text-muted-foreground shrink-0">
         <SparklesIcon size={16} />
       </div>
-      <div className="flex-grow text-foreground">
+      <div className="grow text-foreground">
         Searching web for &quot;{args.query}&quot;...
       </div>
-      <div className="animate-spin text-muted-foreground flex-shrink-0">
+      <div className="animate-spin text-muted-foreground shrink-0">
         <LoaderIcon size={16} />
       </div>
     </div>
@@ -39,7 +39,7 @@ export function WebSearchResult({ args, result }: WebSearchResultProps) {
     <div className="bg-background border rounded-xl w-full max-w-md p-4 text-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="text-muted-foreground flex-shrink-0">
+          <div className="text-muted-foreground shrink-0">
             <SparklesIcon size={16} />
           </div>
           <span>Search completed for &quot;{args.query}&quot;</span>
@@ -59,7 +59,7 @@ export function WebSearchResult({ args, result }: WebSearchResultProps) {
         ) : (
           <ul className="list-disc pl-5 mt-2 space-y-1 max-h-60 overflow-auto">
             {list.map((item, idx) => (
-              <li key={idx}>
+              <li key={item.url || `source-${idx}`}>
                 {item.title ? (
                   <a
                     href={item.url}

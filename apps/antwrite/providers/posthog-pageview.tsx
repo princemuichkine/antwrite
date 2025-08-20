@@ -13,8 +13,8 @@ function PostHogPageViewInner(): null {
   useEffect(() => {
     if (posthogEnabled && pathname) {
       let url = window.origin + pathname;
-      if (searchParams && searchParams.toString()) {
-        url = url + `?${searchParams.toString()}`;
+      if (searchParams?.toString()) {
+        url = `${url}?${searchParams.toString()}`;
       }
       // Capture pageview with the full URL
       posthog.capture('$pageview', {

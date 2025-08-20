@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { streamText } from 'ai';
 import { myProvider } from '@/lib/ai/providers';
 import { getSessionCookie } from 'better-auth/cookies';
@@ -10,7 +10,7 @@ async function handleInlineSuggestionRequest(
   suggestionLength: 'short' | 'medium' | 'long' = 'medium',
   customInstructions?: string | null,
   writingStyleSummary?: string | null,
-  applyStyle: boolean = true,
+  applyStyle = true,
 ) {
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();

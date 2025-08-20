@@ -330,7 +330,7 @@ export async function deleteDocumentsByIdAfterTimestamp({
 }) {
   try {
     const timestampDate = new Date(timestamp);
-    if (isNaN(timestampDate.getTime())) {
+    if (Number.isNaN(timestampDate.getTime())) {
       throw new Error('Invalid timestamp provided for deletion.');
     }
     await db

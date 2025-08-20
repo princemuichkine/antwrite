@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { searchDocuments } from '../document/actions/search';
 
 export async function GET(request: NextRequest) {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     // Get optional limit parameter (default is 5 in the search function)
     const limitParam = searchParams.get('limit');
-    const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+    const limit = limitParam ? Number.parseInt(limitParam, 10) : undefined;
 
     // Execute the search using the utility function
     const searchResult = await searchDocuments({

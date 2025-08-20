@@ -1,5 +1,5 @@
-import { Plugin, PluginKey, EditorState, Transaction } from 'prosemirror-state';
-import { EditorView, Decoration, DecorationSet } from 'prosemirror-view';
+import { Plugin, PluginKey, type EditorState, type Transaction } from 'prosemirror-state';
+import { type EditorView, Decoration, DecorationSet } from 'prosemirror-view';
 
 export interface SelectionContextState {
   isActive: boolean;

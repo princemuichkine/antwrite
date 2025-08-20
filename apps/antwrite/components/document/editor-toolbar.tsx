@@ -8,30 +8,24 @@ import {
   ListOrdered,
   Bold,
   Italic,
-  Quote,
-  Code,
   ChevronDown,
 } from 'lucide-react';
-
 import { documentSchema } from '@/lib/editor/config';
 import { getActiveEditorView } from '@/lib/editor/editor-state';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-
-import { wrapIn, lift } from 'prosemirror-commands';
-
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 const { nodes, marks } = documentSchema;
 
@@ -70,22 +64,22 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
     formatKey: keyof typeof activeFormats;
     command: () => void;
   }[] = [
-    {
-      label: 'Heading 1',
-      formatKey: 'h1',
-      command: () => runCommand(setBlockType(nodes.heading, { level: 1 })),
-    },
-    {
-      label: 'Heading 2',
-      formatKey: 'h2',
-      command: () => runCommand(setBlockType(nodes.heading, { level: 2 })),
-    },
-    {
-      label: 'Paragraph',
-      formatKey: 'p',
-      command: () => runCommand(setBlockType(nodes.paragraph)),
-    },
-  ];
+      {
+        label: 'Heading 1',
+        formatKey: 'h1',
+        command: () => runCommand(setBlockType(nodes.heading, { level: 1 })),
+      },
+      {
+        label: 'Heading 2',
+        formatKey: 'h2',
+        command: () => runCommand(setBlockType(nodes.heading, { level: 2 })),
+      },
+      {
+        label: 'Paragraph',
+        formatKey: 'p',
+        command: () => runCommand(setBlockType(nodes.paragraph)),
+      },
+    ];
 
   const ButtonWithTooltip = ({
     label,
@@ -121,7 +115,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="h-8 px-3 min-w-[7rem] flex items-center justify-between gap-2 text-sm rounded-md border border-border bg-background text-foreground"
+            className="h-8 px-3 min-w-28 flex items-center justify-between gap-2 text-sm rounded-md border border-border bg-background text-foreground"
             tabIndex={0}
           >
             <span className="truncate text-sm font-medium">
@@ -144,8 +138,8 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
               className={cn(
                 'text-sm rounded-md',
                 opt.formatKey &&
-                  activeFormats[opt.formatKey] &&
-                  'bg-accent text-accent-foreground',
+                activeFormats[opt.formatKey] &&
+                'bg-accent text-accent-foreground',
               )}
             >
               {opt.label}

@@ -1,7 +1,7 @@
 import { textDocumentHandler } from '@/artifacts/text/server';
-import { ArtifactKind } from '@/components/artifact';
-import { DataStreamWriter } from 'ai';
-import { Session } from '@/lib/auth';
+import type { ArtifactKind } from '@/components/artifact';
+import type { DataStreamWriter } from 'ai';
+import type { Session } from '@/lib/auth';
 
 // Simplified to exclude ID
 export interface CreateDocumentCallbackProps {

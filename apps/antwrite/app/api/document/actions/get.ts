@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth'; // Import Better Auth
 import { headers } from 'next/headers'; // Import headers
 import {
@@ -58,8 +58,8 @@ export async function getDocuments(request: NextRequest) {
         `[Document API - GET] Fetching paginated documents for user: ${userId}`,
       );
       try {
-        const limit = parseInt(limitParam, 10);
-        if (isNaN(limit) || limit <= 0) {
+        const limit = Number.parseInt(limitParam, 10);
+        if (Number.isNaN(limit) || limit <= 0) {
           return NextResponse.json(
             { error: 'Invalid limit parameter' },
             { status: 400 },

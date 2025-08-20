@@ -1,18 +1,16 @@
 import {
   Plugin,
-  EditorState,
-  Transaction,
+  type EditorState,
+  type Transaction,
   TextSelection,
 } from 'prosemirror-state';
-import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
-import {
-  Schema,
+import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
+import type {
   Node as ProseMirrorNode,
-  ResolvedPos,
 } from 'prosemirror-model';
 import * as emoji from 'node-emoji';
 import React from 'react';
-import { createRoot, Root } from 'react-dom/client';
+import { createRoot, type Root } from 'react-dom/client';
 import EmojiOverlay from '@/components/emoji-overlay';
 
 interface EmojiSuggestion {
@@ -114,7 +112,7 @@ export function emojiPlugin(): Plugin {
       pluginState.editorView.dispatch(tr);
 
       setTimeout(() => {
-        if (pluginState.editorView && pluginState.editorView.dom) {
+        if (pluginState.editorView?.dom) {
           pluginState.editorView.focus();
         }
       }, 0);
@@ -288,7 +286,7 @@ export function emojiPlugin(): Plugin {
     }
 
     setTimeout(() => {
-      if (pluginState.editorView && pluginState.editorView.dom) {
+      if (pluginState.editorView?.dom) {
         pluginState.editorView.focus();
       }
     }, 0);

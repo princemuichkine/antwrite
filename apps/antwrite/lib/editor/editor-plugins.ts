@@ -1,6 +1,6 @@
 import { exampleSetup } from 'prosemirror-example-setup';
 import { inputRules } from 'prosemirror-inputrules';
-import { Plugin } from 'prosemirror-state';
+import type { Plugin } from 'prosemirror-state';
 
 import { documentSchema, headingRule } from './config';
 import { creationStreamingPlugin } from './creation-streaming-plugin';

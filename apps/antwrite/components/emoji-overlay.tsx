@@ -180,6 +180,7 @@ export default function EmojiOverlay({
           >
             {suggestions.map((suggestion, index) => (
               <button
+                type="button"
                 key={`${suggestion.code}-${index}`}
                 data-index={index}
                 onClick={() => onSelectEmoji(suggestion.code)}

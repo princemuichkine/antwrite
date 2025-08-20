@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Plus, X, ArrowUpIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Markdown } from '@/components/markdown';
+import Image from 'next/image';
 
 interface AIChatWidgetProps {
   context: string;
@@ -99,7 +100,7 @@ export default function AIChatWidget({
     }
     const decoder = new TextDecoder();
     let done = false;
-    const assistantId = Date.now().toString() + '-assistant';
+    const assistantId = `${Date.now().toString()}-assistant`;
     setMessages((prev) => [
       ...prev,
       { id: assistantId, role: 'assistant' as const, content: '' },
@@ -133,7 +134,7 @@ export default function AIChatWidget({
     if (open && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
     }
-  }, [messages, open]);
+  }, [messages, open, messagesEndRef]);
 
   return (
     <>
@@ -212,7 +213,7 @@ export default function AIChatWidget({
                       <div className="flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:w-fit">
                         {message.role === 'assistant' && (
                           <div className="size-8 flex items-center justify-center rounded-full ring-1 shrink-0 ring-border bg-background overflow-hidden relative">
-                            <img
+                            <Image
                               src="/images/leopardprintbw.svg"
                               alt="Antwrite"
                               className="object-cover dark:invert"

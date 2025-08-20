@@ -1,5 +1,5 @@
-import { Plugin, PluginKey, EditorState } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
+import { Plugin, PluginKey, type EditorState } from 'prosemirror-state';
+import type { EditorView } from 'prosemirror-view';
 import { documentSchema } from './config';
 
 const { nodes, marks } = documentSchema;

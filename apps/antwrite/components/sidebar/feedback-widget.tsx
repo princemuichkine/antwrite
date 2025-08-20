@@ -99,7 +99,7 @@ export function FeedbackWidget({ className }: { className?: string }) {
       <SidebarMenuItem>
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton className="group data-[state=open]: border border-r text-accent-foreground data-[state=open]:text-sidebar-accent-foreground h-10 hover:bg-accent/50 transition-colors duration-200">
+            <SidebarMenuButton className="group data-[state=open]: border text-accent-foreground data-[state=open]:text-sidebar-accent-foreground size-10 hover:bg-accent/50 transition-colors duration-200">
               <span className="group-hover:text-primary transition-colors duration-200">
                 Feedback
               </span>
@@ -113,12 +113,12 @@ export function FeedbackWidget({ className }: { className?: string }) {
             className="w-[--radix-popper-anchor-width] p-0 rounded-lg border-b border-zinc-200 dark:border-zinc-700 shadow-lg"
             sideOffset={5}
           >
-            <div className="h-[240px] w-full">
+            <div className="size-[240px]">
               <AnimatePresence mode="popLayout">
                 {status === 'success' ? (
                   <motion.div
                     key="success"
-                    className="flex h-[240px] w-full flex-col items-center justify-center px-5"
+                    className="flex size-[240px] flex-col items-center justify-center px-5"
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -177,7 +177,7 @@ export function FeedbackWidget({ className }: { className?: string }) {
                         </ul>
                       </motion.div>
                       <textarea
-                        className="text-foreground h-full w-full resize-none bg-transparent px-4 py-3.5 text-sm outline-hidden focus:ring-0 focus:outline-none"
+                        className="text-foreground size-full resize-none bg-transparent px-4 py-3.5 text-sm outline-hidden focus:ring-0 focus:outline-none"
                         autoFocus
                         onChange={(e) => setFeedback(e.target.value)}
                         disabled={status === 'submitting'}
@@ -193,7 +193,7 @@ export function FeedbackWidget({ className }: { className?: string }) {
                         onClick={closeMenu}
                         aria-label="Close popover"
                         disabled={status === 'submitting'}
-                        className="h-8 w-8 p-0 rounded-full hover:bg-muted"
+                        className="size-8 p-0 rounded-full hover:bg-muted"
                       >
                         <X className="size-4" />
                       </Button>

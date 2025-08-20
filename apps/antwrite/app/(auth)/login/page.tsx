@@ -5,12 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { toast } from '@/components/toast';
-import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
+import { LogoGoogle, GitIcon, LogoLinkedIn, LogoTwitter, LogoMicrosoft, LoaderIcon } from '@/components/icons';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // Client-side check for enabled providers
 const googleEnabled = process.env.NEXT_PUBLIC_GOOGLE_ENABLED === 'true';
 const githubEnabled = process.env.NEXT_PUBLIC_GITHUB_ENABLED === 'true';
+const linkedinEnabled = process.env.NEXT_PUBLIC_LINKEDIN_ENABLED === 'true';
+const twitterEnabled = process.env.NEXT_PUBLIC_TWITTER_ENABLED === 'true';
+const microsoftEnabled = process.env.NEXT_PUBLIC_MICROSOFT_ENABLED === 'true';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -58,7 +63,7 @@ export default function LoginPage() {
     );
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'github') => {
+  const handleSocialLogin = async (provider: 'google' | 'github' | 'linkedin' | 'twitter' | 'microsoft') => {
     await authClient.signIn.social(
       {
         provider,
@@ -95,19 +100,147 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="px-8">
-          <AuthForm
-            action={handleEmailLogin}
-            defaultEmail={email}
-            showSocialLogins={true}
-            googleEnabled={googleEnabled}
-            githubEnabled={githubEnabled}
-            onSocialLogin={handleSocialLogin}
-            isSocialLoading={isSocialLoading}
-            isEmailLoading={isEmailLoading}
-          >
+        <div className="px-8 flex flex-col gap-6">
+          {/* Email/Password Form */}
+          <form action={handleEmailLogin} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                defaultValue={email}
+                required
+                className="h-12 border rounded-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-black dark:bg-gray-800 dark:text-white"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                required
+                className="h-12 border rounded-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-black dark:bg-gray-800 dark:text-white"
+              />
+            </div>
             <SubmitButton isSuccessful={isSuccessful}>Sign In</SubmitButton>
-          </AuthForm>
+          </form>
+
+          {/* Social Login Section */}
+          {(googleEnabled || githubEnabled || linkedinEnabled || twitterEnabled || microsoftEnabled) && (
+            <>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-gray-500">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {/* Google OAuth Button */}
+                {googleEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('google')}
+                    disabled={isSocialLoading !== null || isEmailLoading}
+                    className="w-full h-12 px-3 rounded-sm bg-[#EA4335] hover:bg-[#d33b2c] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSocialLoading === 'google' ? (
+                        <LoaderIcon size={20} />
+                      ) : (
+                        <LogoGoogle size={20} />
+                      )}
+                      <span className="ml-2">Continue with Google</span>
+                    </div>
+                  </button>
+                )}
+
+                {/* GitHub OAuth Button */}
+                {githubEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('github')}
+                    disabled={isSocialLoading !== null || isEmailLoading}
+                    className="w-full h-12 px-3 rounded-sm bg-[#333] hover:bg-[#444] dark:bg-[#171515] dark:hover:bg-[#2b2a2a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSocialLoading === 'github' ? (
+                        <LoaderIcon size={20} />
+                      ) : (
+                        <GitIcon />
+                      )}
+                      <span className="ml-2">Continue with GitHub</span>
+                    </div>
+                  </button>
+                )}
+
+                {/* Microsoft OAuth Button */}
+                {microsoftEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('microsoft')}
+                    disabled={isSocialLoading !== null || isEmailLoading}
+                    className="w-full h-12 px-3 rounded-sm bg-white hover:bg-gray-50 dark:bg-white dark:hover:bg-gray-50 text-gray-600 dark:text-gray-600 border border-gray-300 text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSocialLoading === 'microsoft' ? (
+                        <LoaderIcon size={20} />
+                      ) : (
+                        <LogoMicrosoft size={20} />
+                      )}
+                      <span className="ml-2">Continue with Microsoft</span>
+                    </div>
+                  </button>
+                )}
+
+                {/* LinkedIn OAuth Button */}
+                {linkedinEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('linkedin')}
+                    disabled={isSocialLoading !== null || isEmailLoading}
+                    className="w-full h-12 px-3 rounded-sm bg-[#0077B5] hover:bg-[#006699] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSocialLoading === 'linkedin' ? (
+                        <LoaderIcon size={20} />
+                      ) : (
+                        <LogoLinkedIn size={20} />
+                      )}
+                      <span className="ml-2">Continue with LinkedIn</span>
+                    </div>
+                  </button>
+                )}
+
+                {/* Twitter OAuth Button */}
+                {twitterEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleSocialLogin('twitter')}
+                    disabled={isSocialLoading !== null || isEmailLoading}
+                    className="w-full h-12 px-3 rounded-sm bg-[#000000] hover:bg-[#1a1a1a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-center">
+                      {isSocialLoading === 'twitter' ? (
+                        <LoaderIcon size={20} />
+                      ) : (
+                        <LogoTwitter size={20} />
+                      )}
+                      <span className="ml-2">Continue with Twitter</span>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <p className="text-center text-sm text-gray-600 dark:text-zinc-400">
