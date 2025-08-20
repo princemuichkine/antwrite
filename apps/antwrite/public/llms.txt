@@ -1,0 +1,26 @@
+# Antwrite
+
+> Tab, Tab, Apply Brilliance – an open-source AI writing tool that seamlessly integrates real-time inline suggestions, style consistency, and document management into a distraction-free writing workflow.
+
+Antwrite transforms the writing process by placing AI-powered recommendations directly in your text as you type. It refines clarity, grammar, and style without interrupting creative flow. Writers can organize projects, track revisions, and publish content—all within a single interface.
+
+## Core Features
+- [Inline Suggestions](https://www.antwrite.com): Contextual recommendations that appear as you write
+- [Style Consistency](https://www.antwrite.com): Maintain your unique voice with AI-driven edits
+- [Document Management](https://www.antwrite.com/documents): Create, organize, and track revisions in one place
+- [Publishing Tools](https://www.antwrite.com): Publish articles or share links directly from the platform
+
+## Key Pages
+- [Home](https://www.antwrite.com): Feature overview and demo
+- [Login](https://www.antwrite.com/login): Secure authentication
+- [Register](https://www.antwrite.com/register): New user signup
+- [Workspace](https://www.antwrite.com/documents): Main writing environment
+- [Published Content](https://www.antwrite.com/{author}/{slug}): Publicly shared articles (dynamic)
+
+## Developer & Resources
+- [API Reference](https://www.antwrite.com/api): Endpoints for document and AI chat operations
+- [GitHub Repository](https://github.com/princemuichkine/antwrite): Source code, issues, and contributions
+
+## Optional
+- [robots.txt](https://www.antwrite.com/robots.txt): Crawling rules
+- [sitemap.xml](https://www.antwrite.com/sitemap.xml): Sitemap of public routes

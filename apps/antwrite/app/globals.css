@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .text-balance {
+        text-wrap: balance;
+    }
+}
+
+@layer base {
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 0 0% 8%;
+        --card: 0 0% 100%;
+        --card-foreground: 0 0% 8%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 0 0% 8%;
+        --primary: 0 0% 8%;
+        --primary-foreground: 0 0% 98%;
+        --secondary: 0 0% 97%;
+        --secondary-foreground: 0 0% 8%;
+        --muted: 0 0% 97%;
+        --muted-foreground: 0 0% 40%;
+        --accent: 0 0% 97%;
+        --accent-foreground: 0 0% 8%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 90%;
+        --input: 0 0% 97%;
+        --ring: 0 0% 8%;
+        --radius: 0.5rem;
+        --sidebar-background: 0 0% 100%;
+        --sidebar-foreground: 0 0% 8%;
+        --sidebar-primary: 0 0% 8%;
+        --sidebar-primary-foreground: 0 0% 98%;
+        --sidebar-accent: 0 0% 97%;
+        --sidebar-accent-foreground: 0 0% 8%;
+        --sidebar-border: 0 0% 90%;
+        --sidebar-ring: 0 0% 8%;
+    }
+    
+    .dark {
+        --background: 0 0% 8%;
+        --foreground: 0 0% 98%;
+        --card: 0 0% 8%;
+        --card-foreground: 0 0% 98%;
+        --popover: 0 0% 8%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 0 0% 98%;
+        --primary-foreground: 0 0% 8%;
+        --secondary: 0 0% 14%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 0 0% 14%;
+        --muted-foreground: 0 0% 60%;
+        --accent: 0 0% 14%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 0 0% 18%;
+        --input: 0 0% 14%;
+        --ring: 0 0% 83.9%;
+        --sidebar-background: 0 0% 8%;
+        --sidebar-foreground: 0 0% 98%;
+        --sidebar-primary: 0 0% 98%;
+        --sidebar-primary-foreground: 0 0% 8%;
+        --sidebar-accent: 0 0% 14%;
+        --sidebar-accent-foreground: 0 0% 98%;
+        --sidebar-border: 0 0% 18%;
+        --sidebar-ring: 0 0% 83.9%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+.editor-area {
+    background: hsl(8% 1% 99%);
+}
+.dark .editor-area {
+    background: hsl(0 0% 0%);
+    color: hsl(0 0% 100%);
+}
+
+.skeleton {
+    * {
+        pointer-events: none !important;
+    }
+
+    *[class^="text-"] {
+        color: transparent;
+        @apply rounded-md bg-foreground/20 select-none animate-pulse;
+    }
+
+    .skeleton-bg {
+        @apply bg-foreground/10;
+    }
+
+    .skeleton-div {
+        @apply bg-foreground/20 animate-pulse;
+    }
+}
+
+.ProseMirror {
+    outline: none;
+}
+
+.cm-editor,
+.cm-gutters {
+    background: inherit !important;
+    outline: none !important;
+}
+
+.ͼo.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
+.ͼo.cm-selectionBackground,
+.ͼo.cm-content::selection {
+    @apply bg-muted !important;
+}
+
+.cm-activeLine,
+.cm-activeLineGutter {
+    @apply bg-transparent !important;
+}
+
+.cm-activeLine {
+    @apply rounded-r-sm !important;
+}
+
+.cm-lineNumbers {
+    @apply min-w-7;
+}
+
+.cm-foldGutter {
+    @apply min-w-3;
+}
+
+.cm-lineNumbers .cm-activeLineGutter {
+    @apply rounded-l-sm !important;
+}
+
+.suggestion-highlight {
+    @apply bg-accent text-accent-foreground hover:bg-accent/80;
+}

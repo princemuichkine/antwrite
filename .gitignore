@@ -1,0 +1,33 @@
+# dependencies
+node_modules
+
+# testing
+coverage
+
+# next.js
+.next/
+out/
+build
+
+# misc
+.DS_Store
+*.pem
+.cursor
+
+# debug
+.pnpm-debug.log*
+
+# env files
+.env
+.env.production
+
+# turbo
+.turbo
+.vercel
+.vscode
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/*
