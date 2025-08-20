@@ -1,4 +1,4 @@
-import { getSession, getUser } from '@/app/(auth)/auth';
+import { getSession, getUser } from '@/lib/auth-helpers';
 import { Chat } from '@/components/chat/chat';
 import { ResizablePanel } from '@/components/resizable-panel';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';

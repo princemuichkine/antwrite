@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getUserDetails } from '@/app/(auth)/auth';
+import { getUserDetails } from '@/lib/auth-helpers';
 import { getActiveSubscriptionByUserId, clearUsername } from '@/lib/db/queries';
 
 export async function getUserAction(request: NextRequest) {

@@ -40,6 +40,8 @@
         --sidebar-ring: 0 0% 8%;
         --selection-background: 177 65% 9%;
         --selection-foreground: 168 60% 47%;
+    /* --selection-background: 177 65% 85%;
+        --selection-foreground: 177 65% 25%; */
     }
     
     .dark {
@@ -70,6 +72,8 @@
         --sidebar-accent-foreground: 0 0% 98%;
         --sidebar-border: 0 0% 18%;
         --sidebar-ring: 0 0% 83.9%;
+        --selection-background: 177 65% 15%;
+        --selection-foreground: 177 65% 70%;
     }
 }
 
@@ -80,6 +84,12 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+
+    button:focus,
+    button:focus-visible {
+        outline: none !important;
+        box-shadow: none !important;
     }
 }
 

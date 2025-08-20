@@ -2,6 +2,7 @@ import 'server-only';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
+import { emailOTP } from 'better-auth/plugins';
 import { db } from '@antwrite/db';
 import Stripe from 'stripe';
 import { stripe } from '@better-auth/stripe';
@@ -189,6 +190,59 @@ if (stripeEnabled && stripeClient) {
 }
 
 authPlugins.push(nextCookies());
+
+// Add emailOTP plugin for password reset functionality
+if (resend) {
+  authPlugins.push(
+    emailOTP({
+      async sendVerificationOTP({ email, otp, type }) {
+        const emailFrom = process.env.EMAIL_FROM;
+        if (!emailFrom) {
+          throw new Error('EMAIL_FROM environment variable is required for OTP emails');
+        }
+
+        let subject: string;
+        let html: string;
+
+        if (type === 'forget-password') {
+          subject = 'Reset your Antwrite password';
+          html = `
+            <p>You requested to reset your password for Antwrite.</p>
+            <p>Your password reset code is: <strong>${otp}</strong></p>
+            <p>This code will expire in 10 minutes.</p>
+            <p>If you didn't request this, please ignore this email.</p>
+          `;
+        } else {
+          subject = 'Verify your email for Antwrite';
+          html = `
+            <p>Welcome to Antwrite! Please use this code to verify your email:</p>
+            <p>Your verification code is: <strong>${otp}</strong></p>
+            <p>This code will expire in 10 minutes.</p>
+          `;
+        }
+
+        try {
+          const { data, error } = await resend.emails.send({
+            from: emailFrom,
+            to: [email],
+            subject,
+            html,
+          });
+
+          if (error) {
+            console.error('Resend error:', error);
+            throw new Error(`Failed to send OTP email: ${error.message}`);
+          }
+
+          console.log(`OTP email sent successfully to ${email}. Type: ${type}. ID: ${data?.id}`);
+        } catch (err) {
+          console.error('Failed to send OTP email:', err);
+          throw err;
+        }
+      },
+    })
+  );
+}
 
 const socialProviders: Record<string, any> = {};
 

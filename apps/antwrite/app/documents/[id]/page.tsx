@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getUser } from '@/app/(auth)/auth';
+import { getUser } from '@/lib/auth-helpers';
 import { getDocumentsById } from '@/lib/db/queries';
 import { AlwaysVisibleArtifact } from '@/components/always-visible-artifact';
 import type { Document } from '@antwrite/db';

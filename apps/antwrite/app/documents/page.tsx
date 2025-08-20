@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getSession, getUser } from '@/app/(auth)/auth';
+import { getSession, getUser } from '@/lib/auth-helpers';
 import { AlwaysVisibleArtifact } from '@/components/always-visible-artifact';
 
 export default async function Page() {

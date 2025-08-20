@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/app/(auth)/auth';
+import { getSession } from '@/lib/auth-helpers';
 import { db } from '@antwrite/db';
 import * as schema from '@antwrite/db';
 import { randomUUID } from 'node:crypto';

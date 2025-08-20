@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/app/(auth)/auth'; // Use the aliased path
+import { getSession } from '@/lib/auth-helpers'; // Use the aliased path
 import {
   getActiveSubscriptionByUserId,
   unpublishAllDocumentsByUserId,
