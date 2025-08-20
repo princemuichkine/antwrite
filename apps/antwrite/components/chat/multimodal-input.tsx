@@ -412,7 +412,7 @@ function PureMultimodalInput({
           style={mentionInputStyle}
           value={inputValue}
           onChange={handleInputChange}
-          placeholder="Send a message... (type @ to mention documents)"
+          placeholder="Ask, learn, write anything... (@ to mention documents, / to use tools)"
           allowSpaceInQuery
           className={cx(className)}
           classNames={{

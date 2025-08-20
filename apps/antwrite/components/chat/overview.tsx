@@ -18,8 +18,7 @@ export const Overview = () => {
 
         <p className="text-sm text-muted-foreground">
           A modern writing tool designed to enhance your creative process.
-          Write, edit, and collaborate with AI assistance - all in one
-          integrated environment.
+          Write, edit, and collaborate with AI.
         </p>
 
         <div className="flex flex-col gap-2 text-sm text-muted-foreground">
@@ -47,26 +46,6 @@ export const Overview = () => {
           </p>
           <p>Configure AI behavior in the settings menu (top-right).</p>
         </div>
-
-        <Button
-          variant="ghost"
-          className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5"
-          asChild
-        >
-          <Link
-            href="https://discord.gg/X49bQmnYbd"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              src="/images/discord-logo.png"
-              alt="Discord"
-              width={16}
-              height={16}
-            />
-            Join the Discord
-          </Link>
-        </Button>
       </div>
     </motion.div>
   );

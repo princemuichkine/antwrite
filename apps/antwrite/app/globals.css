@@ -38,6 +38,8 @@
         --sidebar-accent-foreground: 0 0% 8%;
         --sidebar-border: 0 0% 90%;
         --sidebar-ring: 0 0% 8%;
+        --selection-background: 177 65% 9%;
+        --selection-foreground: 168 60% 47%;
     }
     
     .dark {
@@ -79,6 +81,18 @@
     body {
         @apply bg-background text-foreground;
     }
+}
+
+@layer base {
+  ::selection {
+    background-color: hsl(var(--selection-background));
+    color: hsl(var(--selection-foreground));
+  }
+
+  ::-moz-selection {
+    background-color: hsl(var(--selection-background));
+    color: hsl(var(--selection-foreground));
+  }
 }
 
 .editor-area {

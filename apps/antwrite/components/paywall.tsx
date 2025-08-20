@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { toast } from '@/components/toast';
 import { Loader2, Check, MoreHorizontal } from 'lucide-react';
@@ -172,7 +171,6 @@ export function Paywall({
             event.preventDefault();
           }
         }}
-        hideCloseButton={required}
       >
         <div className="grid grid-cols-1 md:grid-cols-2">
           <div className="relative h-48 md:h-full overflow-hidden">
@@ -305,29 +303,6 @@ export function Paywall({
                 ))}
               </div>
             </div>
-
-            <DialogFooter className="mt-6 pt-4 border-t flex flex-col sm:flex-row items-center gap-2 sm:gap-0">
-              <div className="grow" />
-              <Button
-                variant="ghost"
-                className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5" // Style from overview.tsx
-                asChild
-              >
-                <Link
-                  href="https://discord.gg/X49bQmnYbd"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Image
-                    src="/images/discord-logo.png"
-                    alt="Discord"
-                    width={16}
-                    height={16}
-                  />
-                  Join the Discord
-                </Link>
-              </Button>
-            </DialogFooter>
           </div>
         </div>
       </DialogContent>
