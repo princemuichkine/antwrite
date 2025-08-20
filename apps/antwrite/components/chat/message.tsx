@@ -39,7 +39,7 @@ function formatMessageWithMentions(content: string) {
 
     const documentName = match[1];
     formattedContent.push(
-      `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium">
+      `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium">
         <span class="text-blue-500 dark:text-blue-400">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M14.5 13.5V6.5V5.41421C14.5 5.149 14.3946 4.89464 14.2071 4.70711L9.79289 0.292893C9.60536 0.105357 9.351 0 9.08579 0H8H3H1.5V1.5V13.5C1.5 14.8807 2.61929 16 4 16H12C13.3807 16 14.5 14.8807 14.5 13.5ZM13 13.5V6.5H9.5H8V5V1.5H3V13.5C3 14.0523 3.44772 14.5 4 14.5H12C12.5523 14.5 13 14.0523 13 13.5ZM9.5 5V2.12132L12.3787 5H9.5Z" fill="currentColor"/>
@@ -97,7 +97,7 @@ const PurePreviewMessage = ({
           )}
         >
           {message.role === 'assistant' && (
-            <div className="size-8 flex items-center justify-center rounded-full ring-1 shrink-0 ring-border bg-background overflow-hidden relative">
+            <div className="size-8 flex items-center justify-center rounded-sm ring-1 shrink-0 ring-border bg-background overflow-hidden relative">
               <Image
                 src="/images/leopardprintbw.svg"
                 alt="Antwrite"
@@ -123,7 +123,7 @@ const PurePreviewMessage = ({
               >
                 <div
                   className={cn('flex flex-col gap-4', {
-                    'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
+                    'bg-primary text-primary-foreground px-3 py-2 rounded-sm':
                       message.role === 'user',
                   })}
                 >
@@ -193,7 +193,7 @@ const PurePreviewMessage = ({
                     return (
                       <div
                         key={toolCallId}
-                        className="bg-background border rounded-xl w-full max-w-md p-3 text-sm animate-pulse"
+                        className="bg-background border rounded-sm w-full max-w-md p-3 text-sm animate-pulse"
                       >
                         Searching web for &quot;{(args as any).query}&quot;...
                       </div>
@@ -284,13 +284,13 @@ export const ThinkingMessage = () => {
     >
       <div
         className={cx(
-          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
+          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-sm',
           {
             'group-data-[role=user]/message:bg-muted': true,
           },
         )}
       >
-        <div className="size-8 flex items-center justify-center rounded-full ring-1 shrink-0 ring-border overflow-hidden relative">
+        <div className="size-8 flex items-center justify-center rounded-sm ring-1 shrink-0 ring-border overflow-hidden relative">
           <Image
             src="/images/leopardprintbw.svg"
             alt="Antwrite"
@@ -317,7 +317,7 @@ function WebSearchResult({
 }: { query: string; results: any[] }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-background border rounded-xl w-full max-w-md p-4 text-sm">
+    <div className="bg-background border rounded-sm w-full max-w-md p-4 text-sm">
       <div className="flex items-center justify-between">
         <span>Search completed for &quot;{query}&quot;</span>
         <button

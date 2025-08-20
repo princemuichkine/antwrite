@@ -35,7 +35,7 @@ function Toast(props: ToastProps) {
       <div
         data-testid="toast"
         key={id}
-        className="bg-zinc-100 p-3 rounded-lg w-full toast-mobile:w-fit flex flex-row gap-2 items-center"
+        className="bg-zinc-100 p-3 rounded-sm w-full toast-mobile:w-fit flex flex-row gap-2 items-center"
       >
         <div
           data-type={type}

@@ -413,7 +413,7 @@ export default function SuggestionOverlay({
         <motion.div
           ref={overlayRef}
           className={cn(
-            'fixed z-50 bg-background rounded-lg shadow-lg border border-border w-[400px] overflow-hidden select-none',
+            'fixed z-50 bg-background rounded-sm shadow-lg border border-border w-[400px] overflow-hidden select-none',
             isDragging && 'pointer-events-none',
           )}
           style={{
@@ -454,7 +454,7 @@ export default function SuggestionOverlay({
 
             {/* Selected text collapsible section */}
             {selectedText && (
-              <div className="border rounded-md overflow-hidden bg-muted/30">
+              <div className="border rounded-sm overflow-hidden bg-muted/30">
                 <button
                   type="button"
                   onClick={() => setIsSelectionExpanded(!isSelectionExpanded)}
@@ -490,7 +490,7 @@ export default function SuggestionOverlay({
                     ? "Describe what changes you'd like to make..."
                     : 'Select text first...'
                 }
-                className="w-full p-2 rounded-md border border-input text-sm bg-transparent outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="w-full p-2 rounded-sm border border-input text-sm bg-transparent outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => {
@@ -504,14 +504,14 @@ export default function SuggestionOverlay({
 
             {/* Error message */}
             {error && (
-              <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-md text-xs text-destructive">
+              <div className="p-2 bg-destructive/10 border border-destructive/20 rounded-sm text-xs text-destructive">
                 {error}
               </div>
             )}
 
             {/* Diff view for original vs suggestion */}
             {(isGenerating || suggestion) && originalContent && (
-              <div className="border rounded-lg overflow-hidden bg-muted/30">
+              <div className="border rounded-sm overflow-hidden bg-muted/30">
                 <div className="p-2 max-h-[300px] overflow-y-auto">
                   <DiffView
                     oldContent={originalContent}
@@ -528,7 +528,7 @@ export default function SuggestionOverlay({
                           <button
                             type="button"
                             onClick={onClose}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-destructive"
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-sm transition-colors text-muted-foreground hover:text-destructive"
                           >
                             <X size={13} strokeWidth={2.5} />
                             <span className="text-xs">Reject</span>
@@ -543,7 +543,7 @@ export default function SuggestionOverlay({
                           <button
                             type="button"
                             onClick={() => handleAcceptSuggestion(suggestion)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-primary"
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-sm transition-colors text-muted-foreground hover:text-primary"
                           >
                             <Check size={13} strokeWidth={2.5} />
                             <span className="text-xs">Accept</span>

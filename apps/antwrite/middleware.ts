@@ -9,17 +9,13 @@ export async function middleware(request: NextRequest) {
   // Redirect unauthenticated users away from protected routes
   if (pathname.startsWith('/documents')) {
     if (!sessionCookie) {
-      const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = '/login';
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
+      const homeUrl = request.nextUrl.clone();
+      homeUrl.pathname = '/';
+      return NextResponse.redirect(homeUrl);
     }
   }
 
-  if (
-    sessionCookie &&
-    (pathname === '/' || pathname === '/login' || pathname === '/register')
-  ) {
+  if (sessionCookie && pathname === '/') {
     const homeUrl = request.nextUrl.clone();
     homeUrl.pathname = '/documents';
     return NextResponse.redirect(homeUrl);
@@ -29,5 +25,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/documents/:path*', '/login', '/register'],
+  matcher: ['/', '/documents/:path*'],
 };

@@ -21,7 +21,11 @@ console.log(
 const connectionOptions: postgres.Options<
   Record<string, postgres.PostgresType>
 > = {
-  max: 1, // Suitable for serverless or local dev
+  // Optimize connection pooling for auth performance
+  max: isProduction ? 20 : 5, // More connections in production
+  idle_timeout: 30, // Close idle connections after 30s
+  connect_timeout: 10, // Fail fast on connection issues
+  prepare: false, // Disable prepared statements for faster auth queries
   // Only require SSL in production, allow non-SSL for local dev/other environments
   ssl: sslSetting,
 };

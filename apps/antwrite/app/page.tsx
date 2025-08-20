@@ -6,6 +6,8 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AlwaysVisibleArtifact } from '@/components/always-visible-artifact';
 import { getCurrentDocumentsByUserId } from '@/lib/db/queries';
 import { AuthGuardProvider } from '@/hooks/use-auth-guard';
+import { OAuthErrorHandler } from '@/components/oauth-error-handler';
+import MobileWarning from '@/components/mobile-warning';
 import { headers } from 'next/headers';
 
 export default async function HomePage() {
@@ -41,6 +43,8 @@ export default async function HomePage() {
   // Return the same layout as /documents but with auth guard
   return (
     <AuthGuardProvider initialIsGuest={isGuest}>
+      <OAuthErrorHandler />
+      <MobileWarning />
       <SidebarProvider
         defaultOpenLeft={!isLeftSidebarCollapsed}
         defaultOpenRight={true}

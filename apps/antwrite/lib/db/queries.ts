@@ -410,7 +410,7 @@ export async function updateChatContextQuery({
 export async function getCurrentDocumentsByUserId({
   userId,
 }: { userId: string }): Promise<
-  Pick<Document, 'id' | 'title' | 'createdAt' | 'kind'>[]
+  Pick<Document, 'id' | 'title' | 'createdAt' | 'kind' | 'is_starred'>[]
 > {
   try {
     const data = await db
@@ -419,6 +419,7 @@ export async function getCurrentDocumentsByUserId({
         title: schema.Document.title,
         createdAt: schema.Document.createdAt,
         kind: schema.Document.kind,
+        is_starred: schema.Document.is_starred,
       })
       .from(schema.Document)
       .where(
@@ -444,7 +445,10 @@ export async function getPaginatedDocumentsByUserId({
   limit: number;
   endingBefore: string | null;
 }): Promise<{
-  documents: Pick<Document, 'id' | 'title' | 'createdAt' | 'kind'>[];
+  documents: Pick<
+    Document,
+    'id' | 'title' | 'createdAt' | 'kind' | 'is_starred'
+  >[];
   hasMore: boolean;
 }> {
   try {
@@ -457,6 +461,7 @@ export async function getPaginatedDocumentsByUserId({
           title: schema.Document.title,
           createdAt: schema.Document.createdAt,
           kind: schema.Document.kind,
+          is_starred: schema.Document.is_starred,
         })
         .from(schema.Document)
         .where(
@@ -474,8 +479,10 @@ export async function getPaginatedDocumentsByUserId({
         .orderBy(desc(schema.Document.createdAt))
         .limit(extendedLimit);
 
-    let paginatedDocs: Pick<Document, 'id' | 'title' | 'createdAt' | 'kind'>[] =
-      [];
+    let paginatedDocs: Pick<
+      Document,
+      'id' | 'title' | 'createdAt' | 'kind' | 'is_starred'
+    >[] = [];
 
     if (endingBefore) {
       // Find the cursor document to get its creation date
@@ -1133,5 +1140,122 @@ export async function unpublishAllDocumentsByUserId({
       error,
     );
     throw new Error('Failed to un-publish documents.');
+  }
+}
+
+/**
+ * Toggle the starred status of a document
+ */
+export async function toggleDocumentStar({
+  documentId,
+  userId,
+  isStarred,
+}: {
+  documentId: string;
+  userId: string;
+  isStarred: boolean;
+}): Promise<void> {
+  try {
+    const ownsDocument = await checkDocumentOwnership({ userId, documentId });
+    if (!ownsDocument) {
+      console.warn(
+        `User ${userId} attempted to star/unstar document ${documentId} they don't own.`,
+      );
+      throw new Error('Unauthorized or document not found');
+    }
+
+    await db
+      .update(schema.Document)
+      .set({ is_starred: isStarred, updatedAt: new Date() })
+      .where(
+        and(
+          eq(schema.Document.id, documentId),
+          eq(schema.Document.userId, userId),
+        ),
+      );
+
+    console.log(
+      `${isStarred ? 'Starred' : 'Unstarred'} document ${documentId} for user ${userId}`,
+    );
+  } catch (error) {
+    console.error('Error toggling document star:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get starred documents by user ID
+ */
+export async function getStarredDocumentsByUserId({
+  userId,
+}: { userId: string }): Promise<
+  Pick<Document, 'id' | 'title' | 'createdAt' | 'kind' | 'is_starred'>[]
+> {
+  try {
+    const data = await db
+      .select({
+        id: schema.Document.id,
+        title: schema.Document.title,
+        createdAt: schema.Document.createdAt,
+        kind: schema.Document.kind,
+        is_starred: schema.Document.is_starred,
+      })
+      .from(schema.Document)
+      .where(
+        and(
+          eq(schema.Document.userId, userId),
+          eq(schema.Document.is_current, true),
+          eq(schema.Document.is_starred, true),
+        ),
+      )
+      .orderBy(desc(schema.Document.createdAt));
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching starred documents by user ID:', error);
+    return [];
+  }
+}
+
+/**
+ * Clone a document by creating a new document with the same content
+ */
+export async function cloneDocument({
+  originalDocumentId,
+  userId,
+  newTitle,
+}: {
+  originalDocumentId: string;
+  userId: string;
+  newTitle: string;
+}): Promise<typeof schema.Document.$inferSelect> {
+  try {
+    // First, get the original document
+    const originalDoc = await getCurrentDocumentVersion({
+      userId,
+      documentId: originalDocumentId,
+    });
+
+    if (!originalDoc) {
+      throw new Error('Original document not found or unauthorized');
+    }
+
+    // Create a new document with the same content but different title
+    const newDocument = await saveDocument({
+      id: crypto.randomUUID(),
+      title: newTitle,
+      kind: originalDoc.kind as ArtifactKind,
+      content: originalDoc.content || '',
+      userId,
+      chatId: null, // New document not linked to any chat
+    });
+
+    console.log(
+      `Cloned document ${originalDocumentId} to ${newDocument.id} for user ${userId}`,
+    );
+
+    return newDocument;
+  } catch (error) {
+    console.error('Error cloning document:', error);
+    throw error;
   }
 }

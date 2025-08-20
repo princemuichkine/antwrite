@@ -101,7 +101,7 @@ export function Onboard({
               <Button
                 onClick={handleStartTrial}
                 disabled={isLoading}
-                className="w-full px-5 py-2 rounded-full bg-card text-card-foreground border border-border shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-muted transition-colors"
+                className="w-full px-5 py-2 rounded-sm bg-card text-card-foreground border border-border shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-muted transition-colors"
               >
                 {isLoading ? 'Starting...' : 'Start Trial'}
               </Button>

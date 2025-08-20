@@ -34,7 +34,7 @@ export default async function Page({ params }: any) {
   return (
     <>
       <ThemeToggle />
-      <Link href="/register">
+      <Link href="/">
         <Button variant="outline" className="fixed top-4 right-4 z-50">
           Sign up to Antwrite
         </Button>

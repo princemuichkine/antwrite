@@ -148,7 +148,7 @@ export default function AIChatWidget({
             className="fixed bottom-4 right-4 z-50"
           >
             <Button
-              className="rounded-full px-6 py-3 shadow-lg"
+              className="rounded-sm px-6 py-3 shadow-lg"
               onClick={(e) => {
                 e.stopPropagation();
                 setOpen(true);
@@ -175,7 +175,7 @@ export default function AIChatWidget({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 50, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="fixed bottom-4 right-4 z-50 w-[400px] h-[500px] bg-background rounded-2xl shadow-lg border border-border overflow-hidden"
+              className="fixed bottom-4 right-4 z-50 w-[400px] h-[500px] bg-background rounded-sm shadow-lg border border-border overflow-hidden"
             >
               <div className="flex flex-col h-full overflow-hidden">
                 <header className="flex sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b border-border items-center px-3 h-[45px] gap-2 transition-all duration-200">
@@ -212,7 +212,7 @@ export default function AIChatWidget({
                     >
                       <div className="flex gap-4 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:w-fit">
                         {message.role === 'assistant' && (
-                          <div className="size-8 flex items-center justify-center rounded-full ring-1 shrink-0 ring-border bg-background overflow-hidden relative">
+                          <div className="size-8 flex items-center justify-center rounded-sm ring-1 shrink-0 ring-border bg-background overflow-hidden relative">
                             <Image
                               src="/images/leopardprintbw.svg"
                               alt="Antwrite"
@@ -228,7 +228,7 @@ export default function AIChatWidget({
                             <div
                               className={
                                 message.role === 'user'
-                                  ? 'bg-primary text-primary-foreground px-3 py-2 rounded-xl'
+                                  ? 'bg-primary text-primary-foreground px-3 py-2 rounded-sm'
                                   : ''
                               }
                             >
@@ -253,7 +253,7 @@ export default function AIChatWidget({
                         placeholder="Send a message..."
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        className="px-3 py-2 min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700"
+                        className="px-3 py-2 min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-sm !text-base bg-muted pb-10 dark:border-zinc-700"
                         rows={2}
                         autoFocus
                         onKeyDown={(e) => {
@@ -267,7 +267,7 @@ export default function AIChatWidget({
                         <Button
                           type="submit"
                           data-testid="send-button"
-                          className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+                          className="rounded-sm p-1.5 h-fit border dark:border-zinc-600"
                           disabled={!input.trim() || loading}
                         >
                           <ArrowUpIcon size={14} />

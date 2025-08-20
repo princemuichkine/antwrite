@@ -1,11 +1,13 @@
 'use client';
-import { ChevronUp, Loader2 } from 'lucide-react';
+import { ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { useTheme } from 'next-themes';
 import { toast } from '@/components/toast';
 import type { ClientUser as User } from '@/lib/auth-client';
+import { LottieIcon } from '@/components/ui/lottie-icon';
+import { animations } from '@/lib/utils/lottie-animations';
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -56,6 +58,9 @@ export function SidebarUserNav({ user }: { user: User | null }) {
   const [isSignOutLoading, setIsSignOutLoading] = useState(false);
   const [isBillingLoading, setIsBillingLoading] = useState(false);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [hoveredTheme, setHoveredTheme] = useState(false);
+  const [hoveredSignOut, setHoveredSignOut] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
@@ -122,7 +127,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
           setIsSignOutLoading(true);
         },
         onSuccess: () => {
-          router.push('/login');
+          router.push('/');
           router.refresh();
         },
         onError: (ctx) => {
@@ -216,16 +221,20 @@ export function SidebarUserNav({ user }: { user: User | null }) {
     <>
       <SidebarMenu>
         <SidebarMenuItem>
-          <DropdownMenu>
+          <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
             <DropdownMenuTrigger asChild disabled={isLoading}>
-              <SidebarMenuButton className="border data-[state=open]:border-border text-accent-foreground data-[state=open]:text-sidebar-accent-foreground size-10">
+              <SidebarMenuButton className="border data-[state=open]:border-border text-accent-foreground data-[state=open]:text-sidebar-accent-foreground w-full h-10">
                 <span className="truncate">{user.email ?? 'User'}</span>
-                <ChevronUp className="ml-auto" />
+                {isDropdownOpen ? (
+                  <ChevronUp className="ml-auto" />
+                ) : (
+                  <ChevronDown className="ml-auto" />
+                )}
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               side="top"
-              className="w-[--radix-popper-anchor-width]"
+              className="w-[--radix-popper-anchor-width] min-w-full"
             >
               {isStripeEnabled && (
                 <>
@@ -241,7 +250,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                       type="button"
                       onClick={ctaAction}
                       disabled={ctaLoading}
-                      className="mt-2 text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
+                      className="mt-2 w-full text-left text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
                     >
                       {ctaLoading ? (
                         <Loader2 className="size-4 animate-spin inline-block mr-1 text-muted-foreground" />
@@ -254,17 +263,31 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                 </>
               )}
               <DropdownMenuItem
-                className="cursor-pointer"
+                className="cursor-pointer w-full"
                 onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                onMouseEnter={() => setHoveredTheme(true)}
+                onMouseLeave={() => setHoveredTheme(false)}
                 disabled={isLoading}
               >
+                <LottieIcon
+                  animationData={
+                    theme === 'dark' ? animations.sun : animations.point
+                  }
+                  size={16}
+                  loop={false}
+                  autoplay={false}
+                  initialFrame={0}
+                  isHovered={hoveredTheme}
+                />
                 {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
               </DropdownMenuItem>
               {!isStripeEnabled && <DropdownMenuSeparator />}
 
               <DropdownMenuItem
-                className="cursor-pointer"
+                className="cursor-pointer w-full"
                 onSelect={handleSignOut}
+                onMouseEnter={() => setHoveredSignOut(true)}
+                onMouseLeave={() => setHoveredSignOut(false)}
                 disabled={isLoading}
               >
                 {isSignOutLoading ? (
@@ -273,7 +296,17 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                     out...
                   </>
                 ) : (
-                  'Sign out'
+                  <>
+                    <LottieIcon
+                      animationData={animations.logout}
+                      size={16}
+                      loop={false}
+                      autoplay={false}
+                      initialFrame={0}
+                      isHovered={hoveredSignOut}
+                    />
+                    Sign out
+                  </>
                 )}
               </DropdownMenuItem>
             </DropdownMenuContent>

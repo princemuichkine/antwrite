@@ -12,8 +12,7 @@ Antwrite transforms the writing process by placing AI-powered recommendations di
 
 ## Key Pages
 - [Home](https://www.antwrite.com): Feature overview and demo
-- [Login](https://www.antwrite.com/login): Secure authentication
-- [Register](https://www.antwrite.com/register): New user signup
+
 - [Workspace](https://www.antwrite.com/documents): Main writing environment
 - [Published Content](https://www.antwrite.com/{author}/{slug}): Publicly shared articles (dynamic)
 

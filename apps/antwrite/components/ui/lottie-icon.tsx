@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, memo } from 'react';
+import { useState, useRef, useEffect, memo, useMemo } from 'react';
 import Lottie from 'lottie-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/hooks/use-theme';
 import type { LottieAnimationData } from '@/lib/utils/lottie-animations';
 
 interface LottieIconProps {
@@ -31,6 +31,12 @@ const LottieIconComponent = ({
   const lottieRef = useRef<any>(null);
   const { theme } = useTheme();
 
+  const isDark = theme === 'dark';
+  const color = useMemo(
+    () => (isDark ? ([1, 1, 1] as [number, number, number]) : customColor),
+    [isDark, customColor],
+  );
+
   // Use external hover state if provided, otherwise use internal state
   const isHovered =
     externalHovered !== undefined ? externalHovered : internalHovered;
@@ -40,8 +46,8 @@ const LottieIconComponent = ({
     if (typeof animationData === 'object' && animationData !== null) {
       let processedData = animationData as LottieAnimationData;
 
-      // If customColor is provided, override the primary color in the control layer
-      if (customColor && processedData.layers) {
+      // If color is provided, override the primary color in the control layer
+      if (color && processedData.layers) {
         processedData = JSON.parse(JSON.stringify(processedData)); // Deep clone
         const controlLayer = processedData.layers.find(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,7 +67,7 @@ const LottieIconComponent = ({
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ) as any;
             if (colorControl?.v?.k) {
-              colorControl.v.k = [...customColor, 1]; // Add alpha channel
+              colorControl.v.k = [...color, 1]; // Add alpha channel
             }
           }
         }
@@ -80,7 +86,7 @@ const LottieIconComponent = ({
       setAnimData(null);
       setIsLoading(false);
     }
-  }, [animationData, customColor]);
+  }, [animationData, color]);
 
   // Set initial frame when animation loads
   useEffect(() => {
@@ -123,22 +129,13 @@ const LottieIconComponent = ({
         style={{ width: size, height: size }}
       >
         {isLoading ? (
-          <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin opacity-50" />
+          <div className="w-3 h-3 border border-current border-t-transparent rounded-sm animate-spin opacity-50" />
         ) : (
           <div className="w-full h-full bg-muted-foreground/20 rounded-sm animate-pulse" />
         )}
       </div>
     );
   }
-
-  // Apply theme-based filter if no custom color is provided
-  const shouldApplyThemeFilter = !customColor;
-  const isDark = theme === 'dark';
-  const filterStyle = shouldApplyThemeFilter
-    ? isDark
-      ? { filter: 'invert(1) brightness(1.2)' }
-      : { filter: 'brightness(0.8)' }
-    : {};
 
   return (
     <div
@@ -159,7 +156,6 @@ const LottieIconComponent = ({
         style={{
           width: size,
           height: size,
-          ...filterStyle,
         }}
       />
     </div>

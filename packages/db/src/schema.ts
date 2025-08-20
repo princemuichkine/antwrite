@@ -121,6 +121,7 @@ export const Document = pgTable(
       .references(() => user.id),
     chatId: uuid('chatId').references(() => Chat.id),
     is_current: boolean('is_current').notNull(),
+    is_starred: boolean('is_starred').notNull().default(false),
     visibility: text('visibility', { enum: ['public', 'private'] })
       .notNull()
       .default('private'),

@@ -392,17 +392,17 @@ export function AlwaysVisibleArtifact({
           {/* Heading + description */}
           <div className="text-center">
             <h3 className="text-lg font-medium mb-1 text-foreground ">
-              Document Not Found
+              Document not found
             </h3>
             <p className="text-sm">Create a new document?</p>
           </div>
 
           {/* Action buttons */}
-          <div className="flex flex-col gap-4 w-full max-w-md">
+          <div className="flex flex-col -mt-4 gap-2 w-full max-w-md">
             <Button
               size="sm"
-              variant="default"
-              className="w-full"
+              variant="ghost"
+              className="w-56 self-center bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hover:text-cyan-800 dark:hover:text-cyan-200 border border-cyan-200 dark:border-cyan-800 transition-colors duration-200"
               onClick={() =>
                 handleCreateDocumentWithId(showCreateDocumentForId)
               }
@@ -411,12 +411,12 @@ export function AlwaysVisibleArtifact({
               {isCreatingDocument ? (
                 <Loader2 className="size-4 animate-spin mx-auto" />
               ) : (
-                'Create Document'
+                'Create'
               )}
             </Button>
             <Button
-              variant="outline"
-              className="w-full"
+              variant="ghost"
+              className="w-56 self-center bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 border border-pink-200 dark:border-pink-800 transition-colors duration-200"
               size="sm"
               onClick={() => router.push('/documents')}
             >
@@ -523,7 +523,7 @@ export function AlwaysVisibleArtifact({
                 initialLastSaved={
                   latestDocument ? new Date(latestDocument.updatedAt) : null
                 }
-                onStatusChange={(newSaveState: SaveState) => { }}
+                onStatusChange={(newSaveState: SaveState) => {}}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
               />
             </Suspense>

@@ -391,7 +391,7 @@ export function PureArtifact({
         addSuffix: true,
       })}`
     ) : (
-      <div className="w-32 h-3 bg-muted-foreground/20 rounded-md animate-pulse" />
+      <div className="w-32 h-3 bg-muted-foreground/20 rounded-sm animate-pulse" />
     );
   };
 

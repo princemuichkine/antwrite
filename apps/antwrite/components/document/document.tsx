@@ -148,7 +148,7 @@ function PureDocumentToolResult({
 
   if (result.error) {
     return (
-      <div className="bg-background border border-destructive/50 rounded-xl w-full max-w-md flex flex-row items-center text-sm overflow-hidden p-3 gap-3">
+      <div className="bg-background border border-destructive/50 rounded-sm w-full max-w-md flex flex-row items-center text-sm overflow-hidden p-3 gap-3">
         <div className="text-destructive shrink-0">
           <MessageIcon size={16} />
         </div>
@@ -166,7 +166,7 @@ function PureDocumentToolResult({
 
   if (isUpdateProposal) {
     return (
-      <div className="bg-background border rounded-xl w-full max-w-md flex flex-col items-start text-sm overflow-hidden">
+      <div className="bg-background border rounded-sm w-full max-w-md flex flex-col items-start text-sm overflow-hidden">
         <div className="p-3 flex flex-row gap-3 items-start w-full border-b bg-muted/30">
           <div className="text-muted-foreground mt-0.5 shrink-0">
             <PencilEditIcon size={16} />
@@ -236,7 +236,7 @@ function PureDocumentToolResult({
   const SuccessIcon = CheckCircleFillIcon;
 
   return (
-    <div className="bg-background border rounded-xl w-full max-w-md flex flex-row items-center text-sm overflow-hidden p-3 gap-3">
+    <div className="bg-background border rounded-sm w-full max-w-md flex flex-row items-center text-sm overflow-hidden p-3 gap-3">
       <div className="text-green-600 shrink-0">
         <SuccessIcon size={16} />
       </div>
@@ -284,7 +284,7 @@ function PureDocumentToolCall({
             : LoaderIcon;
 
   return (
-    <div className="bg-background border rounded-xl w-full max-w-md flex flex-row items-center justify-between gap-3 text-sm overflow-hidden">
+    <div className="bg-background border rounded-sm w-full max-w-md flex flex-row items-center justify-between gap-3 text-sm overflow-hidden">
       <div className="p-3 flex flex-row gap-3 items-center w-full bg-muted/30">
         <div className="text-muted-foreground shrink-0">
           <CallIcon size={16} />

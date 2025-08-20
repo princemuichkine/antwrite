@@ -25,7 +25,7 @@ function PureHighlightTool({ toolInvocation }: HighlightToolProps) {
       : '';
 
   return (
-    <div className="bg-background border rounded-xl w-full max-w-md flex flex-col items-start text-sm overflow-hidden">
+    <div className="bg-background border rounded-sm w-full max-w-md flex flex-col items-start text-sm overflow-hidden">
       <div className="p-3 flex items-center gap-3 w-full bg-muted/30 border-b">
         <div className="shrink-0 text-muted-foreground">
           <SearchIcon size={16} />

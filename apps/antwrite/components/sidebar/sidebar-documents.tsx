@@ -7,7 +7,7 @@ import type { User } from '@/lib/auth';
 import { memo, useCallback, useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { cn, fetcher } from '@/lib/utils';
-import { MoreHorizontalIcon, PlusIcon, TrashIcon } from '@/components/icons';
+import { MoreHorizontalIcon } from '@/components/icons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,9 +40,12 @@ import { useDocumentUtils } from '@/hooks/use-document-utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { LottieIcon } from '@/components/ui/lottie-icon';
+import { animations } from '@/lib/utils/lottie-animations';
 import useSWRInfinite from 'swr/infinite';
 
 type GroupedDocuments = {
+  favorites: Document[];
   today: Document[];
   yesterday: Document[];
   lastWeek: Document[];
@@ -66,6 +69,8 @@ const PureDocumentItem = ({
   isSelectionMode,
   isSelected,
   onToggleSelect,
+  onStar,
+  onClone,
 }: {
   document: Document;
   isActive: boolean;
@@ -75,6 +80,8 @@ const PureDocumentItem = ({
   isSelectionMode: boolean;
   isSelected: boolean;
   onToggleSelect: (documentId: string, isSelected: boolean) => void;
+  onStar: (documentId: string, isStarred: boolean) => void;
+  onClone: (documentId: string, title: string) => void;
 }) => {
   const handleDocumentClick = useCallback(
     (e: React.MouseEvent) => {
@@ -114,26 +121,26 @@ const PureDocumentItem = ({
   return (
     <SidebarMenuItem>
       <div className="flex items-center w-full">
-        {isSelectionMode && (
-          <div className="flex items-center pl-2 pr-1">
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={(checked) =>
-                onToggleSelect(document.id, !!checked)
-              }
-              aria-label={`Select ${document.title}`}
-            />
-          </div>
-        )}
         <SidebarMenuButton
           asChild
           isActive={isActive}
-          className={cn(isSelectionMode && 'flex-1')}
+          className={cn('flex-1', isSelectionMode && 'pr-1')}
         >
           <Link
             href={isSelectionMode ? '#' : `/documents/${document.id}`}
             onClick={handleDocumentClick}
+            className="flex items-center w-full"
           >
+            {isSelectionMode && (
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={(checked) =>
+                  onToggleSelect(document.id, !!checked)
+                }
+                aria-label={`Select ${document.title}`}
+                className="mr-2 shrink-0"
+              />
+            )}
             <span className="truncate">{document.title}</span>
           </Link>
         </SidebarMenuButton>
@@ -151,12 +158,56 @@ const PureDocumentItem = ({
             </SidebarMenuAction>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent side="bottom" align="end">
+          <DropdownMenuContent
+            side="bottom"
+            align="end"
+            className="w-[--radix-popper-anchor-width] min-w-[180px]"
+            sideOffset={8}
+          >
             <DropdownMenuItem
-              className="cursor-pointer text-destructive focus:bg-destructive/15 focus:text-destructive dark:text-red-500"
+              className="cursor-pointer text-accent-foreground hover:bg-accent/50 transition-colors duration-200"
+              onSelect={() =>
+                onStar(document.id, !(document as any).is_starred)
+              }
+            >
+              <LottieIcon
+                animationData={animations.star}
+                size={16}
+                loop={false}
+                autoplay={false}
+                initialFrame={0}
+                className="mr-2"
+              />
+              <span>{(document as any).is_starred ? 'Unstar' : 'Star'}</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              className="cursor-pointer text-accent-foreground hover:bg-accent/50 transition-colors duration-200"
+              onSelect={() => onClone(document.id, `${document.title} (Copy)`)}
+            >
+              <LottieIcon
+                animationData={animations.cube}
+                size={16}
+                loop={false}
+                autoplay={false}
+                initialFrame={0}
+                className="mr-2"
+              />
+              <span>Clone</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              className="cursor-pointer bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 focus:bg-pink-100 dark:focus:bg-pink-900/40 focus:text-pink-800 dark:focus:text-pink-200 transition-colors duration-200"
               onSelect={() => onDelete(document.id)}
             >
-              <TrashIcon />
+              <LottieIcon
+                animationData={animations.trash}
+                size={16}
+                loop={false}
+                autoplay={false}
+                initialFrame={0}
+                className="mr-2"
+              />
               <span>Delete</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -172,6 +223,11 @@ export const DocumentItem = memo(PureDocumentItem, (prevProps, nextProps) => {
   if (prevProps.isSelectionMode !== nextProps.isSelectionMode) return false;
   if (prevProps.isSelected !== nextProps.isSelected) return false;
   if (prevProps.document.id !== nextProps.document.id) return false;
+  if (
+    (prevProps.document as any).is_starred !==
+    (nextProps.document as any).is_starred
+  )
+    return false;
   return true;
 });
 
@@ -333,6 +389,8 @@ export function SidebarDocuments({
     new Set(),
   );
   const [showMultiDeleteDialog, setShowMultiDeleteDialog] = useState(false);
+  const [isStarring, setIsStarring] = useState(false);
+  const [isCloning, setIsCloning] = useState(false);
 
   const handleToggleSelectionMode = () => {
     setIsSelectionMode(!isSelectionMode);
@@ -432,6 +490,94 @@ export function SidebarDocuments({
     }
   };
 
+  const handleStar = async (documentId: string, isStarred: boolean) => {
+    if (isStarring) return;
+
+    setIsStarring(true);
+    try {
+      const response = await fetch('/api/document/star', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          documentId,
+          isStarred,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to toggle star');
+      }
+
+      // Update the documents optimistically
+      mutate((pages) => {
+        if (!pages) return pages;
+        return pages.map((page) => ({
+          ...page,
+          documents: page.documents.map((doc) => {
+            if (doc.id === documentId) {
+              return { ...doc, is_starred: isStarred } as any;
+            }
+            return doc;
+          }),
+        }));
+      }, false);
+
+      toast.success(isStarred ? 'Document starred' : 'Document unstarred');
+    } catch (error: any) {
+      console.error('Error toggling star:', error);
+      toast.error(error.message || 'Failed to toggle star');
+    } finally {
+      setIsStarring(false);
+    }
+  };
+
+  const handleClone = async (documentId: string, originalTitle: string) => {
+    if (isCloning) return;
+
+    setIsCloning(true);
+    try {
+      // Generate a unique title for the clone
+      const timestamp = new Date().toLocaleString();
+      const newTitle = `${originalTitle} - Copy ${timestamp}`;
+
+      const response = await fetch('/api/document/clone', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          documentId,
+          newTitle,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to clone document');
+      }
+
+      // Refresh the documents list to show the new clone
+      mutate();
+
+      toast.success('Document cloned successfully');
+
+      // Navigate to the cloned document
+      if (result.document?.id) {
+        router.push(`/documents/${result.document.id}`);
+      }
+    } catch (error: any) {
+      console.error('Error cloning document:', error);
+      toast.error(error.message || 'Failed to clone document');
+    } finally {
+      setIsCloning(false);
+    }
+  };
+
   const handleDocumentSelect = useCallback(
     async (documentId: string) => {
       setActiveDocumentId(documentId);
@@ -495,8 +641,11 @@ export function SidebarDocuments({
     return docs.reduce(
       (groups, doc) => {
         const docDate = new Date(doc.createdAt);
+        const isStarred = (doc as any).is_starred;
 
-        if (isToday(docDate)) {
+        if (isStarred) {
+          groups.favorites.push(doc);
+        } else if (isToday(docDate)) {
           groups.today.push(doc);
         } else if (isYesterday(docDate)) {
           groups.yesterday.push(doc);
@@ -511,6 +660,7 @@ export function SidebarDocuments({
         return groups;
       },
       {
+        favorites: [],
         today: [],
         yesterday: [],
         lastWeek: [],
@@ -531,10 +681,10 @@ export function SidebarDocuments({
             {[44, 32, 28, 64, 52].map((item) => (
               <div
                 key={item}
-                className="rounded-md h-8 flex gap-2 px-2 items-center"
+                className="rounded-sm h-8 flex gap-2 px-2 items-center"
               >
                 <div
-                  className="h-4 rounded-md flex-1 max-w-[--skeleton-width] bg-sidebar-accent-foreground/10"
+                  className="h-4 rounded-sm flex-1 max-w-[--skeleton-width] bg-sidebar-accent-foreground/10"
                   style={
                     {
                       '--skeleton-width': `${item}%`,
@@ -553,12 +703,12 @@ export function SidebarDocuments({
   if (hasEmptyDocuments && !searchTerm) {
     return (
       <SidebarGroup>
-        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer">
+        <div className="px-2 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/70 transition-colors duration-200">
           <span>Documents</span>
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
-            className="size-5"
+            className="size-5 hover:bg-accent/50 transition-colors duration-200 text-accent-foreground border border-border"
             onClick={createNewDocument}
             disabled={isCreatingDocument}
           >
@@ -580,7 +730,13 @@ export function SidebarDocuments({
                 />
               </svg>
             ) : (
-              <PlusIcon size={12} />
+              <LottieIcon
+                animationData={animations.fileplus}
+                size={12}
+                loop={false}
+                autoplay={false}
+                initialFrame={0}
+              />
             )}
           </Button>
         </div>
@@ -599,7 +755,7 @@ export function SidebarDocuments({
         <div
           role="button"
           tabIndex={0}
-          className="px-2 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer"
+          className="px-2 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/70 transition-colors duration-200"
           onClick={() => setIsExpanded(!isExpanded)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -608,15 +764,19 @@ export function SidebarDocuments({
             }
           }}
         >
-          <span>
+          <span className="font-medium">
             Documents{' '}
-            {documents && documents.length > 0 && `(${documents.length})`}
+            {documents && documents.length > 0 && (
+              <span className="text-sidebar-foreground/30">
+                ({documents.length})
+              </span>
+            )}
           </span>
-          <div className="flex items-center">
+          <div className="flex items-center gap-0.5">
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
-              className="size-5"
+              className="size-5 hover:bg-accent/50 transition-colors duration-200 text-accent-foreground border border-border"
               onClick={(e) => {
                 e.stopPropagation();
                 createNewDocument();
@@ -641,23 +801,31 @@ export function SidebarDocuments({
                   />
                 </svg>
               ) : (
-                <PlusIcon size={12} />
+                <LottieIcon
+                  animationData={animations.fileplus}
+                  size={12}
+                  loop={false}
+                  autoplay={false}
+                  initialFrame={0}
+                />
               )}
             </Button>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <div className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </div>
           </div>
         </div>
 
@@ -668,7 +836,7 @@ export function SidebarDocuments({
                 placeholder="Search documents..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-7 text-xs borderbg-sidebar-accent"
+                className="h-10 text-sm border data-[state=open]:border-border text-accent-foreground bg-background hover:bg-accent/50 transition-colors duration-200"
               />
             </div>
 
@@ -679,7 +847,7 @@ export function SidebarDocuments({
                     variant="outline"
                     size="sm"
                     onClick={handleToggleSelectionMode}
-                    className="h-7 text-xs px-1"
+                    className="h-6 text-xs px-1.5 border text-accent-foreground hover:bg-accent/50 transition-colors duration-200"
                   >
                     Select
                   </Button>
@@ -690,32 +858,52 @@ export function SidebarDocuments({
                       variant="ghost"
                       size="sm"
                       onClick={handleSelectAll}
-                      className="h-7 text-xs px-1"
+                      className="h-6 text-xs px-1.5 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hover:text-cyan-800 dark:hover:text-cyan-200 border border-cyan-200 dark:border-cyan-800 transition-colors duration-200"
                     >
                       {selectedDocuments.size === filteredDocuments.length
                         ? 'Deselect All'
                         : 'Select All'}
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
                       onClick={() =>
                         selectedDocuments.size > 0 &&
                         setShowMultiDeleteDialog(true)
                       }
                       disabled={selectedDocuments.size === 0}
-                      className="h-7 text-xs px-1"
+                      className="h-6 text-xs px-1.5 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 border border-pink-200 dark:border-pink-800 transition-colors duration-200 disabled:opacity-50"
                     >
-                      Delete ({selectedDocuments.size})
+                      <LottieIcon
+                        animationData={animations.trash}
+                        size={12}
+                        loop={false}
+                        autoplay={false}
+                        initialFrame={0}
+                        className="mr-1"
+                      />
+                      Delete
+                      {selectedDocuments.size > 1
+                        ? ` (${selectedDocuments.size})`
+                        : ''}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleToggleSelectionMode}
-                      className="h-7 text-xs px-1"
-                    >
-                      Cancel
-                    </Button>
+                    {selectedDocuments.size > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleToggleSelectionMode}
+                        className="size-6 flex items-center justify-center text-accent-foreground hover:bg-accent/50 transition-colors duration-200 rounded-sm"
+                        title="Cancel selection"
+                      >
+                        <LottieIcon
+                          animationData={animations.cross}
+                          size={12}
+                          loop={false}
+                          autoplay={false}
+                          initialFrame={0}
+                        />
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
@@ -743,6 +931,8 @@ export function SidebarDocuments({
                         isSelectionMode={isSelectionMode}
                         isSelected={selectedDocuments.has(doc.id)}
                         onToggleSelect={handleToggleSelect}
+                        onStar={handleStar}
+                        onClone={handleClone}
                       />
                     ))
                   )
@@ -752,9 +942,42 @@ export function SidebarDocuments({
                       groupDocumentsByDate(filteredDocuments);
                     return (
                       <>
+                        {groupedDocuments.favorites.length > 0 && (
+                          <>
+                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium flex items-center gap-1">
+                              <LottieIcon
+                                animationData={animations.star}
+                                size={12}
+                                loop={false}
+                                autoplay={false}
+                                initialFrame={0}
+                              />
+                              Favorites
+                            </div>
+                            {groupedDocuments.favorites.map((doc) => (
+                              <DocumentItem
+                                key={`${doc.id}-${doc.createdAt}`}
+                                document={doc}
+                                isActive={doc.id === activeDocumentId}
+                                onDelete={(documentId) => {
+                                  setDeleteId(documentId);
+                                  setShowDeleteDialog(true);
+                                }}
+                                setOpenMobile={setOpenMobile}
+                                onSelect={handleDocumentSelect}
+                                isSelectionMode={isSelectionMode}
+                                isSelected={selectedDocuments.has(doc.id)}
+                                onToggleSelect={handleToggleSelect}
+                                onStar={handleStar}
+                                onClone={handleClone}
+                              />
+                            ))}
+                          </>
+                        )}
+
                         {groupedDocuments.today.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
+                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium">
                               Today
                             </div>
                             {groupedDocuments.today.map((doc) => (
@@ -771,6 +994,8 @@ export function SidebarDocuments({
                                 isSelectionMode={isSelectionMode}
                                 isSelected={selectedDocuments.has(doc.id)}
                                 onToggleSelect={handleToggleSelect}
+                                onStar={handleStar}
+                                onClone={handleClone}
                               />
                             ))}
                           </>
@@ -778,7 +1003,7 @@ export function SidebarDocuments({
 
                         {groupedDocuments.yesterday.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-4">
+                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
                               Yesterday
                             </div>
                             {groupedDocuments.yesterday.map((doc) => (
@@ -795,6 +1020,8 @@ export function SidebarDocuments({
                                 isSelectionMode={isSelectionMode}
                                 isSelected={selectedDocuments.has(doc.id)}
                                 onToggleSelect={handleToggleSelect}
+                                onStar={handleStar}
+                                onClone={handleClone}
                               />
                             ))}
                           </>
@@ -802,7 +1029,7 @@ export function SidebarDocuments({
 
                         {groupedDocuments.lastWeek.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-4">
+                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
                               Last 7 days
                             </div>
                             {groupedDocuments.lastWeek.map((doc) => (
@@ -819,6 +1046,8 @@ export function SidebarDocuments({
                                 isSelectionMode={isSelectionMode}
                                 isSelected={selectedDocuments.has(doc.id)}
                                 onToggleSelect={handleToggleSelect}
+                                onStar={handleStar}
+                                onClone={handleClone}
                               />
                             ))}
                           </>
@@ -826,7 +1055,7 @@ export function SidebarDocuments({
 
                         {groupedDocuments.lastMonth.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-4">
+                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
                               Last 30 days
                             </div>
                             {groupedDocuments.lastMonth.map((doc) => (
@@ -843,6 +1072,8 @@ export function SidebarDocuments({
                                 isSelectionMode={isSelectionMode}
                                 isSelected={selectedDocuments.has(doc.id)}
                                 onToggleSelect={handleToggleSelect}
+                                onStar={handleStar}
+                                onClone={handleClone}
                               />
                             ))}
                           </>
@@ -850,7 +1081,7 @@ export function SidebarDocuments({
 
                         {groupedDocuments.older.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 mt-4">
+                            <div className="px-2 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
                               Older
                             </div>
                             {groupedDocuments.older.map((doc) => (
@@ -867,6 +1098,8 @@ export function SidebarDocuments({
                                 isSelectionMode={isSelectionMode}
                                 isSelected={selectedDocuments.has(doc.id)}
                                 onToggleSelect={handleToggleSelect}
+                                onStar={handleStar}
+                                onClone={handleClone}
                               />
                             ))}
                           </>
@@ -904,20 +1137,26 @@ export function SidebarDocuments({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete {selectedDocuments.size} documents?
+              {selectedDocuments.size === 1
+                ? 'Delete this document?'
+                : `Delete ${selectedDocuments.size} documents?`}
             </AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              selected documents and remove them from our servers.
+              selected {selectedDocuments.size === 1 ? 'document' : 'documents'}{' '}
+              and remove {selectedDocuments.size === 1 ? 'it' : 'them'} from our
+              servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteMultiple}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 border border-pink-200 dark:border-pink-800 transition-colors duration-200"
             >
-              Delete {selectedDocuments.size} documents
+              {selectedDocuments.size === 1
+                ? 'Delete'
+                : `Delete ${selectedDocuments.size} documents`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

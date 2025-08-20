@@ -121,7 +121,7 @@ export function ResizablePanel({
           tabIndex={0}
           onMouseDown={startResizing}
           className={cn(
-            'group relative flex w-2.5 cursor-col-resize items-center justify-center rounded-full',
+            'group relative flex w-2.5 cursor-col-resize items-center justify-center rounded-sm',
             'transition-colors',
             isResizing
               ? 'bg-primary/30'

@@ -5,12 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { sendFeedbackToDiscord } from '@/lib/actions/feedback';
 import { authClient } from '@/lib/auth-client';
-import {
-  X,
-  CheckCircle as SealCheck,
-  Loader2 as Spinner,
-  Heart,
-} from 'lucide-react';
+import { CheckCircle as SealCheck, Loader2 as Spinner } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import {
@@ -23,6 +18,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { LottieIcon } from '@/components/ui/lottie-icon';
+import { animations } from '@/lib/utils/lottie-animations';
 
 const TRANSITION_CONTENT = {
   ease: 'easeOut',
@@ -99,18 +96,22 @@ export function FeedbackWidget({ className }: { className?: string }) {
       <SidebarMenuItem>
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton className="group data-[state=open]: border text-accent-foreground data-[state=open]:text-sidebar-accent-foreground size-10 hover:bg-accent/50 transition-colors duration-200">
+            <SidebarMenuButton className="group data-[state=open]:border text-accent-foreground data-[state=open]:text-sidebar-accent-foreground w-full h-10 hover:bg-accent/50 transition-colors duration-200">
+              <LottieIcon
+                animationData={animations.forum}
+                size={16}
+                loop={false}
+                autoplay={false}
+                initialFrame={0}
+              />
               <span className="group-hover:text-primary transition-colors duration-200">
                 Feedback
-              </span>
-              <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <Heart className="size-3 text-primary" />
               </span>
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             side="top"
-            className="w-[--radix-popper-anchor-width] p-0 rounded-lg border-b border-zinc-200 dark:border-zinc-700 shadow-lg"
+            className="w-[--radix-popper-anchor-width] p-0 rounded-sm border-b border-zinc-200 dark:border-zinc-700 shadow-lg"
             sideOffset={5}
           >
             <div className="size-[240px]">
@@ -124,7 +125,7 @@ export function FeedbackWidget({ className }: { className?: string }) {
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
                     transition={TRANSITION_CONTENT}
                   >
-                    <div className="rounded-full bg-green-500/10 p-3">
+                    <div className="rounded-sm bg-green-500/10 p-3">
                       <SealCheck className="size-8 text-green-500" />
                     </div>
                     <p className="text-foreground mt-5 mb-2 text-center text-base font-medium">
@@ -170,7 +171,7 @@ export function FeedbackWidget({ className }: { className?: string }) {
                         <p className="text-xs text-muted-foreground/80">
                           Suggestions:
                         </p>
-                        <ul className="ml-2 mt-1 space-y-1">
+                        <ul className="ml-2 mt-1 space-y-1 text-muted-foreground/80">
                           <li>• Features</li>
                           <li>• Improvements</li>
                           <li>• Issues</li>
@@ -187,22 +188,11 @@ export function FeedbackWidget({ className }: { className?: string }) {
 
                     <div className="flex justify-between items-center p-3 border-t border-border/50">
                       <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={closeMenu}
-                        aria-label="Close popover"
-                        disabled={status === 'submitting'}
-                        className="size-8 p-0 rounded-full hover:bg-muted"
-                      >
-                        <X className="size-4" />
-                      </Button>
-                      <Button
                         type="submit"
                         variant="outline"
                         size="sm"
                         aria-label="Submit feedback"
-                        className="rounded-full bg-primary/10 hover:bg-primary/20 border-primary/20 text-primary hover:text-primary"
+                        className="rounded-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:text-green-800 dark:hover:text-green-200 border border-green-200 dark:border-green-800 ml-auto mr-4"
                         disabled={status === 'submitting' || !feedback.trim()}
                       >
                         <AnimatePresence mode="popLayout">

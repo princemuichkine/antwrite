@@ -164,7 +164,7 @@ export default function EmojiOverlay({
       {isOpen && (
         <motion.div
           ref={overlayRef}
-          className="fixed z-50 bg-background rounded-md shadow-lg border border-border overflow-hidden select-none max-w-[172px]"
+          className="fixed z-50 bg-background rounded-sm shadow-lg border border-border overflow-hidden select-none max-w-[172px]"
           style={{
             top: `${currentPosition.y}px`,
             left: `${currentPosition.x}px`,
@@ -185,7 +185,7 @@ export default function EmojiOverlay({
                 data-index={index}
                 onClick={() => onSelectEmoji(suggestion.code)}
                 className={cn(
-                  'p-1 rounded-md text-xl transition-colors',
+                  'p-1 rounded-sm text-xl transition-colors',
                   index === selectedIndex ? 'bg-muted' : 'hover:bg-muted/60',
                 )}
               >

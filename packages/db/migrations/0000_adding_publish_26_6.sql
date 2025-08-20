@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS "Document" (
 	"userId" text NOT NULL,
 	"chatId" uuid,
 	"is_current" boolean NOT NULL,
+	"is_starred" boolean DEFAULT false NOT NULL,
 	"visibility" text DEFAULT 'private' NOT NULL,
 	"style" jsonb,
 	"author" text,
@@ -155,3 +156,22 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "Document_userId_slug_unique" ON "Document" USING btree ("userId","slug");
+--> statement-breakpoint
+-- Performance indexes for Better Auth GitHub OAuth
+-- Speed up user lookup by email during OAuth flow
+CREATE INDEX IF NOT EXISTS "idx_user_email_auth" ON "user" USING btree ("email");
+--> statement-breakpoint
+-- Speed up session token validation (happens on every auth request) 
+CREATE INDEX IF NOT EXISTS "idx_session_token_auth" ON "session" USING btree ("token");
+--> statement-breakpoint
+-- Speed up active session checks for user
+CREATE INDEX IF NOT EXISTS "idx_session_user_active" ON "session" USING btree ("user_id", "expires_at");
+--> statement-breakpoint
+-- Critical for GitHub OAuth: lookup account by provider + account_id
+CREATE INDEX IF NOT EXISTS "idx_account_provider_lookup" ON "account" USING btree ("provider_id", "account_id");
+--> statement-breakpoint
+-- Speed up finding user's GitHub account
+CREATE INDEX IF NOT EXISTS "idx_account_user_provider" ON "account" USING btree ("user_id", "provider_id");
+--> statement-breakpoint
+-- Create index for better query performance on starred documents
+CREATE INDEX IF NOT EXISTS "idx_document_starred_user" ON "Document" ("userId", "is_starred", "is_current") WHERE "is_starred" = true AND "is_current" = true;

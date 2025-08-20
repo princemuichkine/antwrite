@@ -147,7 +147,7 @@ export const VersionHeader = ({
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 text-sm text-primary/90 font-medium">
               {/* Display version based on currentVersionIndex */}
-              <span className="rounded-full bg-primary/10 size-5 flex items-center justify-center text-[10px] text-primary">
+              <span className="rounded-sm bg-primary/10 size-5 flex items-center justify-center text-[10px] text-primary">
                 {currentVersionIndex + 1}
               </span>
               <span>{dateString}</span>

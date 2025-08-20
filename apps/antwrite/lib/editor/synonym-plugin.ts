@@ -85,7 +85,7 @@ export function synonymsPlugin(): Plugin<SynonymPluginState> {
 
     overlayContainer = document.createElement('div');
     overlayContainer.className =
-      'fixed z-50 bg-background text-foreground rounded-md shadow-lg border border-border flex gap-1 p-1';
+      'fixed z-50 bg-background text-foreground rounded-sm shadow-lg border border-border flex gap-1 p-1';
     overlayContainer.style.position = 'absolute';
     overlayContainer.style.zIndex = '10000';
     const rect = target.getBoundingClientRect();

@@ -316,13 +316,13 @@ export function PublishSettingsMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="group w-64 p-3 shadow-lg rounded-lg border bg-popover space-y-3 relative"
+        className="group w-64 p-3 shadow-lg rounded-sm border bg-popover space-y-3 relative"
         align="end"
         sideOffset={6}
       >
         {/* Hover overlay for unsubscribed users */}
         {disabled && (
-          <div className="absolute inset-0 z-10 bg-background/70 backdrop-blur-sm rounded-lg flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
+          <div className="absolute inset-0 z-10 bg-background/70 backdrop-blur-sm rounded-sm flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
             <Button
               size="sm"
               variant="outline"

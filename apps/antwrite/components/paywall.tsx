@@ -81,7 +81,7 @@ export function Paywall({
         {
           onSuccess: () => {
             setIsSigningOut(false);
-            router.push('/login');
+            router.push('/');
             router.refresh();
             toast({ type: 'success', description: 'Signed out successfully.' });
           },
@@ -238,7 +238,7 @@ export function Paywall({
                   <div
                     key={plan.displayName}
                     className={cn(
-                      'border rounded-lg p-6 flex flex-col transition-colors',
+                      'border rounded-sm p-6 flex flex-col transition-colors',
                       { 'bg-muted/30': plan.annual },
                     )}
                   >
@@ -248,7 +248,7 @@ export function Paywall({
                           {plan.displayName}
                         </h4>
                         {plan.annual && (
-                          <div className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                          <div className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-sm">
                             Save {plan.discount}%
                           </div>
                         )}

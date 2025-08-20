@@ -10,7 +10,7 @@ interface WebSearchCallProps {
 
 export function WebSearchCall({ args }: WebSearchCallProps) {
   return (
-    <div className="bg-background border rounded-xl w-full max-w-md flex items-center p-3 gap-3 text-sm">
+    <div className="bg-background border rounded-sm w-full max-w-md flex items-center p-3 gap-3 text-sm">
       <div className="text-muted-foreground shrink-0">
         <SparklesIcon size={16} />
       </div>
@@ -36,7 +36,7 @@ export function WebSearchResult({ args, result }: WebSearchResultProps) {
   const list = result.results || [];
 
   return (
-    <div className="bg-background border rounded-xl w-full max-w-md p-4 text-sm">
+    <div className="bg-background border rounded-sm w-full max-w-md p-4 text-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="text-muted-foreground shrink-0">

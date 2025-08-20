@@ -40,7 +40,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
   const wordCount = textContent.trim().split(/\s+/).filter(Boolean).length;
   const buttonClass = (format: string) =>
     cn(
-      'h-8 w-8 p-0 flex items-center justify-center rounded-md border border-border bg-background text-foreground',
+      'h-8 w-8 p-0 flex items-center justify-center rounded-sm border border-border bg-background text-foreground',
       activeFormats[format]
         ? 'border-accent bg-accent text-accent-foreground'
         : '',
@@ -103,13 +103,13 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
   );
 
   return (
-    <div className="toolbar sticky top-4 z-20 w-full h-[45px] flex items-center gap-2 px-3 py-0 overflow-x-auto whitespace-nowrap rounded-lg bg-background border border-border">
+    <div className="toolbar sticky top-4 z-20 w-full h-[45px] flex items-center gap-2 px-3 py-0 overflow-x-auto whitespace-nowrap rounded-sm bg-background border border-border">
       {/* Toolbar left side */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="h-8 px-3 min-w-28 flex items-center justify-between gap-2 text-sm rounded-md border border-border bg-background text-foreground"
+            className="h-8 px-3 min-w-28 flex items-center justify-between gap-2 text-sm rounded-sm border border-border bg-background text-foreground"
             tabIndex={0}
           >
             <span className="truncate text-sm font-medium">
@@ -119,7 +119,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
-          className="w-44 p-1 shadow-lg rounded-lg border bg-popover"
+          className="w-44 p-1 shadow-lg rounded-sm border bg-popover"
           align="start"
         >
           {textOptions.map((opt) => (
@@ -130,7 +130,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
                 opt.command();
               }}
               className={cn(
-                'text-sm rounded-md',
+                'text-sm rounded-sm',
                 opt.formatKey &&
                   activeFormats[opt.formatKey] &&
                   'bg-accent text-accent-foreground',

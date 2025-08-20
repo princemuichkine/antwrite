@@ -223,13 +223,13 @@ export function emojiPlugin(): Plugin {
         </div>
 
         <!-- Emoji suggestions list -->
-        <div class="border rounded-lg overflow-hidden bg-muted/30">
+        <div class="border rounded-sm overflow-hidden bg-muted/30">
           <div class="p-2 max-h-[200px] overflow-y-auto">
             <div class="flex gap-2 overflow-x-auto">
               ${pluginState.suggestions
                 .map(
                   (suggestion: EmojiSuggestion, index: number) => `
-                <button class="emoji-suggestion-item flex flex-col items-center gap-1 p-2 rounded-md transition-colors min-w-fit whitespace-nowrap hover:bg-muted border border-transparent ${index === pluginState.selectedIndex ? 'bg-muted border-border' : ''}" 
+                <button class="emoji-suggestion-item flex flex-col items-center gap-1 p-2 rounded-sm transition-colors min-w-fit whitespace-nowrap hover:bg-muted border border-transparent ${index === pluginState.selectedIndex ? 'bg-muted border-border' : ''}" 
                        data-index="${index}"
                        data-emoji="${suggestion.emoji}"
                        data-code="${suggestion.code}"

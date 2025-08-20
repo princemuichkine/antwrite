@@ -113,13 +113,13 @@ export function AiSettingsMenu() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="size-8 p-0 flex items-center justify-center border rounded-md hover:bg-muted"
+              className="size-8 p-0 flex items-center justify-center border rounded-sm hover:bg-muted"
             >
               <Settings className="size-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-64 p-3 shadow-lg rounded-lg border bg-popover"
+            className="w-64 p-3 shadow-lg rounded-sm border bg-popover"
             align="end"
             sideOffset={6}
           >
@@ -177,7 +177,7 @@ export function AiSettingsMenu() {
             {/* Writing Voice Section */}
             <div className="space-y-4 relative group">
               {!hasSubscription && (
-                <div className="absolute inset-0 z-10 bg-background/70 backdrop-blur-sm rounded-lg flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
+                <div className="absolute inset-0 z-10 bg-background/70 backdrop-blur-sm rounded-sm flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
                   <Button
                     size="sm"
                     variant="outline"
@@ -231,7 +231,7 @@ export function AiSettingsMenu() {
                 </div>
               ) : (
                 // Trained State
-                <div className="space-y-4 rounded-md border p-4">
+                <div className="space-y-4 rounded-sm border p-4">
                   <div className="flex items-center justify-between">
                     <Label
                       htmlFor="apply-style"

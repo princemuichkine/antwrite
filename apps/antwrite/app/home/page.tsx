@@ -5,6 +5,7 @@ import { Crimson_Text } from 'next/font/google';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { CardHeader, Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GripVertical, X, Check } from 'lucide-react';
@@ -30,11 +31,16 @@ const crimson = Crimson_Text({
 // Environment variables for enabled providers
 // Enable by default in development, or when explicitly set to 'true'
 const isDev = process.env.NODE_ENV === 'development';
-const googleEnabled = isDev || process.env.NEXT_PUBLIC_GOOGLE_ENABLED === 'true';
-const githubEnabled = isDev || process.env.NEXT_PUBLIC_GITHUB_ENABLED === 'true';
-const linkedinEnabled = isDev || process.env.NEXT_PUBLIC_LINKEDIN_ENABLED === 'true';
-const twitterEnabled = isDev || process.env.NEXT_PUBLIC_TWITTER_ENABLED === 'true';
-const microsoftEnabled = isDev || process.env.NEXT_PUBLIC_MICROSOFT_ENABLED === 'true';
+const googleEnabled =
+  isDev || process.env.NEXT_PUBLIC_GOOGLE_ENABLED === 'true';
+const githubEnabled =
+  isDev || process.env.NEXT_PUBLIC_GITHUB_ENABLED === 'true';
+const linkedinEnabled =
+  isDev || process.env.NEXT_PUBLIC_LINKEDIN_ENABLED === 'true';
+const twitterEnabled =
+  isDev || process.env.NEXT_PUBLIC_TWITTER_ENABLED === 'true';
+const microsoftEnabled =
+  isDev || process.env.NEXT_PUBLIC_MICROSOFT_ENABLED === 'true';
 
 const StyleToggleDemo = ({ inView }: { inView: boolean }) => {
   const [isEnabled, setIsEnabled] = useState(false);
@@ -46,7 +52,7 @@ const StyleToggleDemo = ({ inView }: { inView: boolean }) => {
   }, [inView]);
 
   return (
-    <div className="rounded-md border p-4 w-full">
+    <div className="rounded-sm border p-4 w-full">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium">Apply Writer Style</span>
         <Switch
@@ -61,6 +67,7 @@ const StyleToggleDemo = ({ inView }: { inView: boolean }) => {
 
 export default function Home() {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const featuresRef = useRef<HTMLElement>(null);
   const isFeaturesInView = useInView(featuresRef, { once: true, amount: 0.3 });
   const card1Ref = useRef<HTMLDivElement>(null);
@@ -100,19 +107,24 @@ export default function Home() {
 
   const handleBeginClick = () => {
     if (hasSession) {
-      router.push('/documents');
+      // Redirect mobile users to home page instead of documents
+      router.push(isMobile ? '/home' : '/documents');
     } else {
-      router.push('/login?redirect=/documents');
+      const redirectPath = isMobile ? '/home' : '/documents';
+      router.push('/');
     }
   };
 
   const handleSocialLogin = async (
     provider: 'google' | 'github' | 'linkedin' | 'twitter' | 'microsoft',
   ) => {
+    // Redirect mobile users to home page instead of documents
+    const callbackURL = isMobile ? '/home' : '/documents';
+
     await authClient.signIn.social(
       {
         provider,
-        callbackURL: '/documents',
+        callbackURL,
         errorCallbackURL: '/?error=social_signin_failed',
       },
       {
@@ -146,7 +158,7 @@ export default function Home() {
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full"
+            className="rounded-sm"
             onClick={handleBeginClick}
           >
             {hasSession ? 'Open Antwrite' : 'Begin'}
@@ -185,24 +197,19 @@ export default function Home() {
 
           {/* CTA Buttons */}
           <div className="flex gap-2 mt-6 justify-center">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="rounded-full"
-            >
-              <Link href="/login">
+            <Button asChild variant="outline" size="sm" className="rounded-sm">
+              <button type="button" onClick={handleBeginClick}>
                 Get Started{' '}
                 <span className="inline-block ml-2 text-xs transition-transform group-hover:translate-x-0.5">
                   ›
                 </span>
-              </Link>
+              </button>
             </Button>
             <Button
               asChild
               variant="secondary"
               size="sm"
-              className="rounded-full"
+              className="rounded-sm"
             >
               <Link
                 href="https://github.com/princemuichkine/antwrite"
@@ -243,7 +250,7 @@ export default function Home() {
                       type="button"
                       onClick={() => handleSocialLogin('google')}
                       disabled={isSocialLoading !== null}
-                      className="w-full h-10 px-3 rounded-md bg-[#EA4335] hover:bg-[#d33b2c] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full h-10 px-3 rounded-sm bg-[#EA4335] hover:bg-[#d33b2c] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="flex items-center justify-center">
                         {isSocialLoading === 'google' ? (
@@ -262,7 +269,7 @@ export default function Home() {
                       type="button"
                       onClick={() => handleSocialLogin('github')}
                       disabled={isSocialLoading !== null}
-                      className="w-full h-10 px-3 rounded-md bg-[#333] hover:bg-[#444] dark:bg-[#171515] dark:hover:bg-[#2b2a2a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full h-10 px-3 rounded-sm bg-[#333] hover:bg-[#444] dark:bg-[#171515] dark:hover:bg-[#2b2a2a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="flex items-center justify-center">
                         {isSocialLoading === 'github' ? (
@@ -281,7 +288,7 @@ export default function Home() {
                       type="button"
                       onClick={() => handleSocialLogin('linkedin')}
                       disabled={isSocialLoading !== null}
-                      className="w-full h-10 px-3 rounded-md bg-[#0077B5] hover:bg-[#006699] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full h-10 px-3 rounded-sm bg-[#0077B5] hover:bg-[#006699] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="flex items-center justify-center">
                         {isSocialLoading === 'linkedin' ? (
@@ -300,7 +307,7 @@ export default function Home() {
                       type="button"
                       onClick={() => handleSocialLogin('twitter')}
                       disabled={isSocialLoading !== null}
-                      className="w-full h-10 px-3 rounded-md bg-[#000000] hover:bg-[#1a1a1a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full h-10 px-3 rounded-sm bg-[#000000] hover:bg-[#1a1a1a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="flex items-center justify-center">
                         {isSocialLoading === 'twitter' ? (
@@ -319,7 +326,7 @@ export default function Home() {
                       type="button"
                       onClick={() => handleSocialLogin('microsoft')}
                       disabled={isSocialLoading !== null}
-                      className="w-full h-10 px-3 rounded-md bg-white hover:bg-gray-50 dark:bg-white dark:hover:bg-gray-50 text-gray-600 dark:text-gray-600 border border-gray-300 text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full h-10 px-3 rounded-sm bg-white hover:bg-gray-50 dark:bg-white dark:hover:bg-gray-50 text-gray-600 dark:text-gray-600 border border-gray-300 text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="flex items-center justify-center">
                         {isSocialLoading === 'microsoft' ? (
@@ -342,7 +349,7 @@ export default function Home() {
                 alt="Antwrite Demo Preview"
                 width={1200}
                 height={675}
-                className="rounded-lg block dark:hidden"
+                className="rounded-sm block dark:hidden"
                 priority={true}
               />
               <Image
@@ -350,7 +357,7 @@ export default function Home() {
                 alt="Antwrite Demo Preview (Dark Mode)"
                 width={1200}
                 height={675}
-                className="rounded-lg hidden dark:block"
+                className="rounded-sm hidden dark:block"
                 priority={true}
               />
             </div>
@@ -386,7 +393,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="size-full"
             >
-              <Card className="h-full flex flex-col min-h-[320px] rounded-xl overflow-visible">
+              <Card className="h-full flex flex-col min-h-[320px] rounded-sm overflow-visible">
                 <CardHeader className="p-6 text-base font-medium">
                   Real-time Inline Suggestions
                 </CardHeader>
@@ -415,7 +422,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="size-full"
             >
-              <Card className="h-full flex flex-col min-h-[320px] rounded-xl overflow-visible">
+              <Card className="h-full flex flex-col min-h-[320px] rounded-sm overflow-visible">
                 <CardHeader className="p-6 text-base font-medium">
                   Powerful Selection Edits
                 </CardHeader>
@@ -450,7 +457,7 @@ export default function Home() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 py-1 text-xs hover:text-destructive rounded-full"
+                        className="h-7 px-2 py-1 text-xs hover:text-destructive rounded-sm"
                       >
                         <X size={13} strokeWidth={2.5} className="mr-1" />{' '}
                         Reject
@@ -458,7 +465,7 @@ export default function Home() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 py-1 text-xs hover:text-primary rounded-full"
+                        className="h-7 px-2 py-1 text-xs hover:text-primary rounded-sm"
                       >
                         <Check size={13} strokeWidth={2.5} className="mr-1" />{' '}
                         Accept
@@ -477,7 +484,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="size-full"
             >
-              <Card className="h-full flex flex-col min-h-[320px] rounded-xl overflow-visible">
+              <Card className="h-full flex flex-col min-h-[320px] rounded-sm overflow-visible">
                 <CardHeader className="p-6 text-base font-medium">
                   Instant Synonym Finder
                 </CardHeader>
@@ -511,7 +518,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="size-full"
             >
-              <Card className="h-full flex flex-col min-h-[320px] rounded-xl overflow-visible">
+              <Card className="h-full flex flex-col min-h-[320px] rounded-sm overflow-visible">
                 <CardHeader className="p-6 text-base font-medium">
                   AI Writing That Sounds Like You
                 </CardHeader>
@@ -534,7 +541,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.25 }}
               className="size-full"
             >
-              <Card className="h-full flex flex-col min-h-[320px] rounded-xl">
+              <Card className="h-full flex flex-col min-h-[320px] rounded-sm">
                 <CardHeader className="p-6 text-base font-medium">
                   Access Premium Models
                 </CardHeader>
@@ -555,19 +562,19 @@ export default function Home() {
                           animate={
                             card5InView
                               ? {
-                                opacity: 1,
-                                rotate: rot,
-                                y,
-                                transition: {
-                                  delay: 0.2 + i * 0.1,
-                                  type: 'spring',
-                                  stiffness: 140,
-                                  damping: 15,
-                                },
-                              }
+                                  opacity: 1,
+                                  rotate: rot,
+                                  y,
+                                  transition: {
+                                    delay: 0.2 + i * 0.1,
+                                    type: 'spring',
+                                    stiffness: 140,
+                                    damping: 15,
+                                  },
+                                }
                               : {}
                           }
-                          className="w-20 h-28 bg-background border border-border rounded-lg flex items-center justify-center mx-[-4px] shadow-sm relative"
+                          className="w-20 h-28 bg-background border border-border rounded-sm flex items-center justify-center mx-[-4px] shadow-sm relative"
                           style={{ zIndex: 10 - Math.abs(offset) }}
                         >
                           {i === proIndex && (
@@ -595,14 +602,14 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="size-full"
             >
-              <Card className="h-full flex flex-col min-h-[320px] rounded-xl">
+              <Card className="h-full flex flex-col min-h-[320px] rounded-sm">
                 <CardHeader className="p-6 text-base font-medium">
                   One-Click Publish & Share
                 </CardHeader>
                 <CardContent className="p-6 text-sm text-muted-foreground grow flex flex-col justify-between items-center">
                   <div className="w-full flex flex-col items-center">
                     {/* Mini page preview */}
-                    <div className="relative w-44 h-32 rounded-lg border border-border bg-background shadow-sm overflow-hidden">
+                    <div className="relative w-44 h-32 rounded-sm border border-border bg-background shadow-sm overflow-hidden">
                       {/* URL bar */}
                       <div className="h-5 bg-muted flex items-center px-2 text-[9px] text-muted-foreground/90 font-mono gap-1">
                         <span className="truncate">you/your-post</span>
@@ -614,7 +621,7 @@ export default function Home() {
                         <div className="h-2.5 bg-muted rounded w-5/6" />
                       </div>
                       {/* Chat bubble */}
-                      <div className="absolute bottom-2 right-2 w-8 h-4 rounded-full bg-primary flex items-center justify-center text-[6px] text-primary-foreground shadow">
+                      <div className="absolute bottom-2 right-2 w-8 h-4 rounded-sm bg-primary flex items-center justify-center text-[6px] text-primary-foreground shadow">
                         Ask Leo
                       </div>
                     </div>
@@ -929,7 +936,7 @@ export default function Home() {
         }
 
         /* Ensure feature cards have no extra hover effects */
-        #features .rounded-xl:hover {
+        #features .rounded-sm:hover {
           box-shadow: var(--tw-shadow, 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06)); /* Explicitly set to base shadow if using Tailwind's 'shadow' class */
           transform: none;
         }

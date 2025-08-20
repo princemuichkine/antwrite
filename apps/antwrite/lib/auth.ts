@@ -198,7 +198,9 @@ if (resend) {
       async sendVerificationOTP({ email, otp, type }) {
         const emailFrom = process.env.EMAIL_FROM;
         if (!emailFrom) {
-          throw new Error('EMAIL_FROM environment variable is required for OTP emails');
+          throw new Error(
+            'EMAIL_FROM environment variable is required for OTP emails',
+          );
         }
 
         let subject: string;
@@ -234,13 +236,15 @@ if (resend) {
             throw new Error(`Failed to send OTP email: ${error.message}`);
           }
 
-          console.log(`OTP email sent successfully to ${email}. Type: ${type}. ID: ${data?.id}`);
+          console.log(
+            `OTP email sent successfully to ${email}. Type: ${type}. ID: ${data?.id}`,
+          );
         } catch (err) {
           console.error('Failed to send OTP email:', err);
           throw err;
         }
       },
-    })
+    }),
   );
 }
 
@@ -313,6 +317,17 @@ export const auth = betterAuth({
     requireEmailVerification: emailVerificationEnabled,
   },
 
+  // Optimize session configuration for performance
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day
+    // Reduce session update frequency
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    },
+  },
+
   emailVerification: {
     sendOnSignUp: emailVerificationEnabled,
     sendVerificationEmail:
@@ -365,6 +380,15 @@ export const auth = betterAuth({
   },
 
   plugins: authPlugins,
+
+  // Performance optimizations
+  advanced: {
+    useSecureCookies: process.env.NODE_ENV === 'production',
+    crossSubDomainCookies: {
+      enabled: false, // Disable if not needed
+    },
+    generateId: () => crypto.randomUUID(), // Use native crypto for faster ID generation
+  },
 
   trustedOrigins: [
     'https://www.antwrite.com',

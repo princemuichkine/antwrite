@@ -43,7 +43,7 @@ const mentionInputStyle: MentionsInputProps['style'] = {
   control: {
     fontSize: 14,
     lineHeight: 1.5,
-    borderRadius: '1rem', // rounded-2xl
+    borderRadius: '0.25rem', // rounded-sm
     backgroundColor: 'hsl(var(--muted))', // Use CSS variable
     border: '1px solid hsl(var(--border))', // Use CSS variable
     color: 'hsl(var(--foreground))', // Use CSS variable for text
@@ -469,7 +469,7 @@ function PureStopButton({
   return (
     <Button
       data-testid="stop-button"
-      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      className="rounded-sm p-1.5 h-fit border dark:border-zinc-600"
       onClick={(event) => {
         event.preventDefault();
         stop();
@@ -495,7 +495,7 @@ function PureSendButton({
   return (
     <Button
       data-testid="send-button"
-      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      className="rounded-sm p-1.5 h-fit border dark:border-zinc-600"
       onClick={(event) => {
         event.preventDefault();
         submitForm();
