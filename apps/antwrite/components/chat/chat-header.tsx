@@ -13,6 +13,8 @@ import { PlusIcon, ClockRewind } from '../icons';
 import { useSidebar } from '../ui/sidebar';
 import { useDocumentUtils } from '@/hooks/use-document-utils';
 import { cn, fetcher } from '@/lib/utils';
+import { LottieIcon } from '@/components/ui/lottie-icon';
+import { animations } from '@/lib/utils/lottie-animations';
 import type { Chat } from '@antwrite/db';
 import {
   DropdownMenu,
@@ -62,7 +64,7 @@ function PureChatHeader({
   return (
     <header
       className={cn(
-        'flex sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b border-border border-r items-center px-3 h-[45px] gap-2 transition-all duration-200',
+        'flex sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b border-border border-r items-center px-3 h-[42.5px] gap-2 transition-all duration-200',
         className,
       )}
     >
@@ -103,8 +105,8 @@ function PureChatHeader({
           <ModelSelector
             selectedModelId={selectedModelId}
             className={cn('ml-0', {
-              'w-[140px] md:px-2 md:h-[34px]': isCompact,
-              'w-[180px] md:px-3 md:h-[34px]': !isCompact,
+              'w-[140px] md:px-2 md:h-[32px]': isCompact,
+              'w-[180px] md:px-3 md:h-[32px]': !isCompact,
             })}
             onModelChange={onModelChange}
           />
@@ -118,17 +120,23 @@ function PureChatHeader({
             size="icon"
             className="size-8 ml-auto text-muted-foreground hover:text-foreground"
           >
-            <ClockRewind size={16} />
+            <LottieIcon
+              animationData={animations.history}
+              size={16}
+              loop={false}
+              autoplay={false}
+              initialFrame={0}
+            />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-72">
+        <DropdownMenuContent align="end" className="w-[--radix-popper-anchor-width] min-w-[280px]" sideOffset={4}>
           <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
             Recent Conversations
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
 
           {recentChats.length === 0 ? (
-            <DropdownMenuItem disabled className="py-2 px-3 text-center">
+            <DropdownMenuItem disabled className="py-1.5 px-2 text-center">
               No recent conversations
             </DropdownMenuItem>
           ) : (
@@ -143,7 +151,7 @@ function PureChatHeader({
                     }),
                   );
                 }}
-                className="py-2 px-3"
+                className="py-2.5 px-4 rounded-sm hover:bg-accent/50 transition-colors duration-200"
               >
                 <div className="flex flex-col w-full overflow-hidden">
                   <span className="truncate font-medium text-sm">
@@ -156,7 +164,7 @@ function PureChatHeader({
                         day: 'numeric',
                         year:
                           new Date(chat.createdAt).getFullYear() !==
-                          new Date().getFullYear()
+                            new Date().getFullYear()
                             ? 'numeric'
                             : undefined,
                       })}
@@ -165,57 +173,57 @@ function PureChatHeader({
                   {(chat.document_context?.active ||
                     (chat.document_context?.mentioned &&
                       chat.document_context.mentioned.length > 0)) && (
-                    <div className="mt-1.5 pt-1.5 border-t border-border/50 text-xs flex flex-col gap-1 overflow-hidden">
-                      {chat.document_context.active && (
-                        <div className="flex items-center gap-1.5 text-muted-foreground truncate">
-                          <span className="font-medium text-foreground/80 shrink-0">
-                            Active:
-                          </span>
-                          <Link
-                            href={`/documents/${chat.document_context.active}`}
-                            className="truncate hover:underline text-blue-500 dark:text-blue-400"
-                            onClick={(e) => e.stopPropagation()}
-                            title={
-                              chat.document_context.activeTitle ||
-                              chat.document_context.active
-                            }
-                          >
-                            {chat.document_context.activeTitle ||
-                              chat.document_context.active}
-                          </Link>
-                        </div>
-                      )}
-                      {chat.document_context.mentioned &&
-                        chat.document_context.mentioned.length > 0 && (
-                          <div className="flex items-start gap-1.5 text-muted-foreground">
-                            <span className="font-medium text-foreground/80 shrink-0 pt-px">
-                              Mentioned:
+                      <div className="mt-1.5 pt-1.5 border-t border-border/50 text-xs flex flex-col gap-1 overflow-hidden">
+                        {chat.document_context.active && (
+                          <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+                            <span className="font-medium text-foreground/80 shrink-0">
+                              Active:
                             </span>
-                            <div className="flex flex-wrap gap-x-2 gap-y-1 overflow-hidden">
-                              {chat.document_context.mentioned.map(
-                                (docId: string, index: number) => (
-                                  <Link
-                                    key={docId}
-                                    href={`/documents/${docId}`}
-                                    className="truncate hover:underline text-blue-500 dark:text-blue-400"
-                                    onClick={(e) => e.stopPropagation()} // Prevent dropdown item click
-                                    title={
-                                      chat.document_context.mentionedTitles?.[
-                                        index
-                                      ] || docId
-                                    }
-                                  >
-                                    {chat.document_context.mentionedTitles?.[
-                                      index
-                                    ] || docId}
-                                  </Link>
-                                ),
-                              )}
-                            </div>
+                            <Link
+                              href={`/documents/${chat.document_context.active}`}
+                              className="truncate hover:underline text-blue-500 dark:text-blue-400"
+                              onClick={(e) => e.stopPropagation()}
+                              title={
+                                chat.document_context.activeTitle ||
+                                chat.document_context.active
+                              }
+                            >
+                              {chat.document_context.activeTitle ||
+                                chat.document_context.active}
+                            </Link>
                           </div>
                         )}
-                    </div>
-                  )}
+                        {chat.document_context.mentioned &&
+                          chat.document_context.mentioned.length > 0 && (
+                            <div className="flex items-start gap-1.5 text-muted-foreground">
+                              <span className="font-medium text-foreground/80 shrink-0 pt-px">
+                                Mentioned:
+                              </span>
+                              <div className="flex flex-wrap gap-x-2 gap-y-1 overflow-hidden">
+                                {chat.document_context.mentioned.map(
+                                  (docId: string, index: number) => (
+                                    <Link
+                                      key={docId}
+                                      href={`/documents/${docId}`}
+                                      className="truncate hover:underline text-blue-500 dark:text-blue-400"
+                                      onClick={(e) => e.stopPropagation()} // Prevent dropdown item click
+                                      title={
+                                        chat.document_context.mentionedTitles?.[
+                                        index
+                                        ] || docId
+                                      }
+                                    >
+                                      {chat.document_context.mentionedTitles?.[
+                                        index
+                                      ] || docId}
+                                    </Link>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    )}
                 </div>
               </DropdownMenuItem>
             ))
@@ -239,7 +247,7 @@ function PureChatHeader({
           />
         </Link>
       </Button>
-    </header>
+    </header >
   );
 }
 

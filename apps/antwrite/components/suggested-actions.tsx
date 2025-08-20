@@ -22,7 +22,7 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="text-sm text-muted-foreground py-4"
+        className="text-sm text-muted-foreground py-1"
       >
         Type a message to start a conversation
       </motion.p>

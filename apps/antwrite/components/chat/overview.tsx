@@ -8,14 +8,14 @@ export const Overview = () => {
   return (
     <motion.div
       key="overview"
-      className="size-full flex items-center justify-center p-6"
+      className="size-full flex items-center justify-center p-5"
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ delay: 0.3 }}
     >
       <div className="rounded-sm p-6 flex flex-col gap-4 leading-relaxed text-center max-w-md bg-card/50 border shadow-sm dark:border-white/10">
-        <div className="flex justify-center mb-2">
+        <div className="flex justify-center mb-0">
           <Image
             src={
               resolvedTheme === 'dark'
@@ -35,30 +35,30 @@ export const Overview = () => {
           Write, edit, and collaborate with AI.
         </p>
 
-        <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-          <p>
+        <div className="flex flex-col gap-3 text-sm text-muted-foreground">
+          <p className="leading-relaxed">
             Press{' '}
-            <kbd className="px-1.5 py-0.5 text-xs font-semibold text-foreground bg-background border border-border rounded-sm">
+            <kbd className="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold text-primary bg-background border border-border rounded-md shadow-sm min-w-[30px] justify-center">
               TAB
             </kbd>{' '}
             to generate a suggestion.
           </p>
-          <p>
+          <p className="leading-relaxed">
             Highlight text and press{' '}
-            <kbd className="px-1.5 py-0.5 text-xs font-semibold text-foreground bg-background border border-border rounded-sm">
+            <kbd className="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold text-primary bg-background border border-border rounded-md shadow-sm min-w-[70px] justify-center">
               ⌘/Ctrl + K
             </kbd>{' '}
             to edit.
           </p>
-          <p>Send a message in the chat input below.</p>
-          <p>
+          <p className="leading-relaxed">Send a message in the chat input below.</p>
+          <p className="leading-relaxed">
             Hold{' '}
-            <kbd className="px-1.5 py-0.5 text-xs font-semibold text-foreground bg-background border border-border rounded-sm">
+            <kbd className="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold text-primary bg-background border border-border rounded-md shadow-sm min-w-[40px] justify-center">
               Shift
             </kbd>{' '}
             and hover over text for synonyms.
           </p>
-          <p>Configure AI behavior in the settings menu (top-right).</p>
+          <p className="leading-relaxed">Configure AI behavior in the settings menu (top-right).</p>
         </div>
       </div>
     </motion.div>

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { chatModels } from '@/lib/ai/models';
 
-import { CheckCircleFillIcon, ChevronDownIcon } from '../icons';
+import { ChevronDownIcon } from '../icons';
 import { Paywall } from '@/components/paywall';
 
 export function ModelSelector({
@@ -46,7 +46,7 @@ export function ModelSelector({
       <Button
         data-testid="model-selector"
         variant="outline"
-        className={cn('md:px-2 md:h-[34px]', className)}
+        className={cn('px-2 h-8 rounded-sm border border-border', className)}
         disabled
       >
         Loading...
@@ -60,20 +60,26 @@ export function ModelSelector({
         <DropdownMenuTrigger
           asChild
           className={cn(
-            'w-fit data-[state=open]:bg-accent data-[state=open]:text-accent-foreground',
+            'w-fit data-[state=open]:border-border data-[state=open]:text-sidebar-accent-foreground group',
             className,
           )}
         >
           <Button
             data-testid="model-selector"
             variant="outline"
-            className="flex items-center gap-1 md:px-2 md:h-[34px]"
+            className="flex items-center gap-1.5 px-2 h-8 rounded-sm hover:bg-accent/50 transition-colors duration-200 border border-border"
           >
-            {minimal ? selectedModelId.split('-')[0] : selectedChatModel?.name}
-            <ChevronDownIcon />
+            <span className="truncate">
+              {minimal ? selectedModelId.split('-')[0] : selectedChatModel?.name}
+            </span>
+            <ChevronDownIcon size={16} />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-72">
+        <DropdownMenuContent
+          align="start"
+          className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-sm border-border shadow-lg bg-background"
+          sideOffset={4}
+        >
           {chatModels.map((chatModel) => {
             const { id, proOnly } = chatModel;
             const isLocked = proOnly === true && !hasActiveSubscription;
@@ -91,7 +97,10 @@ export function ModelSelector({
                   onModelChange(id);
                 }}
                 data-active={id === selectedModelId}
-                className="group relative flex w-full items-center gap-2 px-3 py-2 cursor-pointer"
+                className={cn(
+                  "group relative flex w-full items-center gap-3 px-4 py-2.5 cursor-pointer rounded-sm hover:bg-accent/50 transition-colors duration-200",
+                  id === selectedModelId && !isLocked && "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
+                )}
               >
                 <div className="flex flex-col gap-1 items-start flex-1">
                   <div>{chatModel.name}</div>
@@ -99,11 +108,6 @@ export function ModelSelector({
                     {chatModel.description}
                   </div>
                 </div>
-                {!isLocked && id === selectedModelId && (
-                  <div className="text-foreground dark:text-foreground">
-                    <CheckCircleFillIcon />
-                  </div>
-                )}
                 {isLocked && (
                   <Button
                     size="sm"
@@ -112,7 +116,7 @@ export function ModelSelector({
                       e.stopPropagation();
                       setPaywallOpen(true);
                     }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity rounded-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:text-green-800 dark:hover:text-green-200 border border-green-200 dark:border-green-800"
                   >
                     Upgrade
                   </Button>

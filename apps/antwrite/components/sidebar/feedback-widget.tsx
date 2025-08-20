@@ -96,9 +96,9 @@ export function FeedbackWidget({ className }: { className?: string }) {
       <SidebarMenuItem>
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton className="group data-[state=open]:border text-accent-foreground data-[state=open]:text-sidebar-accent-foreground w-full h-10 hover:bg-accent/50 transition-colors duration-200">
+            <SidebarMenuButton className="group data-[state=open]:bg-accent/50 data-[state=open]:text-sidebar-accent-foreground text-accent-foreground w-full h-10 hover:bg-accent/50 transition-colors duration-200">
               <LottieIcon
-                animationData={animations.forum}
+                animationData={animations.chat}
                 size={16}
                 loop={false}
                 autoplay={false}
@@ -111,7 +111,7 @@ export function FeedbackWidget({ className }: { className?: string }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             side="top"
-            className="w-[--radix-popper-anchor-width] p-0 rounded-sm border-b border-zinc-200 dark:border-zinc-700 shadow-lg"
+            className="w-[--radix-popper-anchor-width] min-w-full"
             sideOffset={5}
           >
             <div className="size-[240px]">
@@ -178,7 +178,7 @@ export function FeedbackWidget({ className }: { className?: string }) {
                         </ul>
                       </motion.div>
                       <textarea
-                        className="text-foreground size-full resize-none bg-transparent px-4 py-3.5 text-sm outline-hidden focus:ring-0 focus:outline-none"
+                        className="text-foreground size-full resize-none bg-transparent pl-3 pr-8 py-3.5 text-sm outline-hidden focus:ring-0 focus:outline-none"
                         autoFocus
                         onChange={(e) => setFeedback(e.target.value)}
                         disabled={status === 'submitting'}
@@ -192,7 +192,7 @@ export function FeedbackWidget({ className }: { className?: string }) {
                         variant="outline"
                         size="sm"
                         aria-label="Submit feedback"
-                        className="rounded-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:text-green-800 dark:hover:text-green-200 border border-green-200 dark:border-green-800 ml-auto mr-4"
+                        className="rounded-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:text-green-800 dark:hover:text-green-200 border border-green-200 dark:border-green-800 ml-auto mr-6"
                         disabled={status === 'submitting' || !feedback.trim()}
                       >
                         <AnimatePresence mode="popLayout">

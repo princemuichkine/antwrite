@@ -91,6 +91,27 @@
     }
 }
 
+@layer utilities {
+    /* Hide scrollbars globally */
+    .hide-scrollbar {
+        -ms-overflow-style: none;  /* Internet Explorer 10+ */
+        scrollbar-width: none;  /* Firefox */
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;  /* Safari and Chrome */
+    }
+
+    /* Hide scrollbars for all elements by default */
+    * {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    *::-webkit-scrollbar {
+        display: none;
+    }
+}
+
 @layer base {
   ::selection {
     background-color: hsl(var(--selection-background));
