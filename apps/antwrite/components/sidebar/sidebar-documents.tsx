@@ -7,11 +7,7 @@ import type { User } from '@/lib/auth';
 import { memo, useCallback, useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { cn, fetcher } from '@/lib/utils';
-import {
-  MoreHorizontalIcon,
-  PlusIcon,
-  TrashIcon,
-} from '@/components/icons';
+import { MoreHorizontalIcon, PlusIcon, TrashIcon } from '@/components/icons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -487,7 +483,7 @@ export function SidebarDocuments({
     return docs.filter(
       (doc) =>
         doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (doc.content?.toLowerCase().includes(searchTerm.toLowerCase())),
+        doc.content?.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   };
 

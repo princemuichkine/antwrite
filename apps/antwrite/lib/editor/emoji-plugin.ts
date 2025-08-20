@@ -5,9 +5,7 @@ import {
   TextSelection,
 } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
-import type {
-  Node as ProseMirrorNode,
-} from 'prosemirror-model';
+import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import * as emoji from 'node-emoji';
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';

@@ -1,4 +1,9 @@
-import { Plugin, PluginKey, type EditorState, type Transaction } from 'prosemirror-state';
+import {
+  Plugin,
+  PluginKey,
+  type EditorState,
+  type Transaction,
+} from 'prosemirror-state';
 import { type EditorView, Decoration, DecorationSet } from 'prosemirror-view';
 
 export interface SelectionContextState {

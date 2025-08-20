@@ -1,6 +1,6 @@
 'use server';
 
-import { generateText, } from 'ai';
+import { generateText } from 'ai';
 
 import { getDocumentById, saveDocument } from '@/lib/db/queries';
 import { myProvider } from '@/lib/ai/providers';

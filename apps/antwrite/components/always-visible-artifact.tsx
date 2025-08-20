@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { Loader2, } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import type { Document } from '@antwrite/db';
 import { generateUUID } from '@/lib/utils';
@@ -29,7 +29,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { SaveState } from '@/lib/editor/save-plugin';
 import type { User } from '@/lib/auth';
 import { PublishSettingsMenu } from '@/components/publish-settings-menu';
-import { Card, } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Editor = dynamic(
@@ -523,7 +523,7 @@ export function AlwaysVisibleArtifact({
                 initialLastSaved={
                   latestDocument ? new Date(latestDocument.updatedAt) : null
                 }
-                onStatusChange={(newSaveState: SaveState) => { }}
+                onStatusChange={(newSaveState: SaveState) => {}}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
               />
             </Suspense>

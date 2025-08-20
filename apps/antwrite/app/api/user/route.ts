@@ -1,4 +1,4 @@
-import type { NextRequest, } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { getUserAction } from './actions/get';
 import { checkUsernameAction } from './actions/check';
 import { updateUsernameAction } from './actions/update';

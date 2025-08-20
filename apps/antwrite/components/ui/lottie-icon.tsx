@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, memo } from "react";
-import Lottie from "lottie-react";
-import { useTheme } from "next-themes";
-import type { LottieAnimationData } from "@/lib/utils/lottie-animations";
+import { useState, useRef, useEffect, memo } from 'react';
+import Lottie from 'lottie-react';
+import { useTheme } from 'next-themes';
+import type { LottieAnimationData } from '@/lib/utils/lottie-animations';
 
 interface LottieIconProps {
   animationData: string | object;
@@ -17,7 +17,7 @@ interface LottieIconProps {
 const LottieIconComponent = ({
   animationData,
   size = 18,
-  className = "",
+  className = '',
   loop = false,
   autoplay = false,
   initialFrame,
@@ -37,7 +37,7 @@ const LottieIconComponent = ({
 
   useEffect(() => {
     // Handle direct object data (our new preferred approach)
-    if (typeof animationData === "object" && animationData !== null) {
+    if (typeof animationData === 'object' && animationData !== null) {
       let processedData = animationData as LottieAnimationData;
 
       // If customColor is provided, override the primary color in the control layer
@@ -45,19 +45,19 @@ const LottieIconComponent = ({
         processedData = JSON.parse(JSON.stringify(processedData)); // Deep clone
         const controlLayer = processedData.layers.find(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (layer: any) => layer.nm === "control" && layer.ef,
+          (layer: any) => layer.nm === 'control' && layer.ef,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ) as any;
         if (controlLayer?.ef) {
           const primaryEffect = controlLayer.ef.find(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (effect: any) => effect.nm === "primary",
+            (effect: any) => effect.nm === 'primary',
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ) as any;
           if (primaryEffect?.ef) {
             const colorControl = primaryEffect.ef.find(
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (control: any) => control.nm === "Color",
+              (control: any) => control.nm === 'Color',
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ) as any;
             if (colorControl?.v?.k) {
@@ -73,7 +73,7 @@ const LottieIconComponent = ({
     }
 
     // Handle string paths (legacy - should warn developers)
-    if (typeof animationData === "string") {
+    if (typeof animationData === 'string') {
       console.warn(
         `Using path string "${animationData}" for Lottie animation is deprecated. Please use direct animation imports from @/lib/utils/lottie-animations instead.`,
       );
@@ -133,19 +133,20 @@ const LottieIconComponent = ({
 
   // Apply theme-based filter if no custom color is provided
   const shouldApplyThemeFilter = !customColor;
-  const isDark = theme === "dark";
+  const isDark = theme === 'dark';
   const filterStyle = shouldApplyThemeFilter
     ? isDark
-      ? { filter: "invert(1) brightness(1.2)" }
-      : { filter: "brightness(0.8)" }
+      ? { filter: 'invert(1) brightness(1.2)' }
+      : { filter: 'brightness(0.8)' }
     : {};
 
   return (
     <div
       role="button"
       tabIndex={0}
-      className={`inline-flex items-center justify-center transition-all duration-200 ease-out ${isHovered ? "scale-110" : ""
-        } ${className}`}
+      className={`inline-flex items-center justify-center transition-all duration-200 ease-out ${
+        isHovered ? 'scale-110' : ''
+      } ${className}`}
       style={{ width: size, height: size }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -169,4 +170,4 @@ const LottieIconComponent = ({
 export const LottieIcon = memo(LottieIconComponent);
 
 // Set displayName for proper component identification
-LottieIcon.displayName = "LottieIcon";
+LottieIcon.displayName = 'LottieIcon';

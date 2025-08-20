@@ -1,4 +1,9 @@
-import { Plugin, PluginKey, type EditorState, type Transaction } from 'prosemirror-state';
+import {
+  Plugin,
+  PluginKey,
+  type EditorState,
+  type Transaction,
+} from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 
@@ -115,14 +120,11 @@ export function synonymsPlugin(): Plugin<SynonymPluginState> {
         currentFetchController = null;
       }
     };
-    setTimeout(
-      () => {
-        if (closeOverlayListener) {
-          document.addEventListener('mousedown', closeOverlayListener);
-        }
-      },
-      0,
-    );
+    setTimeout(() => {
+      if (closeOverlayListener) {
+        document.addEventListener('mousedown', closeOverlayListener);
+      }
+    }, 0);
 
     document.body.appendChild(overlayContainer);
   }

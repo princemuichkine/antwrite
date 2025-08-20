@@ -14,7 +14,6 @@ import { Loader2, GlobeIcon, CopyIcon, Edit2, Check } from 'lucide-react';
 import type { Document } from '@antwrite/db';
 import type { User } from '@/lib/auth';
 import useSWR from 'swr';
-import debounce from 'lodash.debounce';
 import { toast } from 'sonner';
 import useSWRMutation from 'swr/mutation';
 import { Paywall } from '@/components/paywall';
@@ -104,10 +103,10 @@ export function PublishSettingsMenu({
   useEffect(() => {
     setSlug(
       document.slug ||
-      document.title
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, ''),
+        document.title
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, ''),
     );
     const styleObj = (document.style as any) || {};
     setFont(styleObj.font || 'montserrat');

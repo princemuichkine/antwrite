@@ -3,7 +3,14 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { LogoGoogle, GitIcon, LoaderIcon, LogoLinkedIn, LogoTwitter, LogoMicrosoft } from '@/components/icons';
+import {
+  LogoGoogle,
+  GitIcon,
+  LoaderIcon,
+  LogoLinkedIn,
+  LogoTwitter,
+  LogoMicrosoft,
+} from '@/components/icons';
 import type { ReactNode } from 'react';
 
 interface AuthFormProps {
@@ -16,7 +23,9 @@ interface AuthFormProps {
   linkedinEnabled?: boolean;
   twitterEnabled?: boolean;
   microsoftEnabled?: boolean;
-  onSocialLogin?: (provider: 'google' | 'github' | 'linkedin' | 'twitter' | 'microsoft') => void;
+  onSocialLogin?: (
+    provider: 'google' | 'github' | 'linkedin' | 'twitter' | 'microsoft',
+  ) => void;
   isSocialLoading?: string | null;
   isEmailLoading?: boolean;
 }
@@ -31,11 +40,16 @@ export function AuthForm({
   linkedinEnabled = false,
   twitterEnabled = false,
   microsoftEnabled = false,
-  onSocialLogin = () => { },
+  onSocialLogin = () => {},
   isSocialLoading = null,
   isEmailLoading = false,
 }: AuthFormProps) {
-  const anySocialEnabled = googleEnabled || githubEnabled || linkedinEnabled || twitterEnabled || microsoftEnabled;
+  const anySocialEnabled =
+    googleEnabled ||
+    githubEnabled ||
+    linkedinEnabled ||
+    twitterEnabled ||
+    microsoftEnabled;
   const isLoading = !!isSocialLoading || isEmailLoading;
 
   return (

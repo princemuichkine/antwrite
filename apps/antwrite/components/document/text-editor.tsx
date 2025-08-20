@@ -12,12 +12,10 @@ import { EditorToolbar } from '@/components/document/editor-toolbar';
 import {
   savePluginKey,
   setSaveStatus,
-  createSaveFunction,
   createForceSaveHandler,
   type SaveState,
 } from '@/lib/editor/save-plugin';
 import { createEditorPlugins } from '@/lib/editor/editor-plugins';
-import { createInlineSuggestionCallback } from '@/lib/editor/inline-suggestion-plugin';
 import type { FormatState } from '@/lib/editor/format-plugin';
 
 type EditorProps = {
@@ -63,7 +61,12 @@ function PureEditor({
   const performSave = useCallback(
     async (contentToSave: string) => {
       const docId = currentDocumentIdRef.current;
-      if (!docId || docId === 'init' || docId === 'undefined' || docId === 'null') {
+      if (
+        !docId ||
+        docId === 'init' ||
+        docId === 'undefined' ||
+        docId === 'null'
+      ) {
         console.warn(
           '[Save Function] Attempted to save with invalid or init documentId:',
           docId,

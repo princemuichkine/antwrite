@@ -2,7 +2,7 @@ import 'server-only';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
-import { db, } from '@antwrite/db';
+import { db } from '@antwrite/db';
 import Stripe from 'stripe';
 import { stripe } from '@better-auth/stripe';
 import { Resend } from 'resend';
@@ -92,7 +92,9 @@ if (githubEnabled) {
 
 if (linkedinEnabled) {
   if (!process.env.LINKEDIN_CLIENT_ID)
-    throw new Error('Missing LINKEDIN_CLIENT_ID because LINKEDIN_ENABLED is true');
+    throw new Error(
+      'Missing LINKEDIN_CLIENT_ID because LINKEDIN_ENABLED is true',
+    );
   if (!process.env.LINKEDIN_CLIENT_SECRET)
     throw new Error(
       'Missing LINKEDIN_CLIENT_SECRET because LINKEDIN_ENABLED is true',
@@ -102,7 +104,9 @@ if (linkedinEnabled) {
 
 if (twitterEnabled) {
   if (!process.env.TWITTER_CLIENT_ID)
-    throw new Error('Missing TWITTER_CLIENT_ID because TWITTER_ENABLED is true');
+    throw new Error(
+      'Missing TWITTER_CLIENT_ID because TWITTER_ENABLED is true',
+    );
   if (!process.env.TWITTER_CLIENT_SECRET)
     throw new Error(
       'Missing TWITTER_CLIENT_SECRET because TWITTER_ENABLED is true',
@@ -112,7 +116,9 @@ if (twitterEnabled) {
 
 if (microsoftEnabled) {
   if (!process.env.MICROSOFT_CLIENT_ID)
-    throw new Error('Missing MICROSOFT_CLIENT_ID because MICROSOFT_ENABLED is true');
+    throw new Error(
+      'Missing MICROSOFT_CLIENT_ID because MICROSOFT_ENABLED is true',
+    );
   if (!process.env.MICROSOFT_CLIENT_SECRET)
     throw new Error(
       'Missing MICROSOFT_CLIENT_SECRET because MICROSOFT_ENABLED is true',
@@ -172,14 +178,14 @@ if (stripeEnabled && stripeClient) {
     stripe({
       stripeClient: stripeClient,
       stripeWebhookSecret: stripeWebhookSecret,
-    createCustomerOnSignUp: true,
-    subscription: {
-      enabled: process.env.STRIPE_ENABLED === 'true',
-      plans,
-      requireEmailVerification: emailVerificationEnabled,
-    },
-  }),
-);
+      createCustomerOnSignUp: true,
+      subscription: {
+        enabled: process.env.STRIPE_ENABLED === 'true',
+        plans,
+        requireEmailVerification: emailVerificationEnabled,
+      },
+    }),
+  );
 }
 
 authPlugins.push(nextCookies());
@@ -276,7 +282,9 @@ export const auth = betterAuth({
             try {
               const emailFrom = process.env.EMAIL_FROM;
               if (!emailFrom) {
-                throw new Error('EMAIL_FROM environment variable is required for email verification');
+                throw new Error(
+                  'EMAIL_FROM environment variable is required for email verification',
+                );
               }
               const { data, error } = await resend.emails.send({
                 from: emailFrom,

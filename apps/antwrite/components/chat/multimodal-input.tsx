@@ -1,10 +1,6 @@
 'use client';
 
-import type {
-  Attachment,
-  ChatRequestOptions,
-  Message,
-} from 'ai';
+import type { Attachment, ChatRequestOptions, Message } from 'ai';
 import cx from 'classnames';
 import type React from 'react';
 import {
@@ -26,11 +22,11 @@ import {
   type MentionsInputProps,
 } from 'react-mentions';
 import { sanitizeUIMessages, cn } from '@/lib/utils';
-import { ArrowUpIcon, StopIcon, } from '../icons';
+import { ArrowUpIcon, StopIcon } from '../icons';
 import { Button } from '../ui/button';
 import { SuggestedActions } from '../suggested-actions';
 import equal from 'fast-deep-equal';
-import type { UseChatHelpers, } from '@ai-sdk/react';
+import type { UseChatHelpers } from '@ai-sdk/react';
 import { useDocumentContext } from '@/hooks/use-document-context';
 
 interface DocumentSuggestion extends SuggestionDataItem {

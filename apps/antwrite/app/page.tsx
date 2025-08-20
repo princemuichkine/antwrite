@@ -8,7 +8,14 @@ import { authClient } from '@/lib/auth-client';
 import { CardHeader, Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GripVertical, X, Check } from 'lucide-react';
-import { LogoGoogle, GitIcon, LogoLinkedIn, LogoTwitter, LogoMicrosoft, LoaderIcon } from '@/components/icons';
+import {
+  LogoGoogle,
+  GitIcon,
+  LogoLinkedIn,
+  LogoTwitter,
+  LogoMicrosoft,
+  LoaderIcon,
+} from '@/components/icons';
 import { toast } from '@/components/toast';
 import Image from 'next/image';
 import { motion, useInView } from 'framer-motion';
@@ -97,7 +104,9 @@ export default function Home() {
     }
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'github' | 'linkedin' | 'twitter' | 'microsoft') => {
+  const handleSocialLogin = async (
+    provider: 'google' | 'github' | 'linkedin' | 'twitter' | 'microsoft',
+  ) => {
     await authClient.signIn.social(
       {
         provider,
@@ -207,117 +216,122 @@ export default function Home() {
           </div>
 
           {/* Social Authentication Section */}
-          {!hasSession && (googleEnabled || githubEnabled || linkedinEnabled || twitterEnabled || microsoftEnabled) && (
-            <>
-              <div className="relative mt-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+          {!hasSession &&
+            (googleEnabled ||
+              githubEnabled ||
+              linkedinEnabled ||
+              twitterEnabled ||
+              microsoftEnabled) && (
+              <>
+                <div className="relative mt-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-gray-500">
+                      Or continue with
+                    </span>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-gray-500">
-                    Or continue with
-                  </span>
+
+                <div className="flex flex-col gap-3 mt-6 w-full max-w-xs mx-auto">
+                  {/* Google OAuth Button */}
+                  {googleEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => handleSocialLogin('google')}
+                      disabled={isSocialLoading !== null}
+                      className="w-full h-10 px-3 rounded-md bg-[#EA4335] hover:bg-[#d33b2c] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-center">
+                        {isSocialLoading === 'google' ? (
+                          <LoaderIcon size={16} />
+                        ) : (
+                          <LogoGoogle size={16} />
+                        )}
+                        <span className="ml-2">Continue with Google</span>
+                      </div>
+                    </button>
+                  )}
+
+                  {/* GitHub OAuth Button */}
+                  {githubEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => handleSocialLogin('github')}
+                      disabled={isSocialLoading !== null}
+                      className="w-full h-10 px-3 rounded-md bg-[#333] hover:bg-[#444] dark:bg-[#171515] dark:hover:bg-[#2b2a2a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-center">
+                        {isSocialLoading === 'github' ? (
+                          <LoaderIcon size={16} />
+                        ) : (
+                          <GitIcon />
+                        )}
+                        <span className="ml-2">Continue with GitHub</span>
+                      </div>
+                    </button>
+                  )}
+
+                  {/* LinkedIn OAuth Button */}
+                  {linkedinEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => handleSocialLogin('linkedin')}
+                      disabled={isSocialLoading !== null}
+                      className="w-full h-10 px-3 rounded-md bg-[#0077B5] hover:bg-[#006699] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-center">
+                        {isSocialLoading === 'linkedin' ? (
+                          <LoaderIcon size={16} />
+                        ) : (
+                          <LogoLinkedIn size={16} />
+                        )}
+                        <span className="ml-2">Continue with LinkedIn</span>
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Twitter OAuth Button */}
+                  {twitterEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => handleSocialLogin('twitter')}
+                      disabled={isSocialLoading !== null}
+                      className="w-full h-10 px-3 rounded-md bg-[#000000] hover:bg-[#1a1a1a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-center">
+                        {isSocialLoading === 'twitter' ? (
+                          <LoaderIcon size={16} />
+                        ) : (
+                          <LogoTwitter size={16} />
+                        )}
+                        <span className="ml-2">Continue with Twitter</span>
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Microsoft OAuth Button */}
+                  {microsoftEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => handleSocialLogin('microsoft')}
+                      disabled={isSocialLoading !== null}
+                      className="w-full h-10 px-3 rounded-md bg-white hover:bg-gray-50 dark:bg-white dark:hover:bg-gray-50 text-gray-600 dark:text-gray-600 border border-gray-300 text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-center">
+                        {isSocialLoading === 'microsoft' ? (
+                          <LoaderIcon size={16} />
+                        ) : (
+                          <LogoMicrosoft size={16} />
+                        )}
+                        <span className="ml-2">Continue with Microsoft</span>
+                      </div>
+                    </button>
+                  )}
                 </div>
-              </div>
-
-              <div className="flex flex-col gap-3 mt-6 w-full max-w-xs mx-auto">
-                {/* Google OAuth Button */}
-                {googleEnabled && (
-                  <button
-                    type="button"
-                    onClick={() => handleSocialLogin('google')}
-                    disabled={isSocialLoading !== null}
-                    className="w-full h-10 px-3 rounded-md bg-[#EA4335] hover:bg-[#d33b2c] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="flex items-center justify-center">
-                      {isSocialLoading === 'google' ? (
-                        <LoaderIcon size={16} />
-                      ) : (
-                        <LogoGoogle size={16} />
-                      )}
-                      <span className="ml-2">Continue with Google</span>
-                    </div>
-                  </button>
-                )}
-
-                {/* GitHub OAuth Button */}
-                {githubEnabled && (
-                  <button
-                    type="button"
-                    onClick={() => handleSocialLogin('github')}
-                    disabled={isSocialLoading !== null}
-                    className="w-full h-10 px-3 rounded-md bg-[#333] hover:bg-[#444] dark:bg-[#171515] dark:hover:bg-[#2b2a2a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="flex items-center justify-center">
-                      {isSocialLoading === 'github' ? (
-                        <LoaderIcon size={16} />
-                      ) : (
-                        <GitIcon />
-                      )}
-                      <span className="ml-2">Continue with GitHub</span>
-                    </div>
-                  </button>
-                )}
-
-                {/* LinkedIn OAuth Button */}
-                {linkedinEnabled && (
-                  <button
-                    type="button"
-                    onClick={() => handleSocialLogin('linkedin')}
-                    disabled={isSocialLoading !== null}
-                    className="w-full h-10 px-3 rounded-md bg-[#0077B5] hover:bg-[#006699] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="flex items-center justify-center">
-                      {isSocialLoading === 'linkedin' ? (
-                        <LoaderIcon size={16} />
-                      ) : (
-                        <LogoLinkedIn size={16} />
-                      )}
-                      <span className="ml-2">Continue with LinkedIn</span>
-                    </div>
-                  </button>
-                )}
-
-                {/* Twitter OAuth Button */}
-                {twitterEnabled && (
-                  <button
-                    type="button"
-                    onClick={() => handleSocialLogin('twitter')}
-                    disabled={isSocialLoading !== null}
-                    className="w-full h-10 px-3 rounded-md bg-[#000000] hover:bg-[#1a1a1a] text-white text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="flex items-center justify-center">
-                      {isSocialLoading === 'twitter' ? (
-                        <LoaderIcon size={16} />
-                      ) : (
-                        <LogoTwitter size={16} />
-                      )}
-                      <span className="ml-2">Continue with Twitter</span>
-                    </div>
-                  </button>
-                )}
-
-                {/* Microsoft OAuth Button */}
-                {microsoftEnabled && (
-                  <button
-                    type="button"
-                    onClick={() => handleSocialLogin('microsoft')}
-                    disabled={isSocialLoading !== null}
-                    className="w-full h-10 px-3 rounded-md bg-white hover:bg-gray-50 dark:bg-white dark:hover:bg-gray-50 text-gray-600 dark:text-gray-600 border border-gray-300 text-sm font-medium transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="flex items-center justify-center">
-                      {isSocialLoading === 'microsoft' ? (
-                        <LoaderIcon size={16} />
-                      ) : (
-                        <LogoMicrosoft size={16} />
-                      )}
-                      <span className="ml-2">Continue with Microsoft</span>
-                    </div>
-                  </button>
-                )}
-              </div>
-            </>
-          )}
+              </>
+            )}
 
           <div className="mt-16 flex justify-center w-full">
             <div className="hero-frame">
@@ -539,16 +553,16 @@ export default function Home() {
                           animate={
                             card5InView
                               ? {
-                                opacity: 1,
-                                rotate: rot,
-                                y,
-                                transition: {
-                                  delay: 0.2 + i * 0.1,
-                                  type: 'spring',
-                                  stiffness: 140,
-                                  damping: 15,
-                                },
-                              }
+                                  opacity: 1,
+                                  rotate: rot,
+                                  y,
+                                  transition: {
+                                    delay: 0.2 + i * 0.1,
+                                    type: 'spring',
+                                    stiffness: 140,
+                                    damping: 15,
+                                  },
+                                }
                               : {}
                           }
                           className="w-20 h-28 bg-background border border-border rounded-lg flex items-center justify-center mx-[-4px] shadow-sm relative"
@@ -612,7 +626,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
 
       <footer className="w-full border-t border-border bg-background/80 backdrop-blur-sm py-4 mt-8">
         <div className="container mx-auto px-6 md:px-8 lg:px-12 flex items-center justify-between text-sm text-muted-foreground">

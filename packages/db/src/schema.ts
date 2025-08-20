@@ -11,7 +11,7 @@ import {
   pgEnum,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { relations, } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 
 export const user = pgTable('user', {

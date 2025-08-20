@@ -29,7 +29,8 @@ export async function sendFeedbackToDiscord({
   } catch (error: any) {
     console.error('[Feedback Action] Error processing feedback:', error);
 
-    let errorMessage = 'An unexpected error occurred while processing feedback.';
+    let errorMessage =
+      'An unexpected error occurred while processing feedback.';
     if (error instanceof Error) {
       errorMessage = error.message;
     }

@@ -1,4 +1,4 @@
-import type { NextRequest, } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { createDocument } from './actions/create';
 import { updateDocument } from './actions/update';
 import { deleteDocument } from './actions/delete';

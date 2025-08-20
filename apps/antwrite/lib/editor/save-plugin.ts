@@ -1,4 +1,4 @@
-import { Plugin, PluginKey, } from 'prosemirror-state';
+import { Plugin, PluginKey } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { buildContentFromDocument } from './functions';
 

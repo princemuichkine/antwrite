@@ -6,7 +6,14 @@ import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { toast } from '@/components/toast';
 import { SubmitButton } from '@/components/submit-button';
-import { LogoGoogle, GitIcon, LogoLinkedIn, LogoTwitter, LogoMicrosoft, LoaderIcon } from '@/components/icons';
+import {
+  LogoGoogle,
+  GitIcon,
+  LogoLinkedIn,
+  LogoTwitter,
+  LogoMicrosoft,
+  LoaderIcon,
+} from '@/components/icons';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -63,7 +70,9 @@ export default function LoginPage() {
     );
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'github' | 'linkedin' | 'twitter' | 'microsoft') => {
+  const handleSocialLogin = async (
+    provider: 'google' | 'github' | 'linkedin' | 'twitter' | 'microsoft',
+  ) => {
     await authClient.signIn.social(
       {
         provider,
@@ -130,7 +139,11 @@ export default function LoginPage() {
           </form>
 
           {/* Social Login Section */}
-          {(googleEnabled || githubEnabled || linkedinEnabled || twitterEnabled || microsoftEnabled) && (
+          {(googleEnabled ||
+            githubEnabled ||
+            linkedinEnabled ||
+            twitterEnabled ||
+            microsoftEnabled) && (
             <>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">

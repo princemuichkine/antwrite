@@ -84,9 +84,7 @@ export function Onboard({
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent md:bg-gradient-to-r md:from-black/40 md:via-transparent" />
             <div className="absolute top-8 left-8 z-10">
-              <h1 className="text-lg font-normal text-white/80">
-                Antwrite
-              </h1>
+              <h1 className="text-lg font-normal text-white/80">Antwrite</h1>
             </div>
           </div>
           <div className="p-8 md:p-10 flex flex-col relative">

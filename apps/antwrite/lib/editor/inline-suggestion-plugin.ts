@@ -1,4 +1,9 @@
-import { Plugin, PluginKey, type EditorState, type Transaction } from 'prosemirror-state';
+import {
+  Plugin,
+  PluginKey,
+  type EditorState,
+  type Transaction,
+} from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 
 export interface InlineSuggestionState {
