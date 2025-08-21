@@ -19,6 +19,9 @@ type ContextSelectorProps = {
     position?: { x: number; y: number };
     className?: string;
     placeholder?: string;
+    showSearchBar?: boolean;
+    shouldFocusSearchInput?: boolean;
+    searchQueryValue?: string;
 };
 
 const CONTEXT_TYPES = [
@@ -35,6 +38,9 @@ export function ContextSelector({
     position,
     className,
     placeholder = "Add documents, folders, chats, or tabs...",
+    showSearchBar = true,
+    shouldFocusSearchInput = true,
+    searchQueryValue,
 }: ContextSelectorProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedType, setSelectedType] = useState<string>('');
@@ -45,12 +51,12 @@ export function ContextSelector({
 
     // Focus search input when opened
     useEffect(() => {
-        if (isOpen && searchInputRef.current) {
+        if (isOpen && shouldFocusSearchInput && searchInputRef.current) {
             setTimeout(() => {
                 searchInputRef.current?.focus();
             }, 100);
         }
-    }, [isOpen]);
+    }, [isOpen, shouldFocusSearchInput]);
 
     // Handle click outside
     useEffect(() => {
@@ -63,6 +69,12 @@ export function ContextSelector({
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isOpen, onClose]);
+
+    useEffect(() => {
+        if (searchQueryValue !== undefined) {
+            setSearchQuery(searchQueryValue);
+        }
+    }, [searchQueryValue]);
 
     // Fetch items based on search query and selected type
     useEffect(() => {
@@ -97,6 +109,13 @@ export function ContextSelector({
 
                 let allItems: ContextItem[] = [...documents, ...folders, ...chats, ...tabs];
 
+                // The server already performs a search, so this client-side filtering is redundant and can cause inconsistencies.
+                // if (searchQuery.trim() !== '') {
+                //     allItems = allItems.filter(item =>
+                //         item.title.toLowerCase().startsWith(searchQuery.toLowerCase())
+                //     );
+                // }
+
                 // Filter by selected type (only if a type is selected)
                 if (selectedType) {
                     allItems = allItems.filter(item => item.type === selectedType);
@@ -114,6 +133,14 @@ export function ContextSelector({
         fetchItems();
     }, [searchQuery, selectedType, isOpen]);
 
+    // useEffect(() => {
+    //     // If the selector is open, there's a search query, but there are no items to show,
+    //     // and we are not in a loading state, then close the selector.
+    //     if (isOpen && !isLoading && items.length === 0 && searchQuery.trim() !== '') {
+    //         onClose();
+    //     }
+    // }, [items, isOpen, isLoading, searchQuery, onClose]);
+
     // Handle keyboard navigation
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Escape') {
@@ -127,6 +154,7 @@ export function ContextSelector({
         position: 'fixed' as const,
         top: position.y,
         left: position.x,
+        transform: 'translateY(-100%)',
         zIndex: 50
     } : {};
 
@@ -134,7 +162,7 @@ export function ContextSelector({
         <div
             ref={containerRef}
             className={cn(
-                "bg-background border border-border rounded-sm shadow-lg w-40 max-h-48 flex flex-col",
+                "bg-background border border-border rounded-sm shadow-lg w-40 max-h-48 flex flex-col opacity-90",
                 position ? "fixed" : "absolute bottom-full left-0 mb-1",
                 className
             )}
@@ -143,21 +171,23 @@ export function ContextSelector({
         >
             {/* Search Header */}
             <div className="p-1.5 border-b border-border">
-                <div className="relative">
-                    <Search className="absolute left-1.5 top-1/2 translate-y-[calc(-50%+1px)] size-2.5 text-muted-foreground" />
-                    <input
-                        ref={searchInputRef}
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={placeholder}
-                        className="w-full pl-[21px] pr-4 py-1 text-[6px] bg-background border border-border rounded-sm focus:outline-none h-6"
-                    />
-                </div>
+                {showSearchBar && (
+                    <div className="relative">
+                        <Search className="absolute left-1.5 top-1/2 translate-y-[calc(-50%+1px)] size-2.5 text-muted-foreground" />
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder={placeholder}
+                            className="w-full pl-[21px] pr-4 py-1 text-[6px] bg-background border border-border rounded-sm focus:outline-none h-6"
+                        />
+                    </div>
+                )}
 
                 {/* Type Filters - Vertical Layout - Hide when there are search results */}
                 {items.length === 0 && (
-                    <div className="flex flex-col gap-0.5 mt-1.5">
+                    <div className="flex flex-col gap-1 mt-1.5">
                         {CONTEXT_TYPES.map((type) => {
                             const Icon = type.icon;
                             return (
@@ -167,8 +197,8 @@ export function ContextSelector({
                                     className={cn(
                                         "flex items-center gap-1.5 px-1.5 py-1 text-[6px] rounded-sm transition-colors h-6",
                                         selectedType === type.id
-                                            ? "bg-accent/50 text-foreground"
-                                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                                            ? "bg-accent/30 text-foreground"
+                                            : "text-muted-foreground hover:bg-accent/30 hover:text-foreground"
                                     )}
                                 >
                                     <Icon className="size-2.5" />
@@ -181,12 +211,13 @@ export function ContextSelector({
 
                 {/* Results - Show right below search bar where filters were */}
                 {items.length > 0 && (
-                    <div className="flex flex-col gap-0.5 mt-1.5 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+                    <div className="flex flex-col gap-1 mt-1.5 animate-in fade-in-0 slide-in-from-top-1 duration-200">
                         {items.map((item) => (
                             <button
+                                type="button"
                                 key={`${item.type}-${item.id}`}
                                 onClick={() => onSelect(item)}
-                                className="w-full text-left px-1.5 py-1 rounded-sm hover:bg-accent/50 transition-colors duration-200 group h-6 flex items-center"
+                                className="w-full text-left px-1.5 py-1 rounded-sm hover:bg-accent/30 transition-colors duration-200 group h-6 flex items-center"
                             >
                                 <div className="shrink-0">
                                     {item.icon}

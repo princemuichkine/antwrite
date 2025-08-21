@@ -265,7 +265,7 @@ export const RouteIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
-export const FileIcon = ({ size = 16 }: { size?: number }) => {
+export const FileIcon = ({ size = 16, className }: { size?: number, className?: string }) => {
   return (
     <svg
       height={size}
@@ -273,6 +273,7 @@ export const FileIcon = ({ size = 16 }: { size?: number }) => {
       viewBox="0 0 16 16"
       width={size}
       style={{ color: 'currentcolor' }}
+      className={className}
     >
       <path
         fillRule="evenodd"
@@ -515,7 +516,7 @@ export const InfoIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
-export const ArrowUpIcon = ({ size = 16 }: { size?: number }) => {
+export const ArrowUpIcon = ({ size = 16, className }: { size?: number, className?: string }) => {
   return (
     <svg
       height={size}
@@ -523,6 +524,7 @@ export const ArrowUpIcon = ({ size = 16 }: { size?: number }) => {
       viewBox="0 0 16 16"
       width={size}
       style={{ color: 'currentcolor' }}
+      className={className}
     >
       <path
         fillRule="evenodd"
@@ -534,13 +536,14 @@ export const ArrowUpIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
-export const StopIcon = ({ size = 16 }: { size?: number }) => {
+export const StopIcon = ({ size = 16, className }: { size?: number, className?: string }) => {
   return (
     <svg
       height={size}
       viewBox="0 0 16 16"
       width={size}
       style={{ color: 'currentcolor' }}
+      className={className}
     >
       <path
         fillRule="evenodd"
@@ -610,13 +613,14 @@ export const MessageIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
-export const CrossIcon = ({ size = 16 }: { size?: number }) => (
+export const CrossIcon = ({ size = 16, className }: { size?: number, className?: string }) => (
   <svg
     height={size}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
     width={size}
     style={{ color: 'currentcolor' }}
+    className={className}
   >
     <path
       fillRule="evenodd"

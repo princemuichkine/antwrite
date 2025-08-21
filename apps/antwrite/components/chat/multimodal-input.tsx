@@ -12,11 +12,12 @@ import {
   type SetStateAction,
   type ChangeEvent,
   memo,
+  useLayoutEffect,
 } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 import { sanitizeUIMessages, cn } from '@/lib/utils';
-import { ArrowUpIcon, StopIcon } from '../icons';
+import { ArrowUpIcon, StopIcon, FileIcon, CrossIcon } from '../icons';
 import { Button } from '../ui/button';
 import { SuggestedActions } from '../suggested-actions';
 import equal from 'fast-deep-equal';
@@ -25,6 +26,14 @@ import { useDocumentContext } from '@/hooks/use-document-context';
 
 import { Badge } from '../ui/badge';
 import { ContextSelector, type ContextItem } from '../context-selector';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../ui/tooltip';
+import { ModelSelector } from './model-selector';
+import { ChatModeSelector, type ChatMode } from './chat-mode-selector';
 
 export interface MentionedDocument {
   id: string;
@@ -48,6 +57,10 @@ function PureMultimodalInput({
   className,
   confirmedMentions,
   onMentionsChange,
+  selectedModelId,
+  onModelChange,
+  chatMode,
+  onChatModeChange,
 }: {
   chatId: string;
   input: UseChatHelpers['input'];
@@ -63,16 +76,109 @@ function PureMultimodalInput({
   className?: string;
   confirmedMentions: MentionedDocument[];
   onMentionsChange: (mentions: MentionedDocument[]) => void;
+  selectedModelId: string;
+  onModelChange: (modelId: string) => void;
+  chatMode: ChatMode;
+  onChatModeChange: (mode: ChatMode) => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const { width } = useWindowSize();
   const { documentId: activeDocumentId, documentTitle: activeDocumentTitle } =
     useDocumentContext();
+  const badgesContainerRef = useRef<HTMLDivElement>(null);
+  const atButtonContainerRef = useRef<HTMLDivElement>(null);
+  const measurementRef = useRef<HTMLDivElement>(null);
+  const [visibleMentionsLimit, setVisibleMentionsLimit] = useState(4);
+
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [input]);
+
+  useLayoutEffect(() => {
+    const badgesContainer = badgesContainerRef.current;
+    const atButtonContainer = atButtonContainerRef.current;
+    const measurementContainer = measurementRef.current;
+
+    if (!badgesContainer || !atButtonContainer || !measurementContainer) {
+      return;
+    }
+
+    const calculateLimit = () => {
+      const containerWidth = badgesContainer.offsetWidth;
+      const atButtonWidth = atButtonContainer.offsetWidth;
+      const badgeNodes = Array.from(
+        measurementContainer.children,
+      ) as HTMLElement[];
+      const totalMentions = badgeNodes.length;
+
+      const GAP = 6; // Corresponds to gap-1.5
+      const PLUS_X_BADGE_WIDTH = 40;
+
+      let currentWidth = atButtonWidth;
+      let newLimit = 0;
+
+      for (let i = 0; i < totalMentions; i++) {
+        const badgeWidth = badgeNodes[i].offsetWidth;
+        const widthWithNextBadge = currentWidth + GAP + badgeWidth;
+
+        const hasMoreBadges = i < totalMentions - 1;
+
+        let requiredWidth = widthWithNextBadge;
+        if (hasMoreBadges) {
+          requiredWidth += GAP + PLUS_X_BADGE_WIDTH;
+        }
+
+        if (requiredWidth > containerWidth) {
+          newLimit = i;
+          break;
+        } else {
+          currentWidth = widthWithNextBadge;
+          newLimit = i + 1;
+        }
+      }
+
+      setVisibleMentionsLimit(newLimit);
+    };
+
+    calculateLimit();
+
+    const resizeObserver = new ResizeObserver(calculateLimit);
+    resizeObserver.observe(badgesContainer);
+
+    return () => resizeObserver.disconnect();
+  }, [confirmedMentions]);
+
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    const overlay = overlayRef.current;
+
+    if (!textarea || !overlay) {
+      return;
+    }
+
+    const handleScroll = () => {
+      overlay.scrollTop = textarea.scrollTop;
+      overlay.scrollLeft = textarea.scrollLeft;
+    };
+
+    textarea.addEventListener('scroll', handleScroll);
+
+    return () => {
+      textarea.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const [showMentionContextSelector, setShowMentionContextSelector] = useState(false);
   const [showAddContextSelector, setShowAddContextSelector] = useState(false);
+  const [addSelectorPosition, setAddSelectorPosition] = useState<{ x: number; y: number } | undefined>(undefined);
   const [mentionStartPosition, setMentionStartPosition] = useState<number>(-1);
   const [mentionSelectorPosition, setMentionSelectorPosition] = useState<{ x: number; y: number } | undefined>(undefined);
+  const [mentionQuery, setMentionQuery] = useState('');
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     'input',
@@ -84,7 +190,10 @@ function PureMultimodalInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
+  const hiddenMentionsCount =
+    confirmedMentions.length > visibleMentionsLimit
+      ? confirmedMentions.length - visibleMentionsLimit
+      : 0;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -101,30 +210,43 @@ function PureMultimodalInput({
       // Show context selector immediately when @ is typed, even with no text after it
       if (!afterAt.includes(' ')) {
         setMentionStartPosition(atIndex);
+        setMentionQuery(afterAt);
 
         // Calculate position for context selector
         if (textareaRef.current) {
           const textarea = textareaRef.current;
           const rect = textarea.getBoundingClientRect();
 
-          // Create a temporary element to measure text position
-          const tempDiv = document.createElement('div');
-          tempDiv.style.position = 'absolute';
-          tempDiv.style.visibility = 'hidden';
-          tempDiv.style.whiteSpace = 'pre-wrap';
-          tempDiv.style.font = getComputedStyle(textarea).font;
-          tempDiv.style.width = textarea.clientWidth + 'px';
-          tempDiv.style.padding = getComputedStyle(textarea).padding;
-          tempDiv.textContent = textBeforeCursor;
+          // Create a mirror div to calculate character position
+          const mirrorDiv = document.createElement('div');
+          const style = window.getComputedStyle(textarea);
 
-          document.body.appendChild(tempDiv);
-          const textHeight = tempDiv.scrollHeight;
-          const lineHeight = parseInt(getComputedStyle(textarea).lineHeight);
-          const lines = Math.floor(textHeight / lineHeight);
-          document.body.removeChild(tempDiv);
+          mirrorDiv.style.position = 'absolute';
+          mirrorDiv.style.visibility = 'hidden';
+          mirrorDiv.style.whiteSpace = 'pre-wrap';
+          mirrorDiv.style.wordWrap = 'break-word';
+          mirrorDiv.style.width = `${textarea.clientWidth}px`;
+          mirrorDiv.style.font = style.font;
+          mirrorDiv.style.padding = style.padding;
+          mirrorDiv.style.border = style.border;
+          mirrorDiv.style.boxSizing = style.boxSizing;
 
-          const selectorY = rect.top - 200; // Position above the current line
-          const selectorX = rect.left + 20; // Small offset from left edge
+          const textBeforeAt = newValue.substring(0, atIndex);
+          mirrorDiv.textContent = textBeforeAt;
+
+          const atSpan = document.createElement('span');
+          atSpan.textContent = '@';
+          mirrorDiv.appendChild(atSpan);
+
+          document.body.appendChild(mirrorDiv);
+
+          const atSpanTopRelativeToTextarea = atSpan.offsetTop - textarea.scrollTop;
+          const atSpanLeftRelativeToTextarea = atSpan.offsetLeft - textarea.scrollLeft;
+
+          const selectorX = rect.left + atSpanLeftRelativeToTextarea;
+          const selectorY = rect.top + atSpanTopRelativeToTextarea - 2; // 2px margin from bottom
+
+          document.body.removeChild(mirrorDiv);
 
           setMentionSelectorPosition({ x: selectorX, y: selectorY });
         }
@@ -224,6 +346,11 @@ function PureMultimodalInput({
     setShowAddContextSelector(true);
     setShowMentionContextSelector(false); // Close mention selector if open
 
+    if (atButtonContainerRef.current) {
+      const rect = atButtonContainerRef.current.getBoundingClientRect();
+      setAddSelectorPosition({ x: rect.left, y: rect.top - 4 }); // Position with margin
+    }
+
     // Focus the textarea after a brief delay
     setTimeout(() => {
       textareaRef.current?.focus();
@@ -316,7 +443,21 @@ function PureMultimodalInput({
         confirmedMentions.length === 0 && (
           <SuggestedActions append={append} chatId={chatId} />
         )}
-
+      <div
+        ref={measurementRef}
+        className="absolute top-0 left-0 -z-10 flex flex-nowrap items-center gap-1.5 invisible"
+      >
+        {confirmedMentions.map((doc) => (
+          <Badge
+            key={doc.id}
+            variant="secondary"
+            className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 text-xs group bg-background/30 border border-border/30 text-muted-foreground"
+          >
+            <FileIcon size={12} className="text-accent-foreground" />
+            <span className="max-w-[120px] truncate">{doc.title}</span>
+          </Badge>
+        ))}
+      </div>
       <input
         type="file"
         className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
@@ -326,181 +467,257 @@ function PureMultimodalInput({
         tabIndex={-1}
       />
 
-      <div className="relative">
-        {/* Document Mentions as Badges */}
-        {confirmedMentions.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
-            {confirmedMentions.map((doc) => (
-              <Badge
-                key={doc.id}
-                variant="secondary"
-                className="text-xs px-2 py-1 hover:bg-secondary/80 group relative"
-              >
-                {doc.title}
-                <button
-                  className="absolute top-0.5 left-0.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground focus:opacity-100 text-sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-
-                    // Remove from confirmed mentions
-                    const newMentions = confirmedMentions.filter(m => m.id !== doc.id);
-                    onMentionsChange(newMentions);
-
-                    // Also remove from text input
-                    const currentValue = input;
-                    const mentionText = `@${doc.title}`;
-                    const newValue = currentValue.replace(mentionText, '').trim();
-                    setInput(newValue);
-                    setLocalStorageInput(newValue);
-                  }}
-                  aria-label={`Remove ${doc.title} mention`}
-                >
-                  ×
-                </button>
-              </Badge>
-            ))}
+      {/* New Composer Wrapper */}
+      <div className="relative flex flex-col w-full rounded-sm border border-border/50 bg-muted focus-within:ring-1 focus-within:ring-ring/50 focus-within:border-border transition-colors">
+        {/* Top bar with context button and badges */}
+        <div
+          ref={badgesContainerRef}
+          className="flex items-center gap-1.5 px-2 py-1 flex-nowrap overflow-hidden border-b border-border/50"
+        >
+          <div ref={atButtonContainerRef} className="relative">
+            <button
+              type="button"
+              onClick={handleAddContextClick}
+              className={cn(
+                "add-context-button flex items-center gap-1 text-xs text-accent-foreground bg-background/30 hover:bg-accent/30 transition-colors rounded-sm border border-border/30 opacity-60 hover:opacity-100 h-6",
+                confirmedMentions.length > 0 ? 'px-1.5' : 'px-2'
+              )}
+            >
+              <span className="text-base leading-none">@</span>
+              {confirmedMentions.length === 0 && <span>Add context</span>}
+            </button>
           </div>
-        )}
-
-        {/* Add Context Button */}
-        <div className="mb-2 relative">
-          <button
-            type="button"
-            onClick={handleAddContextClick}
-            className="add-context-button flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors bg-background hover:bg-accent rounded-sm border border-border/50"
-          >
-            <span>@</span>
-            <span>Add context</span>
-          </button>
-
-          {/* Add Context Button Context Selector */}
-          <ContextSelector
-            isOpen={showAddContextSelector}
-            onClose={() => {
-              setShowAddContextSelector(false);
-              setMentionStartPosition(-1);
-            }}
-            onSelect={handleContextSelect}
-            className="absolute bottom-full left-0 z-50 mb-1"
-          />
+          <TooltipProvider>
+            {confirmedMentions.slice(0, visibleMentionsLimit).map((doc) => (
+              <Tooltip key={doc.id}>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1.5 pl-1.5 pr-2 text-xs group bg-background/30 hover:bg-accent/30 border border-border/30 text-accent-foreground opacity-60 hover:opacity-100 h-6"
+                  >
+                    <button
+                      type="button"
+                      className="flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newMentions = confirmedMentions.filter(
+                          (m) => m.id !== doc.id,
+                        );
+                        onMentionsChange(newMentions);
+                        const currentValue = input;
+                        const mentionText = `@${doc.title}`;
+                        const newValue = currentValue
+                          .replace(mentionText, '')
+                          .trim();
+                        setInput(newValue);
+                        setLocalStorageInput(newValue);
+                      }}
+                      aria-label={`Remove ${doc.title} mention`}
+                    >
+                      <FileIcon
+                        size={12}
+                        className="block group-hover:hidden text-accent-foreground"
+                      />
+                      <CrossIcon
+                        size={12}
+                        className="hidden group-hover:block"
+                      />
+                    </button>
+                    <span className="max-w-[120px] truncate">
+                      {doc.title}
+                    </span>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{doc.title}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+            {hiddenMentionsCount > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1.5 px-2 text-xs group bg-background/30 hover:bg-accent/30 border border-border/30 text-accent-foreground opacity-60 hover:opacity-100 h-6"
+                  >
+                    +{hiddenMentionsCount}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {confirmedMentions.slice(visibleMentionsLimit).map((doc) => (
+                    <p key={doc.id}>{doc.title}</p>
+                  ))}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </TooltipProvider>
         </div>
 
-        <div className="relative mention-input">
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              // Handle backspace/delete for @mentions
-              if (e.key === 'Backspace' || e.key === 'Delete') {
-                const cursorPosition = textareaRef.current?.selectionStart || 0;
-                const textBeforeCursor = input.substring(0, cursorPosition);
-                const textAfterCursor = input.substring(cursorPosition);
+        <div className="flex-1 p-3 space-y-2 relative">
+          <div className="relative mention-input">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                // Handle backspace for @mentions
+                if (e.key === 'Backspace') {
+                  const cursorPosition = textareaRef.current?.selectionStart || 0;
+                  const textBeforeCursor = input.substring(0, cursorPosition);
 
-                // Check if we're inside or at the boundary of an @mention
-                const atIndex = textBeforeCursor.lastIndexOf('@');
-                if (atIndex !== -1) {
-                  const afterAt = textBeforeCursor.substring(atIndex);
-                  const mentionMatch = afterAt.match(/^@[^@\s]+/);
+                  if (cursorPosition > 0) {
+                    const atIndex = textBeforeCursor.lastIndexOf('@');
+                    if (atIndex !== -1) {
+                      const potentialMentionText = textBeforeCursor.substring(atIndex);
+                      // Check if the text from the last @ to the cursor is a confirmed mention
+                      const isConfirmedMention = confirmedMentions.some(
+                        (m) => `@${m.title}` === potentialMentionText
+                      );
 
-                  if (mentionMatch && (e.key === 'Backspace' || e.key === 'Delete')) {
-                    e.preventDefault();
+                      if (isConfirmedMention) {
+                        e.preventDefault();
 
-                    // Remove the entire @mention
-                    const newValue = textBeforeCursor.substring(0, atIndex) + textAfterCursor;
-                    setInput(newValue);
-                    setLocalStorageInput(newValue);
+                        const textAfterCursor = input.substring(cursorPosition);
+                        // Remove the entire @mention
+                        const newValue = textBeforeCursor.substring(0, atIndex) + textAfterCursor;
+                        setInput(newValue);
+                        setLocalStorageInput(newValue);
 
-                    // Update cursor position
-                    setTimeout(() => {
-                      textareaRef.current?.setSelectionRange(atIndex, atIndex);
-                    }, 0);
+                        // Update cursor position
+                        setTimeout(() => {
+                          textareaRef.current?.setSelectionRange(atIndex, atIndex);
+                        }, 0);
 
-                    // Update mentions
-                    const mentionText = mentionMatch[0];
-                    const updatedMentions = confirmedMentions.filter(m => `@${m.title}` !== mentionText);
-                    onMentionsChange(updatedMentions);
-                    return;
+                        // Update confirmed mentions list
+                        const updatedMentions = confirmedMentions.filter(
+                          (m) => `@${m.title}` !== potentialMentionText
+                        );
+                        onMentionsChange(updatedMentions);
+                        return;
+                      }
+                    }
                   }
                 }
-              }
 
-              // Call the original handleKeyDown
-              handleKeyDown(e);
-            }}
-            placeholder="Ask, learn, write anything... (@ to mention documents, / to use tools)"
-            className={cn(
-              "flex min-h-[120px] w-full rounded-sm border border-border/50 bg-muted px-3 py-5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 focus-visible:border-border disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-colors overflow-hidden relative z-10 mention-textarea",
-              className
-            )}
-            rows={1}
-          />
+                // Call the original handleKeyDown for other keys like Enter, Escape
+                handleKeyDown(e);
+              }}
+              placeholder="Ask, learn, write anything..."
+              className={cn(
+                'flex min-h-[80px] max-h-[350px] w-full bg-transparent p-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-auto relative z-10 mention-textarea text-transparent caret-black dark:caret-white',
+                className
+              )}
+              rows={1}
+            />
 
-          {/* Overlay for styled @mentions */}
-          <div
-            className="absolute inset-0 px-3 py-5 text-sm pointer-events-none z-20 bg-transparent"
-            style={{
-              fontFamily: 'inherit',
-              fontSize: '14px',
-              lineHeight: '1.25rem',
-              wordWrap: 'break-word',
-              whiteSpace: 'pre-wrap',
-              overflowWrap: 'break-word'
-            }}
-          >
-            {input.split(/(@\w+)/g).map((part, index) => {
-              if (part.startsWith('@')) {
-                const mentionTitle = part.slice(1);
-                const isValidMention = confirmedMentions.some(m => m.title === mentionTitle);
-                if (isValidMention) {
+            <div
+              ref={overlayRef}
+              className="hide-scrollbar absolute inset-0 p-0 text-sm pointer-events-none z-20 bg-transparent overflow-auto"
+              style={{
+                fontFamily: 'inherit',
+                fontSize: '14px',
+                lineHeight: '1.25rem',
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+                overflowWrap: 'break-word'
+              }}
+            >
+              {(() => {
+                if (confirmedMentions.length === 0) {
+                  return <span className="text-foreground">{input}</span>;
+                }
+
+                const escapeRegex = (str: string) =>
+                  str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
+                const mentionTitles = confirmedMentions.map((m) =>
+                  escapeRegex(m.title),
+                );
+                // Sort by length descending to match longer titles first
+                mentionTitles.sort((a, b) => b.length - a.length);
+
+                const regex = new RegExp(
+                  `(${mentionTitles.map((t) => `@${t}`).join('|')})`,
+                  'g',
+                );
+
+                const parts = input.split(regex);
+
+                return parts.map((part, index) => {
+                  if (part.startsWith('@')) {
+                    const mentionTitle = part.slice(1);
+                    const isConfirmed = confirmedMentions.some(
+                      (m) => m.title === mentionTitle,
+                    );
+                    if (isConfirmed) {
+                      return (
+                        <span key={index} className="mention-tag">
+                          {part}
+                        </span>
+                      );
+                    }
+                  }
                   return (
-                    <span key={index} className="mention-tag">
-                      {part.slice(1)}
+                    <span key={index} className="text-foreground">
+                      {part}
                     </span>
                   );
-                }
-                // For @mentions that are not in confirmedMentions, show them as normal text
-                // unless the context selector is open (indicating it's a pending mention)
-                const isPendingMention = showMentionContextSelector && part.length > 1;
-                if (isPendingMention) {
-                  return <span key={index} className="opacity-0 select-none">{part.replace(/./g, ' ')}</span>;
-                }
-                // Show @ as normal text
-                return <span key={index} className="text-foreground">{part}</span>;
-              }
-              return <span key={index} className="text-foreground">{part}</span>;
-            })}
+                });
+              })()}
+            </div>
           </div>
-
-
-
-
-        </div>
-
-        {/* Mention Context Selector */}
-        <ContextSelector
-          isOpen={showMentionContextSelector}
-          onClose={() => {
-            setShowMentionContextSelector(false);
-            setMentionStartPosition(-1);
-            setMentionSelectorPosition(undefined);
-          }}
-          onSelect={handleContextSelect}
-          position={mentionSelectorPosition}
-        />
-
-        <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
-          {status === 'submitted' ? (
-            <StopButton stop={stop} setMessages={setMessages} />
-          ) : (
-            <SendButton
-              input={input}
-              submitForm={submitForm}
-              uploadQueue={uploadQueue}
+          <div className="absolute bottom-3 right-3 z-30 w-fit flex flex-row justify-end">
+            {status === 'submitted' ? (
+              <StopButton stop={stop} setMessages={setMessages} />
+            ) : (
+              <SendButton
+                input={input}
+                submitForm={submitForm}
+                uploadQueue={uploadQueue}
+              />
+            )}
+          </div>
+          <div className="absolute bottom-3 left-3 z-30 w-fit flex flex-row items-center gap-2">
+            <ChatModeSelector
+              selectedMode={chatMode}
+              onModeChange={onChatModeChange}
             />
-          )}
+            <ModelSelector
+              selectedModelId={selectedModelId}
+              onModelChange={onModelChange}
+              minimal={true}
+            />
+          </div>
         </div>
       </div>
+
+
+      {/* Add Context Selector */}
+      <ContextSelector
+        isOpen={showAddContextSelector}
+        onClose={() => {
+          setShowAddContextSelector(false);
+          setMentionStartPosition(-1);
+          setAddSelectorPosition(undefined);
+        }}
+        onSelect={handleContextSelect}
+        position={addSelectorPosition}
+      />
+
+      {/* Mention Context Selector */}
+      <ContextSelector
+        isOpen={showMentionContextSelector}
+        onClose={() => {
+          setShowMentionContextSelector(false);
+          setMentionStartPosition(-1);
+          setMentionSelectorPosition(undefined);
+        }}
+        onSelect={handleContextSelect}
+        position={mentionSelectorPosition}
+        shouldFocusSearchInput={false}
+        showSearchBar={false}
+        searchQueryValue={mentionQuery}
+      />
     </div>
   );
 }
@@ -511,7 +728,10 @@ export const MultimodalInput = memo(
     if (prevProps.input !== nextProps.input) return false;
     if (prevProps.status !== nextProps.status) return false;
     if (!equal(prevProps.attachments, nextProps.attachments)) return false;
-    if (!equal(prevProps.confirmedMentions, nextProps.confirmedMentions)) return false;
+    if (!equal(prevProps.confirmedMentions, nextProps.confirmedMentions))
+      return false;
+    if (prevProps.selectedModelId !== nextProps.selectedModelId) return false;
+    if (prevProps.chatMode !== nextProps.chatMode) return false;
     return true;
   },
 );
@@ -526,7 +746,7 @@ function PureStopButton({
   return (
     <Button
       data-testid="stop-button"
-      className="rounded-sm p-1.5 h-fit border dark:border-zinc-600"
+      className="rounded-sm p-1.5 h-fit bg-white hover:bg-neutral-200 dark:bg-neutral-100 dark:hover:bg-neutral-300 text-black"
       onClick={(event) => {
         event.preventDefault();
         stop();
@@ -549,15 +769,24 @@ function PureSendButton({
   input: string;
   uploadQueue: Array<string>;
 }) {
+  const hasText = input.trim().length > 0;
+  const isDisabled = input.trim().length === 0 || uploadQueue.length > 0;
+
   return (
     <Button
       data-testid="send-button"
-      className="rounded-sm p-1.5 h-fit border dark:border-zinc-600"
+      className={cn(
+        "rounded-sm p-1.5 h-fit transition-colors duration-200",
+        hasText
+          ? "bg-white hover:bg-neutral-200 dark:bg-neutral-100 dark:hover:bg-neutral-300 text-black"
+          : "bg-background/30 hover:bg-accent/30 border border-border/30 text-accent-foreground opacity-60 hover:opacity-100",
+        isDisabled && "opacity-50"
+      )}
       onClick={(event) => {
         event.preventDefault();
         submitForm();
       }}
-      disabled={input.trim().length === 0 || uploadQueue.length > 0}
+      disabled={isDisabled}
     >
       <ArrowUpIcon size={14} />
     </Button>

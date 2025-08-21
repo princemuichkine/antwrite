@@ -7,7 +7,6 @@ import { useWindowSize } from 'usehooks-ts';
 import Image from 'next/image';
 import useSWR from 'swr';
 
-import { ModelSelector } from '@/components/chat/model-selector';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, ClockRewind } from '../icons';
 import { useSidebar } from '../ui/sidebar';
@@ -27,16 +26,12 @@ import {
 
 function PureChatHeader({
   chatId,
-  selectedModelId,
   isReadonly,
   className,
-  onModelChange,
 }: {
   chatId: string;
-  selectedModelId: string;
   isReadonly: boolean;
   className?: string;
-  onModelChange: (newModelId: string) => void;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -99,19 +94,6 @@ function PureChatHeader({
           <PlusIcon />
         )}
       </Button>
-
-      {!isReadonly && mounted && (
-        <div className="transition-all duration-200 min-w-0 shrink">
-          <ModelSelector
-            selectedModelId={selectedModelId}
-            className={cn('ml-0', {
-              'w-[140px] md:px-2 md:h-[32px]': isCompact,
-              'w-[180px] md:px-3 md:h-[32px]': !isCompact,
-            })}
-            onModelChange={onModelChange}
-          />
-        </div>
-      )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -252,5 +234,5 @@ function PureChatHeader({
 }
 
 export const ChatHeader = memo(PureChatHeader, (prevProps, nextProps) => {
-  return prevProps.selectedModelId === nextProps.selectedModelId;
+  return prevProps.chatId === nextProps.chatId;
 });

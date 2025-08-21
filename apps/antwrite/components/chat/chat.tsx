@@ -15,6 +15,7 @@ import { useArtifact } from '@/hooks/use-artifact';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { useAiOptionsValue } from '@/hooks/ai-options';
+import type { ChatMode } from './chat-mode-selector';
 
 export interface ChatProps {
   id?: string;
@@ -38,6 +39,7 @@ export function Chat({
   const [selectedChatModel, setSelectedChatModel] = useState(
     () => initialSelectedChatModel || DEFAULT_CHAT_MODEL,
   );
+  const [chatMode, setChatMode] = useState<ChatMode>('Chat');
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [requestedChatLoadId, setRequestedChatLoadId] = useState<string | null>(
     null,
@@ -47,6 +49,11 @@ export function Chat({
   const handleModelChange = (newModelId: string) => {
     setSelectedChatModel(newModelId);
     console.log('[Chat] Model changed to:', newModelId);
+  };
+
+  const handleModeChange = (newMode: ChatMode) => {
+    setChatMode(newMode);
+    console.log('[Chat] Mode changed to:', newMode);
   };
 
   const [confirmedMentions, setConfirmedMentions] = useState<
@@ -292,9 +299,7 @@ export function Chat({
     <div className="flex flex-col h-full overflow-hidden">
       <ChatHeader
         chatId={chatId}
-        selectedModelId={selectedChatModel}
         isReadonly={isReadonly}
-        onModelChange={handleModelChange}
       />
 
       <div className="flex-1 overflow-y-auto relative">
@@ -332,6 +337,10 @@ export function Chat({
               append={append}
               confirmedMentions={confirmedMentions}
               onMentionsChange={handleMentionsChange}
+              selectedModelId={selectedChatModel}
+              onModelChange={handleModelChange}
+              chatMode={chatMode}
+              onChatModeChange={handleModeChange}
             />
           </form>
         </div>

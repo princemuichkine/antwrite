@@ -717,7 +717,7 @@ export function SidebarDocuments({
             disabled={isCreatingDocument}
           >
             {isCreatingDocument ? (
-              <svg className="animate-spin size-3" viewBox="0 0 24 24">
+              <svg className="animate-spin size-3 text-sidebar-foreground/50" viewBox="0 0 24 24">
                 <circle
                   className="opacity-25"
                   cx="12"
@@ -740,6 +740,7 @@ export function SidebarDocuments({
                 loop={false}
                 autoplay={false}
                 initialFrame={0}
+                className="text-sidebar-foreground/50"
               />
             )}
           </Button>
@@ -788,7 +789,7 @@ export function SidebarDocuments({
               disabled={isCreatingDocument}
             >
               {isCreatingDocument ? (
-                <svg className="animate-spin size-3" viewBox="0 0 24 24">
+                <svg className="animate-spin size-3 text-sidebar-foreground/50" viewBox="0 0 24 24">
                   <circle
                     className="opacity-25"
                     cx="12"
@@ -811,6 +812,7 @@ export function SidebarDocuments({
                   loop={false}
                   autoplay={false}
                   initialFrame={0}
+                  className="text-sidebar-foreground/50"
                 />
               )}
             </Button>
@@ -825,7 +827,7 @@ export function SidebarDocuments({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                className={`transition-transform duration-200 text-sidebar-foreground/50 ${isExpanded ? 'rotate-180' : ''}`}
               >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
@@ -840,7 +842,7 @@ export function SidebarDocuments({
                 placeholder={documents && documents.length === 1 ? "Search" : "Search documents..."}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-10 text-sm border data-[state=open]:border-border text-accent-foreground bg-background hover:bg-accent/50 transition-colors duration-200"
+                className="h-8 text-sm border data-[state=open]:border-border text-accent-foreground bg-background hover:bg-accent/50 transition-colors duration-200"
               />
             </div>
 
@@ -851,7 +853,7 @@ export function SidebarDocuments({
                     variant="outline"
                     size="sm"
                     onClick={handleToggleSelectionMode}
-                    className="h-6 text-xs px-1.5 border text-accent-foreground hover:bg-accent/50 transition-colors duration-200"
+                    className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200"
                   >
                     Select
                   </Button>

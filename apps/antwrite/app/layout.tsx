@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Antwrite',
     description:
-      "The most satisfying, intuitive AI writing tool, and it's open source.",
+      "The most satisfying, intuitive AI writing tool.",
     url: 'https://www.antwrite.com',
     siteName: 'antwrite',
     locale: 'en_US',
@@ -30,8 +30,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Antwrite',
     description:
-      "The most satisfying, intuitive AI writing tool, and it's open source.",
-    creator: '@wlovedaypowell',
+      "The most satisfying, intuitive AI writing tool.",
+    creator: '@princemuichkine',
     images: [
       {
         url: '/api/og',

@@ -15,6 +15,12 @@ import { chatModels } from '@/lib/ai/models';
 
 import { ChevronDownIcon } from '../icons';
 import { Paywall } from '@/components/paywall';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export function ModelSelector({
   selectedModelId,
@@ -67,63 +73,70 @@ export function ModelSelector({
           <Button
             data-testid="model-selector"
             variant="outline"
-            className="flex items-center gap-1.5 px-2 h-8 rounded-sm hover:bg-accent/50 transition-colors duration-200 border border-border"
+            className="flex items-center gap-1.5 px-1.5 h-6 rounded-sm text-xs text-accent-foreground bg-background/30 hover:bg-accent/30 transition-colors duration-200 border border-border/30 opacity-60 hover:opacity-100"
           >
             <span className="truncate">
-              {minimal ? selectedModelId.split('-')[0] : selectedChatModel?.name}
+              {minimal ? selectedChatModel?.name : selectedChatModel?.name}
             </span>
-            <ChevronDownIcon size={16} />
+            <ChevronDownIcon size={14} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
-          className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-sm border-border shadow-lg bg-background"
+          className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-sm border-border shadow-lg bg-background opacity-90 space-y-1"
           sideOffset={4}
         >
-          {chatModels.map((chatModel) => {
-            const { id, proOnly } = chatModel;
-            const isLocked = proOnly === true && !hasActiveSubscription;
+          <TooltipProvider>
+            {chatModels.map((chatModel) => {
+              const { id, proOnly } = chatModel;
+              const isLocked = proOnly === true && !hasActiveSubscription;
 
-            return (
-              <DropdownMenuItem
-                data-testid={`model-selector-item-${id}`}
-                key={id}
-                onSelect={() => {
-                  if (isLocked) {
-                    setPaywallOpen(true);
-                    return;
-                  }
-                  setOpen(false);
-                  onModelChange(id);
-                }}
-                data-active={id === selectedModelId}
-                className={cn(
-                  "group relative flex w-full items-center gap-3 px-4 py-2.5 cursor-pointer rounded-sm hover:bg-accent/50 transition-colors duration-200",
-                  id === selectedModelId && !isLocked && "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
-                )}
-              >
-                <div className="flex flex-col gap-1 items-start flex-1">
-                  <div>{chatModel.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {chatModel.description}
-                  </div>
-                </div>
-                {isLocked && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPaywallOpen(true);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity rounded-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:text-green-800 dark:hover:text-green-200 border border-green-200 dark:border-green-800"
-                  >
-                    Upgrade
-                  </Button>
-                )}
-              </DropdownMenuItem>
-            );
-          })}
+              return (
+                <Tooltip key={id}>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuItem
+                      data-testid={`model-selector-item-${id}`}
+                      onSelect={() => {
+                        if (isLocked) {
+                          setPaywallOpen(true);
+                          return;
+                        }
+                        setOpen(false);
+                        onModelChange(id);
+                      }}
+                      data-active={id === selectedModelId}
+                      className={cn(
+                        "group relative flex w-full items-center gap-1.5 px-1.5 py-1 cursor-pointer rounded-sm hover:bg-accent/30 transition-colors duration-200 h-6",
+                        id === selectedModelId && !isLocked && "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
+                      )}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="text-[6px] font-medium truncate flex-1">
+                          {chatModel.name}
+                        </div>
+                        {isLocked && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPaywallOpen(true);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity rounded-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:text-green-800 dark:hover:text-green-200 border border-green-200 dark:border-green-800 text-[5px] px-1 py-0.5 h-4"
+                          >
+                            Upgrade
+                          </Button>
+                        )}
+                      </div>
+                    </DropdownMenuItem>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="max-w-[200px]">
+                    <p className="text-xs">{chatModel.description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </TooltipProvider>
         </DropdownMenuContent>
       </DropdownMenu>
       <Paywall
