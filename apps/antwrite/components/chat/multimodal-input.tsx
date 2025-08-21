@@ -1,7 +1,6 @@
 'use client';
 
 import type { Attachment, ChatRequestOptions, Message } from 'ai';
-import cx from 'classnames';
 import type React from 'react';
 import {
   useRef,
@@ -39,8 +38,6 @@ export interface MentionedDocument {
   id: string;
   title: string;
 }
-
-
 
 function PureMultimodalInput({
   chatId,
@@ -173,13 +170,20 @@ function PureMultimodalInput({
     };
   }, []);
 
-  const [showMentionContextSelector, setShowMentionContextSelector] = useState(false);
+  const [showMentionContextSelector, setShowMentionContextSelector] =
+    useState(false);
   const [showAddContextSelector, setShowAddContextSelector] = useState(false);
-  const [addSelectorPosition, setAddSelectorPosition] = useState<{ x: number; y: number } | undefined>(undefined);
+  const [addSelectorPosition, setAddSelectorPosition] = useState<
+    { x: number; y: number } | undefined
+  >(undefined);
   const [mentionStartPosition, setMentionStartPosition] = useState<number>(-1);
-  const [mentionSelectorPosition, setMentionSelectorPosition] = useState<{ x: number; y: number } | undefined>(undefined);
+  const [mentionSelectorPosition, setMentionSelectorPosition] = useState<
+    { x: number; y: number } | undefined
+  >(undefined);
   const [mentionQuery, setMentionQuery] = useState('');
-  const [mentionSearchType, setMentionSearchType] = useState<'document' | 'folder' | 'chat' | 'tab' | null>(null);
+  const [mentionSearchType, setMentionSearchType] = useState<
+    'document' | 'folder' | 'chat' | 'tab' | null
+  >(null);
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
@@ -252,8 +256,10 @@ function PureMultimodalInput({
 
           document.body.appendChild(mirrorDiv);
 
-          const atSpanTopRelativeToTextarea = atSpan.offsetTop - textarea.scrollTop;
-          const atSpanLeftRelativeToTextarea = atSpan.offsetLeft - textarea.scrollLeft;
+          const atSpanTopRelativeToTextarea =
+            atSpan.offsetTop - textarea.scrollTop;
+          const atSpanLeftRelativeToTextarea =
+            atSpan.offsetLeft - textarea.scrollLeft;
 
           const selectorX = rect.left + atSpanLeftRelativeToTextarea;
           const selectorY = rect.top + atSpanTopRelativeToTextarea - 2; // 2px margin from bottom
@@ -329,11 +335,12 @@ function PureMultimodalInput({
   const handleContextSelect = (item: ContextItem) => {
     const currentValue = input;
     const beforeMention = currentValue.substring(0, mentionStartPosition);
-    const afterCursor = currentValue.substring(textareaRef.current?.selectionStart || mentionStartPosition + 1);
+    const afterCursor = currentValue.substring(
+      textareaRef.current?.selectionStart || mentionStartPosition + 1,
+    );
 
     // Insert the @item text in the input AND add it as a badge
-    const mentionText =
-      item.type === 'folder' ? `/${item.title}` : item.title;
+    const mentionText = item.type === 'folder' ? `/${item.title}` : item.title;
     const newValue = `${beforeMention}@${mentionText} ${afterCursor}`;
     setInput(newValue);
     setLocalStorageInput(newValue);
@@ -341,7 +348,7 @@ function PureMultimodalInput({
     // Add to confirmed mentions (for now, only documents)
     if (item.type === 'document') {
       const newMentions = [...confirmedMentions];
-      const existingIndex = newMentions.findIndex(m => m.id === item.id);
+      const existingIndex = newMentions.findIndex((m) => m.id === item.id);
       if (existingIndex === -1) {
         newMentions.push({ id: item.id, title: item.title });
       }
@@ -356,7 +363,10 @@ function PureMultimodalInput({
     setTimeout(() => {
       textareaRef.current?.focus();
       const newCursorPosition = beforeMention.length + mentionText.length + 2; // +2 for @ and space
-      textareaRef.current?.setSelectionRange(newCursorPosition, newCursorPosition);
+      textareaRef.current?.setSelectionRange(
+        newCursorPosition,
+        newCursorPosition,
+      );
     }, 0);
   };
 
@@ -456,7 +466,10 @@ function PureMultimodalInput({
     }
 
     // Handle escape to close context selectors
-    if (event.key === 'Escape' && (showMentionContextSelector || showAddContextSelector)) {
+    if (
+      event.key === 'Escape' &&
+      (showMentionContextSelector || showAddContextSelector)
+    ) {
       setShowMentionContextSelector(false);
       setShowAddContextSelector(false);
       setMentionStartPosition(-1);
@@ -509,8 +522,8 @@ function PureMultimodalInput({
               type="button"
               onClick={handleAddContextClick}
               className={cn(
-                "add-context-button flex items-center gap-1 text-xs text-accent-foreground bg-background/30 hover:bg-accent/30 transition-colors rounded-sm border border-border/30 opacity-60 hover:opacity-100 h-6",
-                confirmedMentions.length > 0 ? 'px-1.5' : 'px-2'
+                'add-context-button flex items-center gap-1 text-xs text-accent-foreground bg-background/30 hover:bg-accent/30 transition-colors rounded-sm border border-border/30 opacity-60 hover:opacity-100 h-6',
+                confirmedMentions.length > 0 ? 'px-1.5' : 'px-2',
               )}
             >
               <span className="text-base leading-none">@</span>
@@ -553,9 +566,7 @@ function PureMultimodalInput({
                         className="hidden group-hover:block"
                       />
                     </button>
-                    <span className="max-w-[120px] truncate">
-                      {doc.title}
-                    </span>
+                    <span className="max-w-[120px] truncate">{doc.title}</span>
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -592,16 +603,18 @@ function PureMultimodalInput({
               onKeyDown={(e) => {
                 // Handle backspace for @mentions
                 if (e.key === 'Backspace') {
-                  const cursorPosition = textareaRef.current?.selectionStart || 0;
+                  const cursorPosition =
+                    textareaRef.current?.selectionStart || 0;
                   const textBeforeCursor = input.substring(0, cursorPosition);
 
                   if (cursorPosition > 0) {
                     const atIndex = textBeforeCursor.lastIndexOf('@');
                     if (atIndex !== -1) {
-                      const potentialMentionText = textBeforeCursor.substring(atIndex);
+                      const potentialMentionText =
+                        textBeforeCursor.substring(atIndex);
                       // Check if the text from the last @ to the cursor is a confirmed mention
                       const isConfirmedMention = confirmedMentions.some(
-                        (m) => `@${m.title}` === potentialMentionText
+                        (m) => `@${m.title}` === potentialMentionText,
                       );
 
                       if (isConfirmedMention) {
@@ -609,18 +622,23 @@ function PureMultimodalInput({
 
                         const textAfterCursor = input.substring(cursorPosition);
                         // Remove the entire @mention
-                        const newValue = textBeforeCursor.substring(0, atIndex) + textAfterCursor;
+                        const newValue =
+                          textBeforeCursor.substring(0, atIndex) +
+                          textAfterCursor;
                         setInput(newValue);
                         setLocalStorageInput(newValue);
 
                         // Update cursor position
                         setTimeout(() => {
-                          textareaRef.current?.setSelectionRange(atIndex, atIndex);
+                          textareaRef.current?.setSelectionRange(
+                            atIndex,
+                            atIndex,
+                          );
                         }, 0);
 
                         // Update confirmed mentions list
                         const updatedMentions = confirmedMentions.filter(
-                          (m) => `@${m.title}` !== potentialMentionText
+                          (m) => `@${m.title}` !== potentialMentionText,
                         );
                         onMentionsChange(updatedMentions);
                         return;
@@ -649,7 +667,7 @@ function PureMultimodalInput({
                 lineHeight: '1.25rem',
                 wordWrap: 'break-word',
                 whiteSpace: 'pre-wrap',
-                overflowWrap: 'break-word'
+                overflowWrap: 'break-word',
               }}
             >
               {(() => {
@@ -673,7 +691,11 @@ function PureMultimodalInput({
 
                 const parts = input.split(regex);
 
-                return parts.map((part, index) => {
+                let offset = 0;
+                return parts.map((part) => {
+                  const key = `${offset}-${part}`;
+                  offset += part.length;
+
                   if (part.startsWith('@')) {
                     const mentionTitle = part.slice(1);
                     const isConfirmed = confirmedMentions.some(
@@ -681,14 +703,14 @@ function PureMultimodalInput({
                     );
                     if (isConfirmed) {
                       return (
-                        <span key={index} className="mention-tag">
+                        <span key={key} className="mention-tag">
                           {part}
                         </span>
                       );
                     }
                   }
                   return (
-                    <span key={index} className="text-foreground">
+                    <span key={key} className="text-foreground">
                       {part}
                     </span>
                   );
@@ -724,7 +746,6 @@ function PureMultimodalInput({
           </div>
         </div>
       </div>
-
 
       {/* Add Context Selector */}
       <ContextSelector
@@ -812,11 +833,11 @@ function PureSendButton({
     <Button
       data-testid="send-button"
       className={cn(
-        "rounded-sm p-1.5 h-fit transition-colors duration-200",
+        'rounded-sm p-1.5 h-fit transition-colors duration-200',
         hasText
-          ? "bg-white hover:bg-neutral-200 dark:bg-neutral-100 dark:hover:bg-neutral-300 text-black"
-          : "bg-background/30 hover:bg-accent/30 border border-border/30 text-accent-foreground opacity-60 hover:opacity-100",
-        isDisabled && "opacity-50"
+          ? 'bg-white hover:bg-neutral-200 dark:bg-neutral-100 dark:hover:bg-neutral-300 text-black'
+          : 'bg-background/30 hover:bg-accent/30 border border-border/30 text-accent-foreground opacity-60 hover:opacity-100',
+        isDisabled && 'opacity-50',
       )}
       onClick={(event) => {
         event.preventDefault();

@@ -35,7 +35,9 @@ const LottieIconComponent = ({
   const color = useMemo(() => {
     if (customColor) return customColor;
     // Default to current text color - we'll use a neutral approach that works with CSS
-    return isDark ? ([1, 1, 1] as [number, number, number]) : ([0, 0, 0] as [number, number, number]);
+    return isDark
+      ? ([1, 1, 1] as [number, number, number])
+      : ([0, 0, 0] as [number, number, number]);
   }, [isDark, customColor]);
 
   // Use external hover state if provided, otherwise use internal state
@@ -142,8 +144,9 @@ const LottieIconComponent = ({
     <div
       role="button"
       tabIndex={0}
-      className={`inline-flex items-center justify-center transition-all duration-200 ease-out ${isHovered ? 'scale-110' : ''
-        } ${className}`}
+      className={`inline-flex items-center justify-center transition-all duration-200 ease-out ${
+        isHovered ? 'scale-110' : ''
+      } ${className}`}
       style={{ width: size, height: size }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

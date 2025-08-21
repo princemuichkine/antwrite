@@ -19,8 +19,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Antwrite',
-    description:
-      "The most satisfying, intuitive AI writing tool.",
+    description: 'The most satisfying, intuitive AI writing tool.',
     url: 'https://www.antwrite.com',
     siteName: 'antwrite',
     locale: 'en_US',
@@ -29,8 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Antwrite',
-    description:
-      "The most satisfying, intuitive AI writing tool.",
+    description: 'The most satisfying, intuitive AI writing tool.',
     creator: '@princemuichkine',
     images: [
       {

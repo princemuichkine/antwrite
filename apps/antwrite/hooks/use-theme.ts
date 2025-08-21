@@ -14,7 +14,9 @@ export const useTheme = () => {
   }, []);
 
   const currentTheme = (mounted ? theme : 'system') as Theme;
-  const currentResolvedTheme = (mounted ? resolvedTheme : 'light') as 'light' | 'dark';
+  const currentResolvedTheme = (mounted ? resolvedTheme : 'light') as
+    | 'light'
+    | 'dark';
 
   return {
     theme: currentTheme,

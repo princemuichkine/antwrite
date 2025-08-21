@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { db, Document, Folder, Chat } from '@antwrite/db';
 import { and, eq, ilike, inArray } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('query') || '';
   const type = searchParams.get('type');
-  const limit = parseInt(searchParams.get('limit') || '10', 10);
+  const limit = Number.parseInt(searchParams.get('limit') || '10', 10);
 
   try {
     let results: any[] = [];
@@ -36,12 +36,14 @@ export async function GET(req: NextRequest) {
           )
           .limit(limit);
         break;
-      case 'folder':
+      case 'folder': {
         // Fetch folders and their documents
         const folders = await db
           .select()
           .from(Folder)
-          .where(and(eq(Folder.userId, userId), ilike(Folder.name, `%${query}%`)))
+          .where(
+            and(eq(Folder.userId, userId), ilike(Folder.name, `%${query}%`)),
+          )
           .limit(limit);
 
         const folderIds = folders.map((f) => f.id);
@@ -69,12 +71,16 @@ export async function GET(req: NextRequest) {
             },
             {} as Record<string, typeof documents>,
           );
-          results = folders.map((f) => ({ ...f, documents: documentsByFolder[f.id] || [] }));
+          results = folders.map((f) => ({
+            ...f,
+            documents: documentsByFolder[f.id] || [],
+          }));
         } else {
-            results = folders;
+          results = folders;
         }
 
         break;
+      }
       case 'chat':
         results = await db
           .select()
@@ -82,7 +88,7 @@ export async function GET(req: NextRequest) {
           .where(and(eq(Chat.userId, userId), ilike(Chat.title, `%${query}%`)))
           .limit(limit);
         break;
-      default:
+      default: {
         // If no type or an invalid type is specified, search across all types
         const allDocuments = await db
           .select()
@@ -98,7 +104,9 @@ export async function GET(req: NextRequest) {
         const allFolders = await db
           .select()
           .from(Folder)
-          .where(and(eq(Folder.userId, userId), ilike(Folder.name, `%${query}%`)))
+          .where(
+            and(eq(Folder.userId, userId), ilike(Folder.name, `%${query}%`)),
+          )
           .limit(limit);
         const allChats = await db
           .select()
@@ -106,11 +114,15 @@ export async function GET(req: NextRequest) {
           .where(and(eq(Chat.userId, userId), ilike(Chat.title, `%${query}%`)))
           .limit(limit);
         results = [...allDocuments, ...allFolders, ...allChats];
+      }
     }
 
     return NextResponse.json({ results });
   } catch (error) {
     console.error('Error fetching search results:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 },
+    );
   }
 }

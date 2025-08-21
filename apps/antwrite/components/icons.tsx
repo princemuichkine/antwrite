@@ -265,7 +265,10 @@ export const RouteIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
-export const FileIcon = ({ size = 16, className }: { size?: number, className?: string }) => {
+export const FileIcon = ({
+  size = 16,
+  className,
+}: { size?: number; className?: string }) => {
   return (
     <svg
       height={size}
@@ -516,7 +519,10 @@ export const InfoIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
-export const ArrowUpIcon = ({ size = 16, className }: { size?: number, className?: string }) => {
+export const ArrowUpIcon = ({
+  size = 16,
+  className,
+}: { size?: number; className?: string }) => {
   return (
     <svg
       height={size}
@@ -536,7 +542,10 @@ export const ArrowUpIcon = ({ size = 16, className }: { size?: number, className
   );
 };
 
-export const StopIcon = ({ size = 16, className }: { size?: number, className?: string }) => {
+export const StopIcon = ({
+  size = 16,
+  className,
+}: { size?: number; className?: string }) => {
   return (
     <svg
       height={size}
@@ -613,7 +622,10 @@ export const MessageIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
-export const CrossIcon = ({ size = 16, className }: { size?: number, className?: string }) => (
+export const CrossIcon = ({
+  size = 16,
+  className,
+}: { size?: number; className?: string }) => (
   <svg
     height={size}
     strokeLinejoin="round"
@@ -1238,7 +1250,10 @@ export const LogoMicrosoft = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
-export const FolderIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
+export const FolderIcon = ({
+  size = 16,
+  className,
+}: { size?: number; className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -1255,7 +1270,10 @@ export const FolderIcon = ({ size = 16, className }: { size?: number; className?
   </svg>
 );
 
-export const FilePlusIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
+export const FilePlusIcon = ({
+  size = 16,
+  className,
+}: { size?: number; className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -1275,7 +1293,10 @@ export const FilePlusIcon = ({ size = 16, className }: { size?: number; classNam
   </svg>
 );
 
-export const FolderPlusIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
+export const FolderPlusIcon = ({
+  size = 16,
+  className,
+}: { size?: number; className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -1294,7 +1315,10 @@ export const FolderPlusIcon = ({ size = 16, className }: { size?: number; classN
   </svg>
 );
 
-export const FolderOpenIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
+export const FolderOpenIcon = ({
+  size = 16,
+  className,
+}: { size?: number; className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}

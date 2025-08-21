@@ -10,7 +10,7 @@ import {
   integer,
   pgEnum,
   uniqueIndex,
-  AnyPgColumn,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';

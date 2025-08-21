@@ -1,6 +1,4 @@
 'use client';
-
-import { motion } from 'framer-motion';
 import type { ChatRequestOptions, CreateMessage, Message } from 'ai';
 import { memo } from 'react';
 

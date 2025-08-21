@@ -523,7 +523,7 @@ export function AlwaysVisibleArtifact({
                 initialLastSaved={
                   latestDocument ? new Date(latestDocument.updatedAt) : null
                 }
-                onStatusChange={(newSaveState: SaveState) => { }}
+                onStatusChange={(newSaveState: SaveState) => {}}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
               />
             </Suspense>

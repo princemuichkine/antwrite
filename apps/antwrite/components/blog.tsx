@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Markdown } from '@/components/markdown';
 import { googleFonts } from '@/lib/fonts';
 import { useTheme } from '@/hooks/use-theme';
@@ -27,7 +27,8 @@ export const Blog: React.FC<BlogProps> = ({
 }) => {
   const { resolvedTheme } = useTheme();
   // Pick correct text color based on theme
-  const themeTextColor = resolvedTheme === 'dark' ? textColorLight : textColorDark;
+  const themeTextColor =
+    resolvedTheme === 'dark' ? textColorLight : textColorDark;
   const fontClass = (googleFonts as Record<string, any>)[font]?.className || '';
 
   // Style for main container (accent)
@@ -38,17 +39,17 @@ export const Blog: React.FC<BlogProps> = ({
   // Typography override for text color on prose elements
   const proseStyle: React.CSSProperties = themeTextColor
     ? ({
-      '--tw-prose-body': themeTextColor,
-      '--tw-prose-headings': themeTextColor,
-      '--tw-prose-lead': themeTextColor,
-      '--tw-prose-links': themeTextColor,
-      '--tw-prose-bold': themeTextColor,
-      '--tw-prose-counters': themeTextColor,
-      '--tw-prose-bullets': themeTextColor,
-      '--tw-prose-captions': themeTextColor,
-      '--tw-prose-th-borders': themeTextColor,
-      '--tw-prose-td-borders': themeTextColor,
-    } as any)
+        '--tw-prose-body': themeTextColor,
+        '--tw-prose-headings': themeTextColor,
+        '--tw-prose-lead': themeTextColor,
+        '--tw-prose-links': themeTextColor,
+        '--tw-prose-bold': themeTextColor,
+        '--tw-prose-counters': themeTextColor,
+        '--tw-prose-bullets': themeTextColor,
+        '--tw-prose-captions': themeTextColor,
+        '--tw-prose-th-borders': themeTextColor,
+        '--tw-prose-td-borders': themeTextColor,
+      } as any)
     : {};
 
   return (

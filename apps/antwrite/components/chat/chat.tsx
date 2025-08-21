@@ -16,7 +16,7 @@ import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { useAiOptionsValue } from '@/hooks/ai-options';
 import { useLocalStorage } from 'usehooks-ts';
-import { type ChatMode } from './chat-mode-selector';
+import type { ChatMode } from './chat-mode-selector';
 
 export interface ChatProps {
   id?: string;
@@ -35,7 +35,10 @@ export function Chat({
     'selectedModelId',
     DEFAULT_CHAT_MODEL,
   );
-  const [chatMode, setChatMode] = useLocalStorage<ChatMode>('chatMode', 'agent');
+  const [chatMode, setChatMode] = useLocalStorage<ChatMode>(
+    'chatMode',
+    'agent',
+  );
   const { documentId, documentTitle, documentContent } = useDocumentContext();
   const [documentContextActive, setDocumentContextActive] = useState(false);
   const { artifact } = useArtifact();
@@ -275,7 +278,6 @@ export function Chat({
   const wrappedSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-
     console.log('[Chat] Submitting with Model:', selectedChatModel);
 
     const contextData: {
@@ -305,10 +307,7 @@ export function Chat({
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <ChatHeader
-        chatId={chatId}
-        isReadonly={isReadonly}
-      />
+      <ChatHeader chatId={chatId} isReadonly={isReadonly} />
 
       <div className="flex-1 overflow-y-auto relative">
         {isLoadingChat ? (

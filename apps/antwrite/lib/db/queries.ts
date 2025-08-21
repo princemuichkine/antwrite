@@ -1,7 +1,7 @@
 import 'server-only';
 import { db } from '@antwrite/db';
 import * as schema from '@antwrite/db';
-import { eq, desc, asc, inArray, gt, and, sql, lt, isNull } from 'drizzle-orm'; // Import Drizzle operators and
+import { eq, desc, asc, inArray, gt, and, sql, lt } from 'drizzle-orm'; // Import Drizzle operators and
 import type { ArtifactKind } from '@/components/artifact';
 
 type Chat = typeof schema.Chat.$inferSelect;
@@ -412,7 +412,10 @@ export async function updateChatContextQuery({
 export async function getCurrentDocumentsByUserId({
   userId,
 }: { userId: string }): Promise<
-  Pick<Document, 'id' | 'title' | 'createdAt' | 'kind' | 'is_starred' | 'folderId'>[]
+  Pick<
+    Document,
+    'id' | 'title' | 'createdAt' | 'kind' | 'is_starred' | 'folderId'
+  >[]
 > {
   try {
     const data = await db
@@ -1390,7 +1393,10 @@ export async function moveDocumentToFolder({
       .update(schema.Document)
       .set({ folderId: folderId, updatedAt: new Date() })
       .where(
-        and(eq(schema.Document.id, documentId), eq(schema.Document.userId, userId)),
+        and(
+          eq(schema.Document.id, documentId),
+          eq(schema.Document.userId, userId),
+        ),
       );
   } catch (error) {
     console.error(
@@ -1412,7 +1418,10 @@ export async function cloneFolder({
 }): Promise<Folder> {
   return db.transaction(async (tx) => {
     const originalFolder = await tx.query.Folder.findFirst({
-      where: and(eq(schema.Folder.id, folderId), eq(schema.Folder.userId, userId)),
+      where: and(
+        eq(schema.Folder.id, folderId),
+        eq(schema.Folder.userId, userId),
+      ),
       with: {
         documents: {
           where: eq(schema.Document.is_current, true),

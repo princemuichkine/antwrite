@@ -30,7 +30,7 @@ const DocumentContext = createContext<DocumentContextType>({
   documentContent: '',
   documentKind: 'text',
   isLoading: false,
-  updateDocument: () => { },
+  updateDocument: () => {},
 });
 
 export function DocumentProvider({ children }: { children: ReactNode }) {
