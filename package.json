@@ -21,7 +21,7 @@
     "setup": "docker compose up -d && pnpm install && pnpm db:push",
     "reset": "docker compose down && docker compose up -d && pnpm db:push",
     "rebuild": "pnpm reset && pnpm build",
-    "fresh-start": "docker compose down -v && docker compose up -d && pnpm install && pnpm db:push && pnpm dev"
+    "fresh-start": "docker compose down -v && docker compose up -d && pnpm install && pnpm db:push"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

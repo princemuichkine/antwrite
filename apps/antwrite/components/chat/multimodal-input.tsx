@@ -634,7 +634,7 @@ function PureMultimodalInput({
               }}
               placeholder="Ask, learn, write anything..."
               className={cn(
-                'flex min-h-[80px] max-h-[350px] w-full bg-transparent p-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-auto relative z-10 mention-textarea text-transparent caret-black dark:caret-white',
+                'flex min-h-[60px] h-60px max-h-[350px] w-full bg-transparent p-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-auto relative z-10 mention-textarea text-transparent caret-black dark:caret-white',
                 className,
               )}
               rows={1}

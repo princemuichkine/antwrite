@@ -1,12 +1,13 @@
 import 'server-only';
 import { db } from '@antwrite/db';
 import * as schema from '@antwrite/db';
-import { eq, desc, asc, inArray, gt, and, sql, lt } from 'drizzle-orm'; // Import Drizzle operators and
+import { eq, desc, asc, inArray, gt, and, sql, lt, isNull } from 'drizzle-orm'; // Import Drizzle operators and
 import type { ArtifactKind } from '@/components/artifact';
 
 type Chat = typeof schema.Chat.$inferSelect;
 type Message = typeof schema.Message.$inferSelect;
 type Document = typeof schema.Document.$inferSelect;
+type Folder = typeof schema.Folder.$inferSelect;
 
 interface MessageContent {
   type: 'text' | 'tool_call' | 'tool_result';
@@ -289,6 +290,7 @@ export async function getDocumentById({
     id === 'init' ||
     id === 'current document' ||
     id === 'current document ID' ||
+    id === 'current document ID' ||
     id.includes('current')
   ) {
     console.warn(`[DB Query] Invalid document ID provided: ${id}`);
@@ -410,7 +412,7 @@ export async function updateChatContextQuery({
 export async function getCurrentDocumentsByUserId({
   userId,
 }: { userId: string }): Promise<
-  Pick<Document, 'id' | 'title' | 'createdAt' | 'kind' | 'is_starred'>[]
+  Pick<Document, 'id' | 'title' | 'createdAt' | 'kind' | 'is_starred' | 'folderId'>[]
 > {
   try {
     const data = await db
@@ -420,6 +422,7 @@ export async function getCurrentDocumentsByUserId({
         createdAt: schema.Document.createdAt,
         kind: schema.Document.kind,
         is_starred: schema.Document.is_starred,
+        folderId: schema.Document.folderId,
       })
       .from(schema.Document)
       .where(
@@ -447,7 +450,7 @@ export async function getPaginatedDocumentsByUserId({
 }): Promise<{
   documents: Pick<
     Document,
-    'id' | 'title' | 'createdAt' | 'kind' | 'is_starred'
+    'id' | 'title' | 'createdAt' | 'kind' | 'is_starred' | 'folderId'
   >[];
   hasMore: boolean;
 }> {
@@ -462,6 +465,7 @@ export async function getPaginatedDocumentsByUserId({
           createdAt: schema.Document.createdAt,
           kind: schema.Document.kind,
           is_starred: schema.Document.is_starred,
+          folderId: schema.Document.folderId,
         })
         .from(schema.Document)
         .where(
@@ -481,7 +485,7 @@ export async function getPaginatedDocumentsByUserId({
 
     let paginatedDocs: Pick<
       Document,
-      'id' | 'title' | 'createdAt' | 'kind' | 'is_starred'
+      'id' | 'title' | 'createdAt' | 'kind' | 'is_starred' | 'folderId'
     >[] = [];
 
     if (endingBefore) {
@@ -1258,4 +1262,207 @@ export async function cloneDocument({
     console.error('Error cloning document:', error);
     throw error;
   }
+}
+
+// --- Folder Queries --- //
+
+export async function createFolder({
+  name,
+  userId,
+  parentId,
+}: {
+  name: string;
+  userId: string;
+  parentId?: string | null;
+}): Promise<Folder> {
+  try {
+    const [newFolder] = await db
+      .insert(schema.Folder)
+      .values({
+        name,
+        userId,
+        parentId,
+      })
+      .returning();
+    return newFolder;
+  } catch (error) {
+    console.error(
+      `[DB Query - createFolder] Error creating folder for user ${userId}:`,
+      error,
+    );
+    throw new Error('Failed to create folder.');
+  }
+}
+
+export async function getFoldersByUserId({
+  userId,
+}: {
+  userId: string;
+}): Promise<Folder[]> {
+  try {
+    const folders = await db
+      .select()
+      .from(schema.Folder)
+      .where(eq(schema.Folder.userId, userId))
+      .orderBy(asc(schema.Folder.name));
+    return folders;
+  } catch (error) {
+    console.error(
+      `[DB Query - getFoldersByUserId] Error fetching folders for user ${userId}:`,
+      error,
+    );
+    return [];
+  }
+}
+
+export async function renameFolder({
+  folderId,
+  userId,
+  newName,
+}: {
+  folderId: string;
+  userId: string;
+  newName: string;
+}): Promise<void> {
+  try {
+    await db
+      .update(schema.Folder)
+      .set({ name: newName, updatedAt: new Date() })
+      .where(
+        and(eq(schema.Folder.id, folderId), eq(schema.Folder.userId, userId)),
+      );
+  } catch (error) {
+    console.error(
+      `[DB Query - renameFolder] Error renaming folder ${folderId} for user ${userId}:`,
+      error,
+    );
+    throw new Error('Failed to rename folder.');
+  }
+}
+
+export async function deleteFolder({
+  folderId,
+  userId,
+}: {
+  folderId: string;
+  userId: string;
+}): Promise<void> {
+  try {
+    await db.transaction(async (tx) => {
+      // Set documents' folderId to null
+      await tx
+        .update(schema.Document)
+        .set({ folderId: null })
+        .where(
+          and(
+            eq(schema.Document.folderId, folderId),
+            eq(schema.Document.userId, userId),
+          ),
+        );
+
+      // Delete the folder
+      await tx
+        .delete(schema.Folder)
+        .where(
+          and(eq(schema.Folder.id, folderId), eq(schema.Folder.userId, userId)),
+        );
+    });
+  } catch (error) {
+    console.error(
+      `[DB Query - deleteFolder] Error deleting folder ${folderId} for user ${userId}:`,
+      error,
+    );
+    throw new Error('Failed to delete folder.');
+  }
+}
+
+export async function moveDocumentToFolder({
+  documentId,
+  folderId,
+  userId,
+}: {
+  documentId: string;
+  folderId: string | null;
+  userId: string;
+}): Promise<void> {
+  try {
+    await db
+      .update(schema.Document)
+      .set({ folderId: folderId, updatedAt: new Date() })
+      .where(
+        and(eq(schema.Document.id, documentId), eq(schema.Document.userId, userId)),
+      );
+  } catch (error) {
+    console.error(
+      `[DB Query - moveDocumentToFolder] Error moving document ${documentId} for user ${userId}:`,
+      error,
+    );
+    throw new Error('Failed to move document.');
+  }
+}
+
+export async function cloneFolder({
+  folderId,
+  userId,
+  newFolderName,
+}: {
+  folderId: string;
+  userId: string;
+  newFolderName?: string;
+}): Promise<Folder> {
+  return db.transaction(async (tx) => {
+    const originalFolder = await tx.query.Folder.findFirst({
+      where: and(eq(schema.Folder.id, folderId), eq(schema.Folder.userId, userId)),
+      with: {
+        documents: {
+          where: eq(schema.Document.is_current, true),
+        },
+      },
+    });
+
+    if (!originalFolder) {
+      throw new Error(
+        "Folder not found or you don't have permission to clone it.",
+      );
+    }
+
+    const newName = newFolderName || `${originalFolder.name} - Copy`;
+
+    const [newFolder] = await tx
+      .insert(schema.Folder)
+      .values({
+        name: newName,
+        userId: userId,
+        parentId: originalFolder.parentId,
+      })
+      .returning();
+
+    if (originalFolder.documents && originalFolder.documents.length > 0) {
+      const clonedDocumentsData = originalFolder.documents.map((doc) => {
+        return {
+          id: crypto.randomUUID(), // new ID
+          title: doc.title,
+          content: doc.content,
+          kind: doc.kind,
+          userId: doc.userId,
+          chatId: null, // do not link to any chat
+          is_current: true,
+          is_starred: doc.is_starred,
+          visibility: 'private' as 'private' | 'public',
+          style: doc.style,
+          author: doc.author,
+          slug: null, // new cloned doc is not published
+          folderId: newFolder.id, // new folder id
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+      });
+
+      if (clonedDocumentsData.length > 0) {
+        await tx.insert(schema.Document).values(clonedDocumentsData);
+      }
+    }
+
+    return newFolder;
+  });
 }

@@ -7,7 +7,13 @@ import type { User } from '@/lib/auth';
 import { memo, useCallback, useEffect, useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { cn, fetcher } from '@/lib/utils';
-import { MoreHorizontalIcon } from '@/components/icons';
+import {
+  MoreHorizontalIcon,
+  FolderIcon,
+  FolderPlusIcon,
+  FolderOpenIcon,
+  FilePlusIcon,
+} from '@/components/icons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +39,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import type { Document } from '@antwrite/db';
+import type { Document, Folder } from '@antwrite/db';
 import { useArtifact } from '@/hooks/use-artifact';
 import type { ArtifactKind } from '@/components/artifact';
 import { useDocumentUtils } from '@/hooks/use-document-utils';
@@ -43,6 +49,122 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { LottieIcon } from '@/components/ui/lottie-icon';
 import { animations } from '@/lib/utils/lottie-animations';
 import useSWRInfinite from 'swr/infinite';
+import useSWR from 'swr';
+import { Loader2 as Spinner } from 'lucide-react';
+import {
+  DndContext,
+  useDraggable,
+  useDroppable,
+  DragOverlay,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+
+const FolderItem = ({
+  folder,
+  children,
+  isExpanded,
+  onToggleExpand,
+  onRename,
+  onClone,
+  onDelete,
+  isSelectionMode,
+  isSelected,
+  onToggleSelect,
+}: {
+  folder: Folder;
+  children: React.ReactNode;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  onRename: (folderId: string, currentName: string) => void;
+  onClone: (folderId: string, folderName: string) => void;
+  onDelete: (folderId: string) => void;
+  isSelectionMode: boolean;
+  isSelected: boolean;
+  onToggleSelect: (folderId: string, isSelected: boolean) => void;
+}) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: folder.id,
+    data: {
+      type: 'folder',
+    },
+  });
+  return (
+    <SidebarMenuItem
+      ref={setNodeRef}
+      className="flex-col items-start"
+      style={{
+        backgroundColor: isOver ? 'rgba(0, 128, 128, 0.1)' : undefined,
+        transition: 'background-color 0.2s ease-in-out',
+      }}
+    >
+      <div className="flex items-center w-full group">
+        {isSelectionMode && (
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={(checked) => onToggleSelect(folder.id, !!checked)}
+            aria-label={`Select ${folder.name}`}
+            className="mr-1 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          />
+        )}
+        <SidebarMenuButton
+          onClick={
+            isSelectionMode
+              ? () => onToggleSelect(folder.id, !isSelected)
+              : onToggleExpand
+          }
+          className="flex-1 flex items-center gap-1.5"
+        >
+          {isExpanded ? (
+            <FolderOpenIcon className="size-4" />
+          ) : (
+            <FolderIcon className="size-4" />
+          )}
+          <span className="truncate max-w-[calc(100%-3rem)] block">{folder.name}</span>
+        </SidebarMenuButton>
+        <DropdownMenu modal={true}>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuAction className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <MoreHorizontalIcon />
+              <span className="sr-only">More options for {folder.name}</span>
+            </SidebarMenuAction>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side="bottom"
+            align="end"
+            className="w-[--radix-popper-anchor-width] min-w-[114px]"
+            sideOffset={8}
+            alignOffset={-6}
+          >
+            <DropdownMenuItem
+              className="cursor-pointer hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 mb-1"
+              onSelect={() => onRename(folder.id, folder.name)}
+            >
+              Rename
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 mb-1"
+              onSelect={() => onClone(folder.id, folder.name)}
+            >
+              Clone
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 focus:bg-pink-100 dark:focus:bg-pink-900/40 focus:text-pink-800 dark:focus:text-pink-200 transition-colors duration-200"
+              onSelect={() => onDelete(folder.id)}
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      {isExpanded && (
+        <SidebarGroupContent className="w-full pl-3 mt-1">
+          <SidebarMenu>{children}</SidebarMenu>
+        </SidebarGroupContent>
+      )}
+    </SidebarMenuItem>
+  );
+};
 
 type GroupedDocuments = {
   favorites: Document[];
@@ -71,6 +193,8 @@ const PureDocumentItem = ({
   onToggleSelect,
   onStar,
   onClone,
+  onMove,
+  folders,
 }: {
   document: Document;
   isActive: boolean;
@@ -82,6 +206,8 @@ const PureDocumentItem = ({
   onToggleSelect: (documentId: string, isSelected: boolean) => void;
   onStar: (documentId: string, isStarred: boolean) => void;
   onClone: (documentId: string, title: string) => void;
+  onMove: (documentId: string, folderId: string | null) => void;
+  folders: Folder[];
 }) => {
   const handleDocumentClick = useCallback(
     (e: React.MouseEvent) => {
@@ -116,12 +242,36 @@ const PureDocumentItem = ({
     ],
   );
 
-  const router = useRouter();
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: document.id,
+    data: {
+      type: 'document',
+      document: document,
+    },
+  });
 
   return (
-    <SidebarMenuItem>
+    <SidebarMenuItem
+      ref={setNodeRef}
+      style={{
+        opacity: isDragging ? 0.5 : 1,
+      }}
+    >
       <div className="flex items-center w-full">
+        {isSelectionMode && (
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={(checked) =>
+              onToggleSelect(document.id, !!checked)
+            }
+            aria-label={`Select ${document.title}`}
+            className="mr-1 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          />
+        )}
         <SidebarMenuButton
+          {...listeners}
+          {...attributes}
           asChild
           isActive={isActive}
           className={cn('flex-1', isSelectionMode && 'pr-1')}
@@ -131,92 +281,56 @@ const PureDocumentItem = ({
             onClick={handleDocumentClick}
             className="flex items-center w-full"
           >
-            {isSelectionMode && (
-              <Checkbox
-                checked={isSelected}
-                onCheckedChange={(checked) =>
-                  onToggleSelect(document.id, !!checked)
-                }
-                aria-label={`Select ${document.title}`}
-                className="mr-1 shrink-0"
-              />
-            )}
-            <span className="truncate max-w-[calc(100%-1rem)] block">{document.title}</span>
+            <span className="truncate max-w-[calc(100%-2rem)] block">
+              {document.title}
+            </span>
           </Link>
         </SidebarMenuButton>
       </div>
 
-      {!isSelectionMode && (
-        <DropdownMenu modal={true}>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuAction
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5"
-              showOnHover={!isActive}
-            >
-              <MoreHorizontalIcon />
-              <span className="sr-only">More</span>
-            </SidebarMenuAction>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent
-            side="bottom"
-            align="end"
-            className="w-[--radix-popper-anchor-width] min-w-[114px]"
-            sideOffset={8}
-            alignOffset={-6}
+      <DropdownMenu modal={true}>
+        <DropdownMenuTrigger asChild>
+          <SidebarMenuAction
+            onPointerDown={(e) => e.stopPropagation()}
+            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground mr-0.5"
+            showOnHover={!isActive}
           >
-            <DropdownMenuItem
-              className="cursor-pointer hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 mb-1"
-              onSelect={() =>
-                onStar(document.id, !(document as any).is_starred)
-              }
-            >
-              <LottieIcon
-                animationData={animations.star}
-                size={16}
-                loop={false}
-                autoplay={false}
-                initialFrame={0}
-                className="mr-1"
-              // customColor={[0.7059, 0.3255, 0.0353]} // amber-700 #b45309
-              />
-              <span>{(document as any).is_starred ? 'Unstar' : 'Star'}</span>
-            </DropdownMenuItem>
+            <MoreHorizontalIcon />
+            <span className="sr-only">More</span>
+          </SidebarMenuAction>
+        </DropdownMenuTrigger>
 
-            <DropdownMenuItem
-              className="cursor-pointer hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 mb-1"
-              onSelect={() => onClone(document.id, `${document.title}`)}
-            >
-              <LottieIcon
-                animationData={animations.cube}
-                size={16}
-                loop={false}
-                autoplay={false}
-                initialFrame={0}
-                className="mr-1"
-              // customColor={[0.0549, 0.4549, 0.5647]} // cyan-700 #0e7490
-              />
-              <span>Clone</span>
-            </DropdownMenuItem>
+        <DropdownMenuContent
+          side="bottom"
+          align="end"
+          className="w-[--radix-popper-anchor-width] min-w-[114px]"
+          sideOffset={8}
+          alignOffset={-6}
+        >
+          <DropdownMenuItem
+            className="cursor-pointer hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 mb-1"
+            onSelect={() =>
+              onStar(document.id, !(document as any).is_starred)
+            }
+          >
+            <span>{(document as any).is_starred ? 'Unstar' : 'Star'}</span>
+          </DropdownMenuItem>
 
-            <DropdownMenuItem
-              className="cursor-pointer bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 focus:bg-pink-100 dark:focus:bg-pink-900/40 focus:text-pink-800 dark:focus:text-pink-200 transition-colors duration-200"
-              onSelect={() => onDelete(document.id)}
-            >
-              <LottieIcon
-                animationData={animations.trash}
-                size={16}
-                loop={false}
-                autoplay={false}
-                initialFrame={0}
-                className="mr-1"
-              // customColor={[0.7451, 0.0941, 0.3647]} // pink-700 #be185d
-              />
-              <span>Delete</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+          <DropdownMenuItem
+            className="cursor-pointer hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 mb-1"
+            onSelect={() => onClone(document.id, `${document.title}`)}
+          >
+            <span>Clone</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            className="cursor-pointer bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 focus:bg-pink-100 dark:focus:bg-pink-900/40 focus:text-pink-800 dark:focus:text-pink-200 transition-colors duration-200"
+            onSelect={() => onDelete(document.id)}
+          >
+            <span>Delete</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </SidebarMenuItem>
   );
 };
@@ -232,13 +346,17 @@ export const DocumentItem = memo(PureDocumentItem, (prevProps, nextProps) => {
     (nextProps.document as any).is_starred
   )
     return false;
+  if (prevProps.folders.length !== nextProps.folders.length) return false;
   return true;
 });
 
 export function SidebarDocuments({
   user,
   initialDocuments,
-}: { user?: User; initialDocuments?: any[] }) {
+}: {
+  user?: User;
+  initialDocuments?: any[];
+}) {
   const { setOpenMobile } = useSidebar();
   const router = useRouter();
   const { setArtifact } = useArtifact();
@@ -246,21 +364,50 @@ export function SidebarDocuments({
     useDocumentUtils();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(true);
+  const [isFoldersExpanded, setIsFoldersExpanded] = useState(true);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [renameDialogState, setRenameDialogState] = useState({
+    isOpen: false,
+    folderId: '',
+    currentName: '',
+    newName: '',
+  });
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
+    new Set(),
+  );
+  const [showDeleteFolderDialog, setShowDeleteFolderDialog] = useState(false);
+  const [deleteFolderId, setDeleteFolderId] = useState<string | null>(null);
+  const [folderSearchTerm, setFolderSearchTerm] = useState('');
+  const [isFolderSelectionMode, setIsFolderSelectionMode] = useState(false);
+  const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
+  const [showMultiDeleteFolderDialog, setShowMultiDeleteFolderDialog] =
+    useState(false);
+
+  const { data: folders, mutate: mutateFolders } = useSWR<Folder[]>(
+    user ? '/api/folder' : null,
+    fetcher,
+  );
 
   const {
     data: paginatedDocumentsData,
     isLoading,
     mutate,
+    size,
+    setSize,
   } = useSWRInfinite<PaginatedDocuments>(
     (pageIndex, previousPageData) => {
       if (!user) return null;
       if (previousPageData && !previousPageData.hasMore) return null;
-      if (pageIndex === 0) return `/api/document?limit=${DOCUMENT_PAGE_SIZE}`;
+      if (pageIndex === 0)
+        return `/api/document?limit=${DOCUMENT_PAGE_SIZE}`;
       if (!previousPageData?.documents?.length) return null;
-      const lastDoc = previousPageData.documents.at(-1);
+      const lastDoc =
+        previousPageData.documents[previousPageData.documents.length - 1];
       if (!lastDoc) return null;
-      return `/api/document?limit=${DOCUMENT_PAGE_SIZE}&ending_before=${lastDoc.id}`;
+      return `/api/document?limit=${DOCUMENT_PAGE_SIZE}&cursor=${lastDoc.createdAt}`;
     },
     fetcher,
     {
@@ -287,7 +434,18 @@ export function SidebarDocuments({
 
   const pathname =
     typeof window !== 'undefined' ? window.location.pathname : '';
-  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(
+    null,
+  );
+  const [activeDragItem, setActiveDragItem] = useState<Document | null>(null);
+
+  const { setNodeRef: setRootDroppableRef, isOver: isOverRoot } =
+    useDroppable({
+      id: 'root-droppable',
+      data: {
+        type: 'root',
+      },
+    });
 
   useEffect(() => {
     const match = pathname.match(/\/documents\/([^/?]+)/);
@@ -465,7 +623,9 @@ export function SidebarDocuments({
         if (!pages) return pages;
         return pages.map((page) => ({
           ...page,
-          documents: page.documents.filter((d) => !selectedDocuments.has(d.id)),
+          documents: page.documents.filter(
+            (d) => !selectedDocuments.has(d.id),
+          ),
         }));
       }, false);
 
@@ -582,21 +742,191 @@ export function SidebarDocuments({
     }
   };
 
+  const handleMoveDocument = async (
+    documentId: string,
+    folderId: string | null,
+  ) => {
+    try {
+      await fetch(`/api/document/${documentId}/move`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folderId }),
+      });
+      mutate();
+      toast.success('Document moved');
+    } catch (error) {
+      toast.error('Failed to move document');
+    }
+  };
+
+  const handleCreateFolder = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const name = newFolderName.trim();
+    if (!name) {
+      return;
+    }
+    setIsCreatingFolder(true);
+    try {
+      const response = await fetch('/api/folder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create folder');
+      }
+
+      mutateFolders(); // Re-fetch folders
+      toast.success(`Folder "${name}" created`);
+      setNewFolderName('');
+      setIsCreateFolderOpen(false);
+    } catch (error) {
+      console.error('[SidebarDocuments] Error creating folder:', error);
+      toast.error('Failed to create folder');
+    } finally {
+      setIsCreatingFolder(false);
+    }
+  };
+
+  const handleRenameFolder = (folderId: string, currentName: string) => {
+    setRenameDialogState({
+      isOpen: true,
+      folderId,
+      currentName,
+      newName: currentName,
+    });
+  };
+
+  const submitRenameFolder = async () => {
+    const { folderId, newName, currentName } = renameDialogState;
+    if (!newName || newName.trim().length === 0 || newName === currentName) {
+      setRenameDialogState({
+        isOpen: false,
+        folderId: '',
+        currentName: '',
+        newName: '',
+      });
+      return;
+    }
+
+    try {
+      await fetch(`/api/folder/${folderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newName }),
+      });
+      mutateFolders();
+      toast.success(`Folder renamed to "${newName}"`);
+    } catch (error) {
+      toast.error('Failed to rename folder');
+    } finally {
+      setRenameDialogState({
+        isOpen: false,
+        folderId: '',
+        currentName: '',
+        newName: '',
+      });
+    }
+  };
+
+  const handleCloneFolder = async (folderId: string, folderName: string) => {
+    try {
+      const timestamp = new Date().toLocaleString();
+      const newFolderName = `${folderName} - Copy ${timestamp}`;
+      await fetch(`/api/folder/${folderId}/clone`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ newFolderName }),
+      });
+      mutateFolders();
+      mutate(); // Re-fetch documents as well
+      toast.success('Folder cloned');
+    } catch (error) {
+      toast.error('Failed to clone folder');
+    }
+  };
+
+  const handleDeleteFolder = async () => {
+    if (!deleteFolderId) return;
+
+    try {
+      await fetch(`/api/folder/${deleteFolderId}`, {
+        method: 'DELETE',
+      });
+      mutateFolders();
+      mutate(); // Re-fetch documents to update their folderId to null
+      toast.success('Folder deleted');
+    } catch (error) {
+      toast.error('Failed to delete folder');
+    } finally {
+      setShowDeleteFolderDialog(false);
+      setDeleteFolderId(null);
+    }
+  };
+
+  const handleDeleteMultipleFolders = async () => {
+    const folderIds = Array.from(selectedFolders);
+    setShowMultiDeleteFolderDialog(false);
+
+    try {
+      await Promise.all(
+        folderIds.map((folderId) =>
+          fetch(`/api/folder/${folderId}`, {
+            method: 'DELETE',
+          }),
+        ),
+      );
+
+      mutateFolders();
+      mutate();
+      toast.success(`${folderIds.length} folders deleted`);
+    } catch (error) {
+      toast.error('Failed to delete some folders');
+    } finally {
+      setSelectedFolders(new Set());
+      setIsFolderSelectionMode(false);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveDragItem(null);
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const documentId = active.id as string;
+      const targetData = over.data.current as { type?: string };
+      if (targetData?.type === 'folder') {
+        const folderId = over.id as string;
+        handleMoveDocument(documentId, folderId);
+      } else if (targetData?.type === 'root') {
+        handleMoveDocument(documentId, null);
+      }
+    }
+  };
+
   const handleDocumentSelect = useCallback(
     async (documentId: string) => {
       setActiveDocumentId(documentId);
 
       try {
         if (documentId === 'init' || !documentId) {
-          console.error('[SidebarDocuments] Invalid document ID:', documentId);
+          console.error(
+            '[SidebarDocuments] Invalid document ID:',
+            documentId,
+          );
           return;
         }
 
-        const selectedDocData = documents?.find((doc) => doc.id === documentId);
+        const selectedDocData = documents?.find(
+          (doc) => doc.id === documentId,
+        );
 
         setArtifact((curr: any) => {
           const newTitle = selectedDocData?.title || 'Loading...';
-          const newKind = (selectedDocData?.kind as ArtifactKind) || 'text';
+          const newKind =
+            (selectedDocData?.kind as ArtifactKind) || 'text';
 
           console.log(
             `[SidebarDocuments] Optimistically setting artifact: ID=${documentId}, Title=${newTitle}`,
@@ -619,7 +949,10 @@ export function SidebarDocuments({
 
         setOpenMobile(false);
       } catch (error) {
-        console.error('[SidebarDocuments] Error selecting document:', error);
+        console.error(
+          '[SidebarDocuments] Error selecting document:',
+          error,
+        );
         toast.error('Failed to load document');
         setArtifact((curr: any) => ({ ...curr, status: 'idle' }));
       }
@@ -674,6 +1007,14 @@ export function SidebarDocuments({
     );
   };
 
+  const filterFolders = (foldersToFilter: Folder[]) => {
+    if (!folderSearchTerm.trim()) return foldersToFilter;
+    return foldersToFilter.filter((folder) =>
+      folder.name.toLowerCase().includes(folderSearchTerm.toLowerCase()),
+    );
+  };
+  const filteredFolders = folders ? filterFolders(folders) : [];
+
   if (isLoading && documents.length === 0) {
     return (
       <SidebarGroup>
@@ -704,7 +1045,7 @@ export function SidebarDocuments({
   }
 
   const filteredDocuments = documents ? filterDocuments(documents) : [];
-  if (hasEmptyDocuments && !searchTerm) {
+  /* if (hasEmptyDocuments && !searchTerm) {
     return (
       <SidebarGroup>
         <div className="px-0 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/70 transition-colors duration-200">
@@ -717,7 +1058,10 @@ export function SidebarDocuments({
             disabled={isCreatingDocument}
           >
             {isCreatingDocument ? (
-              <svg className="animate-spin size-3 text-sidebar-foreground/50" viewBox="0 0 24 24">
+              <svg
+                className="animate-spin size-3 text-sidebar-foreground/50"
+                viewBox="0 0 24 24"
+              >
                 <circle
                   className="opacity-25"
                   cx="12"
@@ -752,25 +1096,315 @@ export function SidebarDocuments({
         </SidebarGroupContent>
       </SidebarGroup>
     );
-  }
+  } */
+
+  const documentsInFolders = filteredDocuments.filter((d) => d.folderId);
+  const documentsWithoutFolders = filteredDocuments.filter(
+    (d) => !d.folderId,
+  );
 
   return (
-    <>
+    <DndContext
+      onDragStart={(event) => {
+        const doc = documents.find((d) => d.id === event.active.id);
+        if (doc) setActiveDragItem(doc);
+      }}
+      onDragEnd={handleDragEnd}
+    >
+      {((folders && folders.length > 0) ||
+        (documents && documents.length >= 2)) && (
+          <SidebarGroup>
+            <div
+              role="button"
+              tabIndex={0}
+              className="px-0 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/70 transition-colors duration-200"
+              onClick={() => setIsFoldersExpanded(!isFoldersExpanded)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsFoldersExpanded(!isFoldersExpanded);
+                }
+              }}
+            >
+              <span className="font-medium">
+                {folders && folders.length === 1 ? 'Folder' : 'Folders'}{' '}
+                {folders && folders.length > 1 && (
+                  <span className="text-sidebar-foreground/30">
+                    ({folders.length})
+                  </span>
+                )}
+              </span>
+              <div className="flex items-center gap-0.5">
+                <div className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={`transition-transform duration-200 text-sidebar-foreground/50 ${isFoldersExpanded ? 'rotate-180' : ''
+                      }`}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            {isFoldersExpanded && (
+              <>
+                {folders && folders.length >= 2 && (
+                  <div className="px-0 mt-1 mb-2">
+                    <Input
+                      placeholder={
+                        folders && folders.length === 1
+                          ? 'Search'
+                          : 'Search folders...'
+                      }
+                      value={folderSearchTerm}
+                      onChange={(e) => setFolderSearchTerm(e.target.value)}
+                      className="h-8 text-sm border data-[state=open]:border-border text-accent-foreground bg-background hover:bg-accent/50 transition-colors duration-200"
+                    />
+                  </div>
+                )}
+                {folders && folders.length === 0 && (
+                  <div className="flex items-center justify-end px-0 py-1 mb-2">
+                    <DropdownMenu
+                      open={isCreateFolderOpen}
+                      onOpenChange={setIsCreateFolderOpen}
+                    >
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer"
+                        >
+                          <FolderPlusIcon className="size-3.5 text-sidebar-foreground/50" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        side="bottom"
+                        align="end"
+                        className="w-56"
+                        sideOffset={5}
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <form onSubmit={handleCreateFolder} className="p-2 space-y-2">
+                          <Input
+                            placeholder="Folder name"
+                            value={newFolderName}
+                            onChange={(e) => setNewFolderName(e.target.value)}
+                            className="h-8 text-sm"
+                            autoFocus
+                          />
+                          <Button
+                            type="submit"
+                            size="sm"
+                            className="w-full h-8"
+                            disabled={isCreatingFolder || !newFolderName.trim()}
+                          >
+                            {isCreatingFolder ? (
+                              <Spinner className="size-3 animate-spin" />
+                            ) : (
+                              'Create'
+                            )}
+                          </Button>
+                        </form>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
+                {filteredFolders.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-start px-0 py-1 mb-2 gap-2">
+                    {!isFolderSelectionMode ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setIsFolderSelectionMode(true);
+                            setSelectedFolders(new Set());
+                          }}
+                          className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200"
+                        >
+                          Select
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (selectedFolders.size === filteredFolders.length) {
+                              setIsFolderSelectionMode(false);
+                              setSelectedFolders(new Set());
+                            } else {
+                              setSelectedFolders(
+                                new Set(filteredFolders.map((f) => f.id)),
+                              );
+                            }
+                          }}
+                          className="h-6 text-xs px-1.5 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hover:text-cyan-800 dark:hover:text-cyan-200 border border-cyan-200 dark:border-cyan-800 transition-colors duration-200"
+                        >
+                          {selectedFolders.size === filteredFolders.length
+                            ? 'Deselect'
+                            : 'Select All'}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (selectedFolders.size > 0) {
+                              setShowMultiDeleteFolderDialog(true);
+                            }
+                          }}
+                          disabled={selectedFolders.size === 0}
+                          className="h-6 text-xs px-1.5 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 border border-pink-200 dark:border-pink-800 transition-colors duration-200 disabled:opacity-50"
+                        >
+                          Delete
+                          {selectedFolders.size > 1
+                            ? ` (${selectedFolders.size})`
+                            : ''}
+                        </Button>
+                      </>
+                    )}
+                    <DropdownMenu
+                      open={isCreateFolderOpen}
+                      onOpenChange={setIsCreateFolderOpen}
+                    >
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer ml-auto"
+                        >
+                          <FolderPlusIcon className="size-3.5 text-sidebar-foreground/50" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        side="bottom"
+                        align="end"
+                        className="w-56"
+                        sideOffset={5}
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <form onSubmit={handleCreateFolder} className="p-2 space-y-2">
+                          <Input
+                            placeholder="Folder name"
+                            value={newFolderName}
+                            onChange={(e) => setNewFolderName(e.target.value)}
+                            className="h-8 text-sm"
+                            autoFocus
+                          />
+                          <Button
+                            type="submit"
+                            size="sm"
+                            className="w-full h-8"
+                            disabled={isCreatingFolder || !newFolderName.trim()}
+                          >
+                            {isCreatingFolder ? (
+                              <Spinner className="size-3 animate-spin" />
+                            ) : (
+                              'Create'
+                            )}
+                          </Button>
+                        </form>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {filteredFolders.map((folder) => (
+                      <FolderItem
+                        key={folder.id}
+                        folder={folder}
+                        isExpanded={expandedFolders.has(folder.id)}
+                        onToggleExpand={() => {
+                          setExpandedFolders((prev) => {
+                            const newSet = new Set(prev);
+                            if (newSet.has(folder.id)) {
+                              newSet.delete(folder.id);
+                            } else {
+                              newSet.add(folder.id);
+                            }
+                            return newSet;
+                          });
+                        }}
+                        onRename={handleRenameFolder}
+                        onClone={handleCloneFolder}
+                        onDelete={(folderId) => {
+                          setDeleteFolderId(folderId);
+                          setShowDeleteFolderDialog(true);
+                        }}
+                        isSelectionMode={isFolderSelectionMode}
+                        isSelected={selectedFolders.has(folder.id)}
+                        onToggleSelect={(folderId, isSelected) => {
+                          setSelectedFolders((prev) => {
+                            const newSet = new Set(prev);
+                            if (isSelected) {
+                              newSet.add(folderId);
+                            } else {
+                              newSet.delete(folderId);
+                            }
+                            return newSet;
+                          });
+                        }}
+                      >
+                        {documentsInFolders
+                          .filter((doc) => doc.folderId === folder.id)
+                          .map((doc) => (
+                            <DocumentItem
+                              key={doc.id}
+                              document={doc}
+                              isActive={doc.id === activeDocumentId}
+                              onDelete={(documentId) => {
+                                setDeleteId(documentId);
+                                setShowDeleteDialog(true);
+                              }}
+                              setOpenMobile={setOpenMobile}
+                              onSelect={handleDocumentSelect}
+                              isSelectionMode={isSelectionMode}
+                              isSelected={selectedDocuments.has(doc.id)}
+                              onToggleSelect={handleToggleSelect}
+                              onStar={handleStar}
+                              onClone={handleClone}
+                              onMove={handleMoveDocument}
+                              folders={folders ?? []}
+                            />
+                          ))}
+                      </FolderItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </>
+            )}
+          </SidebarGroup>
+        )}
+
       <SidebarGroup>
         <div
           role="button"
           tabIndex={0}
           className="px-0 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/70 transition-colors duration-200"
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={() => setIsDocumentsExpanded(!isDocumentsExpanded)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              setIsExpanded(!isExpanded);
+              setIsDocumentsExpanded(!isDocumentsExpanded);
             }
           }}
         >
           <span className="font-medium">
-            {documents && documents.length === 1 ? 'Document' : 'Documents'}{' '}
+            {documents && documents.length === 1
+              ? 'Document'
+              : 'Documents'}{' '}
             {documents && documents.length > 1 && (
               <span className="text-sidebar-foreground/30">
                 ({documents.length})
@@ -778,44 +1412,7 @@ export function SidebarDocuments({
             )}
           </span>
           <div className="flex items-center gap-0.5">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                createNewDocument();
-              }}
-              disabled={isCreatingDocument}
-            >
-              {isCreatingDocument ? (
-                <svg className="animate-spin size-3 text-sidebar-foreground/50" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-              ) : (
-                <LottieIcon
-                  animationData={animations.fileplus}
-                  size={13}
-                  loop={false}
-                  autoplay={false}
-                  initialFrame={0}
-                  className="text-sidebar-foreground/50"
-                />
-              )}
-            </Button>
+
             <div className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -827,7 +1424,8 @@ export function SidebarDocuments({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className={`transition-transform duration-200 text-sidebar-foreground/50 ${isExpanded ? 'rotate-180' : ''}`}
+                className={`transition-transform duration-200 text-sidebar-foreground/50 ${isDocumentsExpanded ? 'rotate-180' : ''
+                  }`}
               >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
@@ -835,16 +1433,64 @@ export function SidebarDocuments({
           </div>
         </div>
 
-        {isExpanded && (
+        {isDocumentsExpanded && (
           <>
-            <div className="px-0 mt-1 mb-2">
-              <Input
-                placeholder={documents && documents.length === 1 ? "Search" : "Search documents..."}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-8 text-sm border data-[state=open]:border-border text-accent-foreground bg-background hover:bg-accent/50 transition-colors duration-200"
-              />
-            </div>
+            {documents && documents.length >= 2 && (
+              <div className="px-0 mt-1 mb-2">
+                <Input
+                  placeholder={
+                    documents && documents.length === 1
+                      ? 'Search'
+                      : 'Search documents...'
+                  }
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="h-8 text-sm border data-[state=open]:border-border text-accent-foreground bg-background hover:bg-accent/50 transition-colors duration-200"
+                />
+              </div>
+            )}
+
+            {documents &&
+              documents.length === 0 &&
+              !isLoading &&
+              !searchTerm.trim() && (
+                <div className="flex items-center justify-end px-0 py-1 mb-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      createNewDocument();
+                    }}
+                    disabled={isCreatingDocument}
+                  >
+                    {isCreatingDocument ? (
+                      <svg
+                        className="animate-spin size-3 text-sidebar-foreground/50"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                    ) : (
+                      <FilePlusIcon className="size-3.5 text-sidebar-foreground/50" />
+                    )}
+                  </Button>
+                </div>
+              )}
 
             {filteredDocuments.length > 0 && (
               <div className="flex flex-wrap items-center justify-start px-0 py-1 mb-2 gap-2">
@@ -863,11 +1509,17 @@ export function SidebarDocuments({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={selectedDocuments.size === filteredDocuments.length ? handleToggleSelectionMode : handleSelectAll}
+                      onClick={
+                        selectedDocuments.size ===
+                          filteredDocuments.length
+                          ? handleToggleSelectionMode
+                          : handleSelectAll
+                      }
                       className="h-6 text-xs px-1.5 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hover:text-cyan-800 dark:hover:text-cyan-200 border border-cyan-200 dark:border-cyan-800 transition-colors duration-200"
                     >
-                      {selectedDocuments.size === filteredDocuments.length
-                        ? 'Deselect All'
+                      {selectedDocuments.size ===
+                        filteredDocuments.length
+                        ? 'Deselect'
                         : 'Select All'}
                     </Button>
                     <Button
@@ -885,9 +1537,42 @@ export function SidebarDocuments({
                         ? ` (${selectedDocuments.size})`
                         : ''}
                     </Button>
-
                   </>
                 )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer ml-auto"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    createNewDocument();
+                  }}
+                  disabled={isCreatingDocument}
+                >
+                  {isCreatingDocument ? (
+                    <svg
+                      className="animate-spin size-3 text-sidebar-foreground/50"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                  ) : (
+                    <FilePlusIcon className="size-3.5 text-sidebar-foreground/50" />
+                  )}
+                </Button>
               </div>
             )}
 
@@ -915,26 +1600,24 @@ export function SidebarDocuments({
                         onToggleSelect={handleToggleSelect}
                         onStar={handleStar}
                         onClone={handleClone}
+                        onMove={handleMoveDocument}
+                        folders={folders ?? []}
                       />
                     ))
                   )
                 ) : (
                   (() => {
-                    const groupedDocuments =
-                      groupDocumentsByDate(filteredDocuments);
+                    const groupedDocuments = groupDocumentsByDate(
+                      documentsWithoutFolders,
+                    );
                     return (
                       <>
                         {groupedDocuments.favorites.length > 0 && (
                           <>
                             <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium flex items-center gap-1">
-                              {/* <LottieIcon
-                                animationData={animations.star}
-                                size={12}
-                                loop={false}
-                                autoplay={false}
-                                initialFrame={0}
-                              /> */}
-                              {groupedDocuments.favorites.length === 1 ? 'Favorite' : 'Favorites'}
+                              {groupedDocuments.favorites.length === 1
+                                ? 'Favorite'
+                                : 'Favorites'}
                             </div>
                             {groupedDocuments.favorites.map((doc) => (
                               <DocumentItem
@@ -948,10 +1631,14 @@ export function SidebarDocuments({
                                 setOpenMobile={setOpenMobile}
                                 onSelect={handleDocumentSelect}
                                 isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(doc.id)}
+                                isSelected={selectedDocuments.has(
+                                  doc.id,
+                                )}
                                 onToggleSelect={handleToggleSelect}
                                 onStar={handleStar}
                                 onClone={handleClone}
+                                onMove={handleMoveDocument}
+                                folders={folders ?? []}
                               />
                             ))}
                           </>
@@ -974,10 +1661,14 @@ export function SidebarDocuments({
                                 setOpenMobile={setOpenMobile}
                                 onSelect={handleDocumentSelect}
                                 isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(doc.id)}
+                                isSelected={selectedDocuments.has(
+                                  doc.id,
+                                )}
                                 onToggleSelect={handleToggleSelect}
                                 onStar={handleStar}
                                 onClone={handleClone}
+                                onMove={handleMoveDocument}
+                                folders={folders ?? []}
                               />
                             ))}
                           </>
@@ -1000,10 +1691,14 @@ export function SidebarDocuments({
                                 setOpenMobile={setOpenMobile}
                                 onSelect={handleDocumentSelect}
                                 isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(doc.id)}
+                                isSelected={selectedDocuments.has(
+                                  doc.id,
+                                )}
                                 onToggleSelect={handleToggleSelect}
                                 onStar={handleStar}
                                 onClone={handleClone}
+                                onMove={handleMoveDocument}
+                                folders={folders ?? []}
                               />
                             ))}
                           </>
@@ -1026,10 +1721,14 @@ export function SidebarDocuments({
                                 setOpenMobile={setOpenMobile}
                                 onSelect={handleDocumentSelect}
                                 isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(doc.id)}
+                                isSelected={selectedDocuments.has(
+                                  doc.id,
+                                )}
                                 onToggleSelect={handleToggleSelect}
                                 onStar={handleStar}
                                 onClone={handleClone}
+                                onMove={handleMoveDocument}
+                                folders={folders ?? []}
                               />
                             ))}
                           </>
@@ -1052,10 +1751,14 @@ export function SidebarDocuments({
                                 setOpenMobile={setOpenMobile}
                                 onSelect={handleDocumentSelect}
                                 isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(doc.id)}
+                                isSelected={selectedDocuments.has(
+                                  doc.id,
+                                )}
                                 onToggleSelect={handleToggleSelect}
                                 onStar={handleStar}
                                 onClone={handleClone}
+                                onMove={handleMoveDocument}
+                                folders={folders ?? []}
                               />
                             ))}
                           </>
@@ -1078,10 +1781,14 @@ export function SidebarDocuments({
                                 setOpenMobile={setOpenMobile}
                                 onSelect={handleDocumentSelect}
                                 isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(doc.id)}
+                                isSelected={selectedDocuments.has(
+                                  doc.id,
+                                )}
                                 onToggleSelect={handleToggleSelect}
                                 onStar={handleStar}
                                 onClone={handleClone}
+                                onMove={handleMoveDocument}
+                                folders={folders ?? []}
                               />
                             ))}
                           </>
@@ -1096,10 +1803,13 @@ export function SidebarDocuments({
         )}
       </SidebarGroup>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete document?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this document?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete your
               document and remove it from our servers.
@@ -1130,8 +1840,12 @@ export function SidebarDocuments({
             </AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              selected {selectedDocuments.size === 1 ? 'document' : 'documents'}{' '}
-              and remove {selectedDocuments.size === 1 ? 'it' : 'them'} from our
+              selected{' '}
+              {selectedDocuments.size === 1
+                ? 'document'
+                : 'documents'}{' '}
+              and remove{' '}
+              {selectedDocuments.size === 1 ? 'it' : 'them'} from our
               servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1148,6 +1862,106 @@ export function SidebarDocuments({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+
+      <AlertDialog
+        open={showMultiDeleteFolderDialog}
+        onOpenChange={setShowMultiDeleteFolderDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {selectedFolders.size === 1
+                ? 'Delete this folder?'
+                : `Delete ${selectedFolders.size} folders?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. Documents in these folders will not
+              be deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMultipleFolders}
+              className="bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 border border-pink-200 dark:border-pink-800 transition-colors duration-200"
+            >
+              {selectedFolders.size === 1
+                ? 'Delete'
+                : `Delete ${selectedFolders.size} folders`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={renameDialogState.isOpen}
+        onOpenChange={(isOpen) =>
+          setRenameDialogState((s) => ({ ...s, isOpen }))
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rename Folder</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter a new name for the folder &quot;{renameDialogState.currentName}&quot;.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={renameDialogState.newName}
+            onChange={(e) =>
+              setRenameDialogState((s) => ({ ...s, newName: e.target.value }))
+            }
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                submitRenameFolder();
+              }
+            }}
+            autoFocus
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() =>
+                setRenameDialogState({
+                  isOpen: false,
+                  folderId: '',
+                  currentName: '',
+                  newName: '',
+                })
+              }
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={submitRenameFolder}>
+              Rename
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={showDeleteFolderDialog}
+        onOpenChange={setShowDeleteFolderDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this folder?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. Documents in this folder will not be
+              deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteFolder}
+              className="bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 border border-pink-200 dark:border-pink-800 transition-colors duration-200"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </DndContext>
   );
 }
