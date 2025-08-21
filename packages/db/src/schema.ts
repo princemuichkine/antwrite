@@ -10,9 +10,12 @@ import {
   integer,
   pgEnum,
   uniqueIndex,
+  AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
+
+export const chatModeEnum = pgEnum('chat_mode', ['chat', 'agent']);
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -74,6 +77,7 @@ export const Chat = pgTable('Chat', {
     .notNull()
     .references(() => user.id),
   document_context: jsonb('document_context'),
+  mode: chatModeEnum('mode').default('chat').notNull(),
 });
 
 export type Chat = InferSelectModel<typeof Chat>;
@@ -128,6 +132,7 @@ export const Document = pgTable(
     style: jsonb('style'),
     author: text('author'),
     slug: text('slug'),
+    folderId: uuid('folderId').references(() => Folder.id),
   },
   (table) => {
     return {
@@ -141,6 +146,22 @@ export const Document = pgTable(
 );
 
 export type Document = InferSelectModel<typeof Document>;
+
+export const Folder = pgTable('Folder', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  userId: text('userId')
+    .notNull()
+    .references(() => user.id),
+  createdAt: timestamp('createdAt', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updatedAt', { mode: 'date' })
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+  parentId: uuid('parentId').references((): AnyPgColumn => Folder.id),
+});
+
+export type Folder = InferSelectModel<typeof Folder>;
 
 export const subscription = pgTable('subscription', {
   id: text('id').primaryKey(),
@@ -170,6 +191,23 @@ export const userRelations = relations(user, ({ many }) => ({
   documents: many(Document),
   chats: many(Chat),
   subscriptions: many(subscription),
+  folders: many(Folder),
+}));
+
+export const folderRelations = relations(Folder, ({ one, many }) => ({
+  user: one(user, {
+    fields: [Folder.userId],
+    references: [user.id],
+  }),
+  parent: one(Folder, {
+    fields: [Folder.parentId],
+    references: [Folder.id],
+    relationName: 'parent_folder',
+  }),
+  children: many(Folder, {
+    relationName: 'parent_folder',
+  }),
+  documents: many(Document),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -203,6 +241,10 @@ export const documentRelations = relations(Document, ({ one, many }) => ({
   chat: one(Chat, {
     fields: [Document.chatId],
     references: [Chat.id],
+  }),
+  folder: one(Folder, {
+    fields: [Document.folderId],
+    references: [Folder.id],
   }),
 }));
 

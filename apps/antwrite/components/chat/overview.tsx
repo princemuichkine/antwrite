@@ -30,12 +30,12 @@ export const Overview = () => {
         </div>
         <h2 className="text-xl font-medium">Welcome to Antwrite</h2>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground -mb-1">
           A modern writing tool designed to enhance your creative process.
           Write, edit, and collaborate with AI.
         </p>
 
-        <div className="flex flex-col gap-3 text-sm text-muted-foreground">
+        <div className="flex flex-col gap-2 text-sm text-muted-foreground">
           <p className="leading-relaxed">
             Press{' '}
             <kbd className="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold text-primary bg-background border border-border rounded-sm shadow-sm min-w-[30px] justify-center">
@@ -50,7 +50,7 @@ export const Overview = () => {
             </kbd>{' '}
             to edit.
           </p>
-          <p className="leading-relaxed">Send a message in the chat input below.</p>
+          {/* <p className="leading-relaxed">Send a message in the chat input below.</p> */}
           <p className="leading-relaxed">
             Hold{' '}
             <kbd className="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold text-primary bg-background border border-border rounded-sm shadow-sm min-w-[40px] justify-center">
@@ -58,7 +58,7 @@ export const Overview = () => {
             </kbd>{' '}
             and hover over text for synonyms.
           </p>
-          <p className="leading-relaxed">Configure AI behavior in the settings menu (top-right).</p>
+          {/* <p className="leading-relaxed">Configure AI behavior in the settings menu (top-right).</p> */}
         </div>
       </div>
     </motion.div>

@@ -179,6 +179,8 @@ function PureMultimodalInput({
   const [mentionStartPosition, setMentionStartPosition] = useState<number>(-1);
   const [mentionSelectorPosition, setMentionSelectorPosition] = useState<{ x: number; y: number } | undefined>(undefined);
   const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionSearchType, setMentionSearchType] = useState<'document' | 'folder' | 'chat' | 'tab' | null>(null);
+  const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     'input',
@@ -208,9 +210,19 @@ function PureMultimodalInput({
     if (atIndex !== -1) {
       const afterAt = textBeforeCursor.substring(atIndex + 1);
       // Show context selector immediately when @ is typed, even with no text after it
-      if (!afterAt.includes(' ')) {
+      if (!afterAt.match(/\s/)) {
+        let query = afterAt;
+        let typeFilter: 'folder' | null = null;
+
+        if (afterAt.startsWith('/')) {
+          typeFilter = 'folder';
+          query = afterAt.substring(1);
+        }
+
+        setMentionSearchType(typeFilter);
+        setMentionQuery(query);
+
         setMentionStartPosition(atIndex);
-        setMentionQuery(afterAt);
 
         // Calculate position for context selector
         if (textareaRef.current) {
@@ -251,17 +263,22 @@ function PureMultimodalInput({
           setMentionSelectorPosition({ x: selectorX, y: selectorY });
         }
 
+        setIsModelSelectorOpen(false);
         setShowMentionContextSelector(true);
         setShowAddContextSelector(false); // Close add context selector if open
       } else {
         setShowMentionContextSelector(false);
         setMentionStartPosition(-1);
         setMentionSelectorPosition(undefined);
+        setMentionSearchType(null);
+        setIsModelSelectorOpen(false);
       }
     } else {
       setShowMentionContextSelector(false);
       setMentionStartPosition(-1);
       setMentionSelectorPosition(undefined);
+      setMentionSearchType(null);
+      setIsModelSelectorOpen(false);
     }
   };
 
@@ -315,7 +332,9 @@ function PureMultimodalInput({
     const afterCursor = currentValue.substring(textareaRef.current?.selectionStart || mentionStartPosition + 1);
 
     // Insert the @item text in the input AND add it as a badge
-    const newValue = `${beforeMention}@${item.title} ${afterCursor}`;
+    const mentionText =
+      item.type === 'folder' ? `/${item.title}` : item.title;
+    const newValue = `${beforeMention}@${mentionText} ${afterCursor}`;
     setInput(newValue);
     setLocalStorageInput(newValue);
 
@@ -331,13 +350,22 @@ function PureMultimodalInput({
 
     setShowMentionContextSelector(false);
     setMentionStartPosition(-1);
+    setMentionSearchType(null);
 
     // Focus back to textarea
     setTimeout(() => {
       textareaRef.current?.focus();
-      const newCursorPosition = beforeMention.length + item.title.length + 2; // +2 for @ and space
+      const newCursorPosition = beforeMention.length + mentionText.length + 2; // +2 for @ and space
       textareaRef.current?.setSelectionRange(newCursorPosition, newCursorPosition);
     }, 0);
+  };
+
+  const handleModelSelectorOpenChange = (open: boolean) => {
+    if (open) {
+      setShowAddContextSelector(false);
+      setShowMentionContextSelector(false);
+    }
+    setIsModelSelectorOpen(open);
   };
 
   // Handle Add Context button click
@@ -345,6 +373,7 @@ function PureMultimodalInput({
     setMentionStartPosition(input.length);
     setShowAddContextSelector(true);
     setShowMentionContextSelector(false); // Close mention selector if open
+    setIsModelSelectorOpen(false);
 
     if (atButtonContainerRef.current) {
       const rect = atButtonContainerRef.current.getBoundingClientRect();
@@ -432,6 +461,7 @@ function PureMultimodalInput({
       setShowAddContextSelector(false);
       setMentionStartPosition(-1);
       setMentionSelectorPosition(undefined);
+      setMentionSearchType(null);
     }
   };
 
@@ -472,7 +502,7 @@ function PureMultimodalInput({
         {/* Top bar with context button and badges */}
         <div
           ref={badgesContainerRef}
-          className="flex items-center gap-1.5 px-2 py-1 flex-nowrap overflow-hidden border-b border-border/50"
+          className="flex items-center gap-1.5 px-2 py-1 flex-nowrap overflow-hidden"
         >
           <div ref={atButtonContainerRef} className="relative">
             <button
@@ -553,7 +583,7 @@ function PureMultimodalInput({
           </TooltipProvider>
         </div>
 
-        <div className="flex-1 p-3 space-y-2 relative">
+        <div className="flex-1 px-3 pt-1 space-y-2">
           <div className="relative mention-input">
             <textarea
               ref={textareaRef}
@@ -605,7 +635,7 @@ function PureMultimodalInput({
               placeholder="Ask, learn, write anything..."
               className={cn(
                 'flex min-h-[80px] max-h-[350px] w-full bg-transparent p-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-auto relative z-10 mention-textarea text-transparent caret-black dark:caret-white',
-                className
+                className,
               )}
               rows={1}
             />
@@ -666,7 +696,22 @@ function PureMultimodalInput({
               })()}
             </div>
           </div>
-          <div className="absolute bottom-3 right-3 z-30 w-fit flex flex-row justify-end">
+        </div>
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-2">
+            <ChatModeSelector
+              selectedMode={chatMode}
+              onModeChange={onChatModeChange}
+            />
+            <ModelSelector
+              selectedModelId={selectedModelId}
+              onModelChange={onModelChange}
+              minimal={true}
+              open={isModelSelectorOpen}
+              onOpenChange={handleModelSelectorOpenChange}
+            />
+          </div>
+          <div>
             {status === 'submitted' ? (
               <StopButton stop={stop} setMessages={setMessages} />
             ) : (
@@ -676,17 +721,6 @@ function PureMultimodalInput({
                 uploadQueue={uploadQueue}
               />
             )}
-          </div>
-          <div className="absolute bottom-3 left-3 z-30 w-fit flex flex-row items-center gap-2">
-            <ChatModeSelector
-              selectedMode={chatMode}
-              onModeChange={onChatModeChange}
-            />
-            <ModelSelector
-              selectedModelId={selectedModelId}
-              onModelChange={onModelChange}
-              minimal={true}
-            />
           </div>
         </div>
       </div>
@@ -711,12 +745,14 @@ function PureMultimodalInput({
           setShowMentionContextSelector(false);
           setMentionStartPosition(-1);
           setMentionSelectorPosition(undefined);
+          setMentionSearchType(null);
         }}
         onSelect={handleContextSelect}
         position={mentionSelectorPosition}
         shouldFocusSearchInput={false}
         showSearchBar={false}
         searchQueryValue={mentionQuery}
+        searchTypeFilter={mentionSearchType}
       />
     </div>
   );

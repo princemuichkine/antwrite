@@ -5,6 +5,12 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ CREATE TYPE "public"."chat_mode" AS ENUM('chat', 'agent');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  CREATE TYPE "public"."document_visibility" AS ENUM('public', 'private');
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -15,7 +21,8 @@ CREATE TABLE IF NOT EXISTS "Chat" (
 	"createdAt" timestamp NOT NULL,
 	"title" text NOT NULL,
 	"userId" text NOT NULL,
-	"document_context" jsonb
+	"document_context" jsonb,
+	"mode" "chat_mode" DEFAULT 'agent' NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "Document" (
@@ -33,7 +40,17 @@ CREATE TABLE IF NOT EXISTS "Document" (
 	"style" jsonb,
 	"author" text,
 	"slug" text,
+	"folderId" uuid,
 	CONSTRAINT "Document_id_createdAt_pk" PRIMARY KEY("id","createdAt")
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "Folder" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" text NOT NULL,
+	"userId" text NOT NULL,
+	"createdAt" timestamp DEFAULT now() NOT NULL,
+	"updatedAt" timestamp DEFAULT now() NOT NULL,
+	"parentId" uuid
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "Message" (
@@ -127,6 +144,24 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "Document" ADD CONSTRAINT "Document_chatId_Chat_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."Chat"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Document" ADD CONSTRAINT "Document_folderId_Folder_id_fk" FOREIGN KEY ("folderId") REFERENCES "public"."Folder"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Folder" ADD CONSTRAINT "Folder_parentId_Folder_id_fk" FOREIGN KEY ("parentId") REFERENCES "public"."Folder"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Folder" ADD CONSTRAINT "Folder_userId_user_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

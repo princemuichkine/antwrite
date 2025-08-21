@@ -1,7 +1,15 @@
 'use client';
 
 import { useState, useEffect, useRef, type ReactNode } from 'react';
-import { Search, FileText, Folder, MessageSquare, NotebookTabs } from 'lucide-react';
+import {
+    Search,
+    FileText,
+    Folder,
+    MessageSquare,
+    NotebookTabs,
+    ChevronDown,
+    ChevronRight,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type ContextItem = {
@@ -10,6 +18,7 @@ export type ContextItem = {
     type: 'document' | 'folder' | 'chat' | 'tab';
     subtitle?: string;
     icon?: ReactNode;
+    items?: ContextItem[]; // For nested items like documents in a folder
 };
 
 type ContextSelectorProps = {
@@ -22,6 +31,7 @@ type ContextSelectorProps = {
     showSearchBar?: boolean;
     shouldFocusSearchInput?: boolean;
     searchQueryValue?: string;
+    searchTypeFilter?: 'document' | 'folder' | 'chat' | 'tab' | null;
 };
 
 const CONTEXT_TYPES = [
@@ -41,13 +51,21 @@ export function ContextSelector({
     showSearchBar = true,
     shouldFocusSearchInput = true,
     searchQueryValue,
+    searchTypeFilter = null,
 }: ContextSelectorProps) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedType, setSelectedType] = useState<string>('');
+    const [selectedType, setSelectedType] = useState<string | null>(null);
     const [items, setItems] = useState<ContextItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
     const searchInputRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            onClose();
+        }
+    };
 
     // Focus search input when opened
     useEffect(() => {
@@ -83,21 +101,67 @@ export function ContextSelector({
         const fetchItems = async () => {
             setIsLoading(true);
             try {
-                // Fetch documents
-                const documentsPromise = fetch(`/api/search?query=${encodeURIComponent(searchQuery)}&limit=10`)
-                    .then(res => res.ok ? res.json() : { results: [] })
-                    .then(data => (data.results || [])
-                        .filter((doc: any) => doc.title && doc.title !== 'Untitled')
-                        .map((doc: any) => ({
-                            id: doc.id,
-                            title: doc.title,
-                            type: 'document' as const,
-                            icon: <FileText className="size-2.5" />,
-                        })));
+                const documentsPromise =
+                    !searchTypeFilter || searchTypeFilter === 'document'
+                        ? fetch(
+                            `/api/search?query=${encodeURIComponent(
+                                searchQuery,
+                            )}&type=document&limit=10`,
+                        )
+                            .then((res) => (res.ok ? res.json() : { results: [] }))
+                            .then((data) =>
+                                (data.results || [])
+                                    .filter((doc: any) => doc.title && doc.title !== 'Untitled')
+                                    .map((doc: any) => ({
+                                        id: doc.id,
+                                        title: doc.title,
+                                        type: 'document' as const,
+                                        icon: <FileText className="size-2.5" />,
+                                    })),
+                            )
+                        : Promise.resolve([]);
 
-                // TODO: Add other sources
-                const foldersPromise = Promise.resolve([]); // Placeholder for folders
-                const chatsPromise = Promise.resolve([]); // Placeholder for past chats
+                const foldersPromise =
+                    !searchTypeFilter || searchTypeFilter === 'folder'
+                        ? fetch(
+                            `/api/search?query=${encodeURIComponent(
+                                searchQuery,
+                            )}&type=folder&limit=10`,
+                        )
+                            .then((res) => (res.ok ? res.json() : { results: [] }))
+                            .then((data) =>
+                                (data.results || []).map((folder: any) => ({
+                                    id: folder.id,
+                                    title: folder.name,
+                                    type: 'folder' as const,
+                                    icon: <Folder className="size-2.5" />,
+                                    items: (folder.documents || []).map((doc: any) => ({
+                                        id: doc.id,
+                                        title: doc.title,
+                                        type: 'document' as const,
+                                        icon: <FileText className="size-2.5" />,
+                                    })),
+                                })),
+                            )
+                        : Promise.resolve([]);
+
+                const chatsPromise =
+                    !searchTypeFilter || searchTypeFilter === 'chat'
+                        ? fetch(
+                            `/api/search?query=${encodeURIComponent(
+                                searchQuery,
+                            )}&type=chat&limit=10`,
+                        )
+                            .then((res) => (res.ok ? res.json() : { results: [] }))
+                            .then((data) =>
+                                (data.results || []).map((chat: any) => ({
+                                    id: chat.id,
+                                    title: chat.title,
+                                    type: 'chat' as const,
+                                    icon: <MessageSquare className="size-2.5" />,
+                                })),
+                            )
+                        : Promise.resolve([]);
                 const tabsPromise = Promise.resolve([]); // Placeholder for active tabs
 
                 const [documents, folders, chats, tabs] = await Promise.all([
@@ -107,18 +171,28 @@ export function ContextSelector({
                     tabsPromise,
                 ]);
 
-                let allItems: ContextItem[] = [...documents, ...folders, ...chats, ...tabs];
-
-                // The server already performs a search, so this client-side filtering is redundant and can cause inconsistencies.
-                // if (searchQuery.trim() !== '') {
-                //     allItems = allItems.filter(item =>
-                //         item.title.toLowerCase().startsWith(searchQuery.toLowerCase())
-                //     );
-                // }
-
-                // Filter by selected type (only if a type is selected)
-                if (selectedType) {
-                    allItems = allItems.filter(item => item.type === selectedType);
+                let allItems: ContextItem[] = [];
+                if (searchQuery.trim() !== '') {
+                    // When searching, show a flat list of all item types
+                    allItems = [...documents, ...folders, ...chats, ...tabs];
+                } else {
+                    // When browsing, filter by the selected type
+                    switch (selectedType) {
+                        case 'document':
+                            allItems = documents;
+                            break;
+                        case 'folder':
+                            allItems = folders;
+                            break;
+                        case 'chat':
+                            allItems = chats;
+                            break;
+                        case 'tab':
+                            allItems = tabs;
+                            break;
+                        default:
+                            allItems = [];
+                    }
                 }
 
                 setItems(allItems);
@@ -131,21 +205,18 @@ export function ContextSelector({
         };
 
         fetchItems();
-    }, [searchQuery, selectedType, isOpen]);
+    }, [searchQuery, selectedType, isOpen, searchTypeFilter]);
 
-    // useEffect(() => {
-    //     // If the selector is open, there's a search query, but there are no items to show,
-    //     // and we are not in a loading state, then close the selector.
-    //     if (isOpen && !isLoading && items.length === 0 && searchQuery.trim() !== '') {
-    //         onClose();
-    //     }
-    // }, [items, isOpen, isLoading, searchQuery, onClose]);
-
-    // Handle keyboard navigation
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            onClose();
-        }
+    const handleToggleFolder = (folderId: string) => {
+        setExpandedFolders((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(folderId)) {
+                newSet.delete(folderId);
+            } else {
+                newSet.add(folderId);
+            }
+            return newSet;
+        });
     };
 
     if (!isOpen) return null;
@@ -157,6 +228,43 @@ export function ContextSelector({
         transform: 'translateY(-100%)',
         zIndex: 50
     } : {};
+
+    const renderItem = (item: ContextItem, isSubItem = false) => {
+        const isFolder = item.type === 'folder' && item.items && item.items.length > 0;
+        const isExpanded = isFolder && expandedFolders.has(item.id);
+
+        return (
+            <div key={`${item.type}-${item.id}`}>
+                <button
+                    type="button"
+                    onClick={() => (isFolder ? handleToggleFolder(item.id) : onSelect(item))}
+                    className={cn(
+                        'w-full text-left px-1.5 py-1 rounded-sm hover:bg-accent/30 transition-colors duration-200 group h-6 flex items-center',
+                        isSubItem && 'pl-4',
+                    )}
+                >
+                    <div className="shrink-0 flex items-center gap-1.5">
+                        {isFolder ? (
+                            isExpanded ? (
+                                <ChevronDown className="size-2.5" />
+                            ) : (
+                                <ChevronRight className="size-2.5" />
+                            )
+                        ) : null}
+                        {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0 ml-1.5">
+                        <div className="font-medium text-[6px] truncate">{item.title}</div>
+                    </div>
+                </button>
+                {isExpanded && (
+                    <div className="flex flex-col gap-1 mt-1">
+                        {item.items?.map((subItem) => renderItem(subItem, true))}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div
@@ -170,24 +278,28 @@ export function ContextSelector({
             onKeyDown={handleKeyDown}
         >
             {/* Search Header */}
-            <div className="p-1.5 border-b border-border">
-                {showSearchBar && (
+            {showSearchBar && (
+                <div className="p-1.5 border-b border-border">
                     <div className="relative">
                         <Search className="absolute left-1.5 top-1/2 translate-y-[calc(-50%+1px)] size-2.5 text-muted-foreground" />
                         <input
                             ref={searchInputRef}
                             type="text"
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setSelectedType(null); // Reset type filter when searching
+                            }}
                             placeholder={placeholder}
                             className="w-full pl-[21px] pr-4 py-1 text-[6px] bg-background border border-border rounded-sm focus:outline-none h-6"
                         />
                     </div>
-                )}
-
-                {/* Type Filters - Vertical Layout - Hide when there are search results */}
-                {items.length === 0 && (
-                    <div className="flex flex-col gap-1 mt-1.5">
+                </div>
+            )}
+            <div className="overflow-y-auto flex-1 p-1.5">
+                {/* Show type filters only when no type is selected and no search query exists */}
+                {!selectedType && searchQuery.trim() === '' && !searchTypeFilter && (
+                    <div className="flex flex-col gap-1">
                         {CONTEXT_TYPES.map((type) => {
                             const Icon = type.icon;
                             return (
@@ -195,10 +307,7 @@ export function ContextSelector({
                                     key={type.id}
                                     onClick={() => setSelectedType(type.id)}
                                     className={cn(
-                                        "flex items-center gap-1.5 px-1.5 py-1 text-[6px] rounded-sm transition-colors h-6",
-                                        selectedType === type.id
-                                            ? "bg-accent/30 text-foreground"
-                                            : "text-muted-foreground hover:bg-accent/30 hover:text-foreground"
+                                        'flex items-center gap-1.5 px-1.5 py-1 text-[6px] rounded-sm transition-colors h-6 text-foreground bg-background/30 hover:bg-accent/30 border border-border/30 opacity-60 hover:opacity-100',
                                     )}
                                 >
                                     <Icon className="size-2.5" />
@@ -209,24 +318,16 @@ export function ContextSelector({
                     </div>
                 )}
 
-                {/* Results - Show right below search bar where filters were */}
-                {items.length > 0 && (
-                    <div className="flex flex-col gap-1 mt-1.5 animate-in fade-in-0 slide-in-from-top-1 duration-200">
-                        {items.map((item) => (
-                            <button
-                                type="button"
-                                key={`${item.type}-${item.id}`}
-                                onClick={() => onSelect(item)}
-                                className="w-full text-left px-1.5 py-1 rounded-sm hover:bg-accent/30 transition-colors duration-200 group h-6 flex items-center"
-                            >
-                                <div className="shrink-0">
-                                    {item.icon}
-                                </div>
-                                <div className="flex-1 min-w-0 ml-1.5">
-                                    <div className="font-medium text-[6px] truncate">{item.title}</div>
-                                </div>
-                            </button>
-                        ))}
+                {/* Show items if a type is selected or there's a search query */}
+                {(selectedType || searchQuery.trim() !== '' || searchTypeFilter) && (
+                    <div className="flex flex-col gap-1 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+                        {isLoading && (
+                            <div className="text-muted-foreground text-[6px] p-1.5">Loading...</div>
+                        )}
+                        {!isLoading && items.length === 0 && (
+                            <div className="text-muted-foreground text-[6px] p-1.5">No results found.</div>
+                        )}
+                        {!isLoading && items.map((item) => renderItem(item))}
                     </div>
                 )}
             </div>

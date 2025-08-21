@@ -8,14 +8,15 @@ import { generateUUID } from '@/lib/utils';
 import { MultimodalInput } from './multimodal-input';
 import { Messages } from './messages';
 import { toast } from 'sonner';
-import { FileText, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useDocumentContext } from '@/hooks/use-document-context';
 import type { MentionedDocument } from './multimodal-input';
 import { useArtifact } from '@/hooks/use-artifact';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { useAiOptionsValue } from '@/hooks/ai-options';
-import type { ChatMode } from './chat-mode-selector';
+import { useLocalStorage } from 'usehooks-ts';
+import { type ChatMode } from './chat-mode-selector';
 
 export interface ChatProps {
   id?: string;
@@ -30,6 +31,11 @@ export function Chat({
   selectedChatModel: initialSelectedChatModel,
   isReadonly = false,
 }: ChatProps) {
+  const [selectedModelId, setSelectedModelId] = useLocalStorage(
+    'selectedModelId',
+    DEFAULT_CHAT_MODEL,
+  );
+  const [chatMode, setChatMode] = useLocalStorage<ChatMode>('chatMode', 'agent');
   const { documentId, documentTitle, documentContent } = useDocumentContext();
   const [documentContextActive, setDocumentContextActive] = useState(false);
   const { artifact } = useArtifact();
@@ -39,7 +45,6 @@ export function Chat({
   const [selectedChatModel, setSelectedChatModel] = useState(
     () => initialSelectedChatModel || DEFAULT_CHAT_MODEL,
   );
-  const [chatMode, setChatMode] = useState<ChatMode>('Chat');
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [requestedChatLoadId, setRequestedChatLoadId] = useState<string | null>(
     null,
@@ -96,6 +101,9 @@ export function Chat({
         writingStyleSummary,
         applyStyle,
       },
+      model: selectedModelId,
+      documentId,
+      mode: chatMode,
     },
     onResponse: (res) => {
       if (res.status === 401) {

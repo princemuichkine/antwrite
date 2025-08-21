@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { cn, fetcher } from '@/lib/utils';
-
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { chatModels } from '@/lib/ai/models';
-
+import { Loader2 } from 'lucide-react';
 import { ChevronDownIcon } from '../icons';
 import { Paywall } from '@/components/paywall';
 import {
@@ -27,14 +26,22 @@ export function ModelSelector({
   className,
   minimal = false,
   onModelChange,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   selectedModelId: string;
   className?: string;
   minimal?: boolean;
   onModelChange: (newModelId: string) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 } & React.ComponentProps<typeof Button>) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [isPaywallOpen, setPaywallOpen] = useState(false);
+
+  const isControlled = controlledOpen !== undefined && onOpenChange;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = isControlled ? onOpenChange : setUncontrolledOpen;
 
   const { data: subscriptionData, isLoading: isSubscriptionLoading } = useSWR<{
     hasActiveSubscription: boolean;
@@ -52,10 +59,10 @@ export function ModelSelector({
       <Button
         data-testid="model-selector"
         variant="outline"
-        className={cn('px-2 h-8 rounded-sm border border-border', className)}
+        className={cn('h-6 rounded-sm border border-border px-2', className)}
         disabled
       >
-        Loading...
+        <Loader2 className="animate-spin" size={6} />
       </Button>
     );
   }
@@ -75,15 +82,13 @@ export function ModelSelector({
             variant="outline"
             className="flex items-center gap-1.5 px-1.5 h-6 rounded-sm text-xs text-accent-foreground bg-background/30 hover:bg-accent/30 transition-colors duration-200 border border-border/30 opacity-60 hover:opacity-100"
           >
-            <span className="truncate">
-              {minimal ? selectedChatModel?.name : selectedChatModel?.name}
-            </span>
+            <span className="truncate">{selectedChatModel?.name}</span>
             <ChevronDownIcon size={14} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
-          className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-sm border-border shadow-lg bg-background opacity-90 space-y-1"
+          className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-sm border border-border shadow-lg bg-background opacity-90 space-y-1"
           sideOffset={4}
         >
           <TooltipProvider>
@@ -106,8 +111,10 @@ export function ModelSelector({
                       }}
                       data-active={id === selectedModelId}
                       className={cn(
-                        "group relative flex w-full items-center gap-1.5 px-1.5 py-1 cursor-pointer rounded-sm hover:bg-accent/30 transition-colors duration-200 h-6",
-                        id === selectedModelId && !isLocked && "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
+                        'group relative flex w-full items-center gap-1.5 px-1.5 py-1 cursor-pointer rounded-sm hover:bg-accent/30 transition-colors duration-200 h-6',
+                        id === selectedModelId &&
+                        !isLocked &&
+                        'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800',
                       )}
                     >
                       <div className="flex items-center justify-between w-full">
