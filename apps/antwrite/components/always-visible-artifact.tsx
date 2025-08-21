@@ -447,7 +447,11 @@ export function AlwaysVisibleArtifact({
             <div className="h-6 flex items-center overflow-x-auto overflow-y-hidden document-title-scroll">
               <Input
                 ref={titleInputRef}
-                value={editingTitle ? newTitle : (latestDocument?.title ?? artifact.title ?? 'Document')}
+                value={
+                  editingTitle
+                    ? newTitle
+                    : (latestDocument?.title ?? artifact.title ?? 'Document')
+                }
                 onChange={(e) => setNewTitle(e.target.value)}
                 className={`h-6 py-0 px-1 font-medium leading-6 bg-transparent border-none outline-none shadow-none ring-0 text-left min-w-0 flex-1 ${latestDocument ? 'cursor-pointer' : 'text-muted-foreground'} ${!editingTitle ? 'cursor-pointer' : ''}`}
                 onKeyDown={(e) => {
@@ -455,8 +459,12 @@ export function AlwaysVisibleArtifact({
                   if (e.key === 'Escape') handleCancelEditTitle();
                 }}
                 onBlur={handleSaveTitle}
-                onClick={latestDocument && !editingTitle ? handleEditTitle : undefined}
-                onDoubleClick={latestDocument && !editingTitle ? handleEditTitle : undefined}
+                onClick={
+                  latestDocument && !editingTitle ? handleEditTitle : undefined
+                }
+                onDoubleClick={
+                  latestDocument && !editingTitle ? handleEditTitle : undefined
+                }
                 disabled={isRenamingDocument || !latestDocument}
                 aria-label="Edit document title"
               />
@@ -512,7 +520,7 @@ export function AlwaysVisibleArtifact({
                 initialLastSaved={
                   latestDocument ? new Date(latestDocument.updatedAt) : null
                 }
-                onStatusChange={(newSaveState: SaveState) => { }}
+                onStatusChange={(newSaveState: SaveState) => {}}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
               />
             </Suspense>

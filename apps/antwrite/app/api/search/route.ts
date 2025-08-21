@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { db, Document, Folder, Chat } from '@antwrite/db';
+import { db, Document, Folder } from '@antwrite/db';
 import { and, eq, ilike, inArray } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';

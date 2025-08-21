@@ -132,8 +132,7 @@ export function useDocumentUtils() {
 
       toast({
         type: 'error',
-        description:
-          error instanceof Error ? error.message : String(error),
+        description: error instanceof Error ? error.message : String(error),
       });
     } finally {
       setTimeout(() => {
@@ -328,7 +327,10 @@ export function useDocumentUtils() {
           '[useDocumentUtils] Invalid document ID for deletion:',
           documentId,
         );
-        toast({ type: 'error', description: 'Cannot delete: Invalid document ID' });
+        toast({
+          type: 'error',
+          description: 'Cannot delete: Invalid document ID',
+        });
         return false;
       }
 

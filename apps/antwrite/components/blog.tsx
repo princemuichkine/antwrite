@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React from 'react';
 import { Markdown } from '@/components/markdown';
 import { googleFonts } from '@/lib/fonts';
 import { useTheme } from '@/hooks/use-theme';
@@ -40,17 +40,17 @@ export const Blog: React.FC<BlogProps> = ({
   // Typography override for text color on prose elements
   const proseStyle: React.CSSProperties = themeTextColor
     ? ({
-      '--tw-prose-body': themeTextColor,
-      '--tw-prose-headings': themeTextColor,
-      '--tw-prose-lead': themeTextColor,
-      '--tw-prose-links': themeTextColor,
-      '--tw-prose-bold': themeTextColor,
-      '--tw-prose-counters': themeTextColor,
-      '--tw-prose-bullets': themeTextColor,
-      '--tw-prose-captions': themeTextColor,
-      '--tw-prose-th-borders': themeTextColor,
-      '--tw-prose-td-borders': themeTextColor,
-    } as any)
+        '--tw-prose-body': themeTextColor,
+        '--tw-prose-headings': themeTextColor,
+        '--tw-prose-lead': themeTextColor,
+        '--tw-prose-links': themeTextColor,
+        '--tw-prose-bold': themeTextColor,
+        '--tw-prose-counters': themeTextColor,
+        '--tw-prose-bullets': themeTextColor,
+        '--tw-prose-captions': themeTextColor,
+        '--tw-prose-th-borders': themeTextColor,
+        '--tw-prose-td-borders': themeTextColor,
+      } as any)
     : {};
 
   const wordsPerMinute = 200;
@@ -98,12 +98,12 @@ export const Blog: React.FC<BlogProps> = ({
   if (formattedDate) {
     metaParts.push(<span key="date">{formattedDate}</span>);
   }
-  metaParts.push(
-    <span key="reading-time">{`${readingTime} min read`}</span>,
-  );
+  metaParts.push(<span key="reading-time">{`${readingTime} min read`}</span>);
 
   const postUrl =
-    typeof window !== 'undefined' ? window.location.href : 'https://antwrite.com';
+    typeof window !== 'undefined'
+      ? window.location.href
+      : 'https://antwrite.com';
 
   return (
     <>
@@ -121,7 +121,7 @@ export const Blog: React.FC<BlogProps> = ({
               <div className="flex items-center justify-between mb-4">
                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                   {metaParts.map((part, index) => (
-                    <React.Fragment key={index}>
+                    <React.Fragment key={part.key || `meta-part-${index}`}>
                       {part}
                       {index < metaParts.length - 1 && (
                         <span className="text-muted-foreground/50">|</span>

@@ -12,7 +12,6 @@ import {
 } from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { PanelLeftIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LottieIcon } from '@/components/ui/lottie-icon';
 import { animations } from '@/lib/utils/lottie-animations';
@@ -101,6 +100,7 @@ function SidebarProvider({
   defaultOpen,
   open: openProp,
   onOpenChange: setOpenProp,
+  disableLeftToggle = false,
   className,
   style,
   children,
@@ -115,6 +115,7 @@ function SidebarProvider({
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  disableLeftToggle?: boolean;
 }) {
   const isMobile = useIsMobile();
 
@@ -128,6 +129,11 @@ function SidebarProvider({
 
   const setOpenLeft = useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
+      // If left toggle is disabled, don't allow changes
+      if (disableLeftToggle) {
+        return;
+      }
+
       const openState = typeof value === 'function' ? value(openLeft) : value;
       if (setOpenProp) {
         setOpenProp(openState);
@@ -138,7 +144,7 @@ function SidebarProvider({
       }
       document.cookie = `${SIDEBAR_COOKIE_NAME}_left=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
     },
-    [setOpenProp, setOpenLeftProp, openLeft],
+    [setOpenProp, setOpenLeftProp, openLeft, disableLeftToggle],
   );
 
   const setOpenRight = useCallback(
@@ -155,10 +161,15 @@ function SidebarProvider({
   );
 
   const toggleSidebarLeft = useCallback(() => {
+    // If left toggle is disabled, don't allow toggling
+    if (disableLeftToggle) {
+      return;
+    }
+
     return isMobile
       ? setOpenMobileLeft((open) => !open)
       : setOpenLeft((open) => !open);
-  }, [isMobile, setOpenLeft]);
+  }, [isMobile, setOpenLeft, disableLeftToggle]);
 
   const toggleSidebarRight = useCallback(() => {
     return isMobile
@@ -171,7 +182,10 @@ function SidebarProvider({
       if (event.metaKey || event.ctrlKey) {
         if (event.key === SIDEBAR_KEYBOARD_SHORTCUT) {
           event.preventDefault();
-          toggleSidebarLeft();
+          // Only toggle left sidebar if not disabled
+          if (!disableLeftToggle) {
+            toggleSidebarLeft();
+          }
         } else if (event.key === 'n') {
           event.preventDefault();
           toggleSidebarRight();
@@ -181,7 +195,7 @@ function SidebarProvider({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleSidebarLeft, toggleSidebarRight]);
+  }, [toggleSidebarLeft, toggleSidebarRight, disableLeftToggle]);
 
   const leftState: SidebarState = {
     state: openLeft ? 'expanded' : 'collapsed',
@@ -704,7 +718,7 @@ function SidebarMenuAction({
         'peer-data-[size=lg]/menu-button:top-2.5',
         'group-data-[collapsible=icon]:hidden',
         showOnHover &&
-        'group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 peer-data-[active=true]/menu-button:text-sidebar-accent-foreground data-[state=open]:opacity-100 md:opacity-0',
+          'group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 peer-data-[active=true]/menu-button:text-sidebar-accent-foreground data-[state=open]:opacity-100 md:opacity-0',
         className,
       )}
       {...props}

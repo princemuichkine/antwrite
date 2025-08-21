@@ -101,13 +101,15 @@ function PureDocumentToolResult({
       return;
     setIsSaving(true);
     // Optimistically apply locally
+    const newContent = result.newContent;
+    if (!newContent) return; // Type guard for TypeScript
     setArtifact((current) => ({
       ...current,
-      content: result.newContent!,
+      content: newContent,
     }));
     window.dispatchEvent(
       new CustomEvent('apply-document-update', {
-        detail: { documentId: result.id, newContent: result.newContent },
+        detail: { documentId: result.id, newContent: newContent },
       }),
     );
     setIsApplied(true);
@@ -115,7 +117,7 @@ function PureDocumentToolResult({
     fetch('/api/document', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: result.id, content: result.newContent }),
+      body: JSON.stringify({ id: result.id, content: newContent }),
     })
       .then(async (response) => {
         if (!response.ok) {

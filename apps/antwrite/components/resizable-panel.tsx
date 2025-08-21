@@ -161,17 +161,23 @@ export function ResizablePanel({
               right: isOpen ? '0px' : `-${size}px`,
             }}
           >
-            <div className="size-full">
-              {children}
-            </div>
+            <div className="size-full">{children}</div>
           </div>
 
           {/* Invisible clickable area when collapsed */}
           {!isOpen && (
             <div
+              role="button"
+              tabIndex={0}
               className="fixed top-0 h-full w-2.5 cursor-pointer transition-all duration-200 ease-linear z-10 hover:bg-primary/10 dark:hover:bg-primary/20"
               style={{ right: '0px' }}
               onClick={() => setSidebarOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSidebarOpen(true);
+                }
+              }}
             />
           )}
         </>

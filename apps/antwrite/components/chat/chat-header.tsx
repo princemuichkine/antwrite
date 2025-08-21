@@ -116,71 +116,74 @@ function PureChatHeader({
                     </span>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-xs text-muted-foreground">
-                        {new Date(chat.createdAt).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          year:
-                            new Date(chat.createdAt).getFullYear() !==
+                        {new Date(chat.createdAt).toLocaleDateString(
+                          undefined,
+                          {
+                            month: 'short',
+                            day: 'numeric',
+                            year:
+                              new Date(chat.createdAt).getFullYear() !==
                               new Date().getFullYear()
-                              ? 'numeric'
-                              : undefined,
-                        })}
+                                ? 'numeric'
+                                : undefined,
+                          },
+                        )}
                       </span>
                     </div>
                     {(chat.document_context?.active ||
                       (chat.document_context?.mentioned &&
                         chat.document_context.mentioned.length > 0)) && (
-                        <div className="mt-1.5 pt-1.5 border-t border-border/50 text-xs flex flex-col gap-1 overflow-hidden">
-                          {chat.document_context.active && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground truncate">
-                              <span className="font-medium text-foreground/80 shrink-0">
-                                Active:
+                      <div className="mt-1.5 pt-1.5 border-t border-border/50 text-xs flex flex-col gap-1 overflow-hidden">
+                        {chat.document_context.active && (
+                          <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+                            <span className="font-medium text-foreground/80 shrink-0">
+                              Active:
+                            </span>
+                            <Link
+                              href={`/documents/${chat.document_context.active}`}
+                              className="truncate hover:underline text-blue-500 dark:text-blue-400"
+                              onClick={(e) => e.stopPropagation()}
+                              title={
+                                chat.document_context.activeTitle ||
+                                chat.document_context.active
+                              }
+                            >
+                              {chat.document_context.activeTitle ||
+                                chat.document_context.active}
+                            </Link>
+                          </div>
+                        )}
+                        {chat.document_context.mentioned &&
+                          chat.document_context.mentioned.length > 0 && (
+                            <div className="flex items-start gap-1.5 text-muted-foreground">
+                              <span className="font-medium text-foreground/80 shrink-0 pt-px">
+                                Mentioned:
                               </span>
-                              <Link
-                                href={`/documents/${chat.document_context.active}`}
-                                className="truncate hover:underline text-blue-500 dark:text-blue-400"
-                                onClick={(e) => e.stopPropagation()}
-                                title={
-                                  chat.document_context.activeTitle ||
-                                  chat.document_context.active
-                                }
-                              >
-                                {chat.document_context.activeTitle ||
-                                  chat.document_context.active}
-                              </Link>
+                              <div className="flex flex-wrap gap-x-2 gap-y-1 overflow-hidden">
+                                {chat.document_context.mentioned.map(
+                                  (docId: string, index: number) => (
+                                    <Link
+                                      key={docId}
+                                      href={`/documents/${docId}`}
+                                      className="truncate hover:underline text-blue-500 dark:text-blue-400"
+                                      onClick={(e) => e.stopPropagation()} // Prevent dropdown item click
+                                      title={
+                                        chat.document_context.mentionedTitles?.[
+                                          index
+                                        ] || docId
+                                      }
+                                    >
+                                      {chat.document_context.mentionedTitles?.[
+                                        index
+                                      ] || docId}
+                                    </Link>
+                                  ),
+                                )}
+                              </div>
                             </div>
                           )}
-                          {chat.document_context.mentioned &&
-                            chat.document_context.mentioned.length > 0 && (
-                              <div className="flex items-start gap-1.5 text-muted-foreground">
-                                <span className="font-medium text-foreground/80 shrink-0 pt-px">
-                                  Mentioned:
-                                </span>
-                                <div className="flex flex-wrap gap-x-2 gap-y-1 overflow-hidden">
-                                  {chat.document_context.mentioned.map(
-                                    (docId: string, index: number) => (
-                                      <Link
-                                        key={docId}
-                                        href={`/documents/${docId}`}
-                                        className="truncate hover:underline text-blue-500 dark:text-blue-400"
-                                        onClick={(e) => e.stopPropagation()} // Prevent dropdown item click
-                                        title={
-                                          chat.document_context.mentionedTitles?.[
-                                          index
-                                          ] || docId
-                                        }
-                                      >
-                                        {chat.document_context.mentionedTitles?.[
-                                          index
-                                        ] || docId}
-                                      </Link>
-                                    ),
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                        </div>
-                      )}
+                      </div>
+                    )}
                   </div>
                 </DropdownMenuItem>
               ))

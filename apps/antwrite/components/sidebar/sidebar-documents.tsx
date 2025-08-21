@@ -1135,7 +1135,9 @@ export function SidebarDocuments({
   const documentsWithoutFolders = filteredDocuments.filter((d) => !d.folderId);
 
   // Get all favorites from the complete list of documents
-  const allFavorites = filteredDocuments.filter((doc) => (doc as any).is_starred);
+  const allFavorites = filteredDocuments.filter(
+    (doc) => (doc as any).is_starred,
+  );
 
   // Group documents that are not in folders
   const groupedFromRoot = groupDocumentsByDate(documentsWithoutFolders);
@@ -1241,287 +1243,288 @@ export function SidebarDocuments({
     >
       {((folders && folders.length > 0) ||
         (documents && documents.length >= 2)) && (
-          <SidebarGroup>
-            <div
-              role="button"
-              tabIndex={0}
-              className="px-0 py-1 text-xs text-sidebar-foreground dark:text-sidebar-foreground/70 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/80 dark:hover:text-sidebar-foreground/60 transition-colors duration-200"
-              onClick={() => setIsFoldersExpanded(!isFoldersExpanded)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setIsFoldersExpanded(!isFoldersExpanded);
-                }
-              }}
-            >
-              <span className="font-medium">
-                {folders && folders.length === 1 ? 'Folder' : 'Folders'}{' '}
-                {folders && folders.length > 1 && (
-                  <span className="text-sidebar-foreground/30">
-                    ({folders.length})
-                  </span>
-                )}
-              </span>
-              <div className="flex items-center gap-0.5">
-                <div className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={`transition-transform duration-200 text-sidebar-foreground/50 ${isFoldersExpanded ? 'rotate-180' : ''
-                      }`}
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </div>
+        <SidebarGroup>
+          <div
+            role="button"
+            tabIndex={0}
+            className="px-0 py-1 text-xs text-sidebar-foreground dark:text-sidebar-foreground/70 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/80 dark:hover:text-sidebar-foreground/60 transition-colors duration-200"
+            onClick={() => setIsFoldersExpanded(!isFoldersExpanded)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsFoldersExpanded(!isFoldersExpanded);
+              }
+            }}
+          >
+            <span className="font-medium">
+              {folders && folders.length === 1 ? 'Folder' : 'Folders'}{' '}
+              {folders && folders.length > 1 && (
+                <span className="text-sidebar-foreground/30">
+                  ({folders.length})
+                </span>
+              )}
+            </span>
+            <div className="flex items-center gap-0.5">
+              <div className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`transition-transform duration-200 text-sidebar-foreground/50 ${
+                    isFoldersExpanded ? 'rotate-180' : ''
+                  }`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </div>
             </div>
-            {isFoldersExpanded && (
-              <>
-                {folders && folders.length >= 2 && (
-                  <div className="px-0 mt-1 mb-2">
-                    <Input
-                      placeholder={
-                        folders && folders.length === 1
-                          ? 'Search'
-                          : 'Search folders...'
-                      }
-                      value={folderSearchTerm}
-                      onChange={(e) => setFolderSearchTerm(e.target.value)}
-                      className="h-8 text-sm border data-[state=open]:border-border text-accent-foreground bg-background hover:bg-accent/50 transition-colors duration-200"
-                    />
-                  </div>
-                )}
-                {folders && folders.length === 0 && (
-                  <div className="flex items-center justify-end px-0 py-1 mb-2">
-                    <DropdownMenu
-                      open={isCreateFolderOpen}
-                      onOpenChange={setIsCreateFolderOpen}
-                    >
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-6 text-xs px-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-800 dark:hover:text-blue-200 border border-blue-200 dark:border-blue-800 transition-colors duration-200"
-                        >
-                          <FolderPlusIcon className="size-3.5 text-blue-700 dark:text-blue-300" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        side="bottom"
-                        align="end"
-                        className="w-56"
-                        sideOffset={5}
-                        onCloseAutoFocus={(e) => e.preventDefault()}
-                        onClick={(e) => e.stopPropagation()}
+          </div>
+          {isFoldersExpanded && (
+            <>
+              {folders && folders.length >= 2 && (
+                <div className="px-0 mt-1 mb-2">
+                  <Input
+                    placeholder={
+                      folders && folders.length === 1
+                        ? 'Search'
+                        : 'Search folders...'
+                    }
+                    value={folderSearchTerm}
+                    onChange={(e) => setFolderSearchTerm(e.target.value)}
+                    className="h-8 text-sm border data-[state=open]:border-border text-accent-foreground bg-background hover:bg-accent/50 transition-colors duration-200"
+                  />
+                </div>
+              )}
+              {folders && folders.length === 0 && (
+                <div className="flex items-center justify-end px-0 py-1 mb-2">
+                  <DropdownMenu
+                    open={isCreateFolderOpen}
+                    onOpenChange={setIsCreateFolderOpen}
+                  >
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 text-xs px-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-800 dark:hover:text-blue-200 border border-blue-200 dark:border-blue-800 transition-colors duration-200"
                       >
-                        <form
-                          onSubmit={handleCreateFolder}
-                          className="p-2 space-y-2"
-                        >
-                          <Input
-                            placeholder="Folder name"
-                            value={newFolderName}
-                            onChange={(e) => setNewFolderName(e.target.value)}
-                            className="h-8 text-sm"
-                            autoFocus
-                          />
-                          <Button
-                            type="submit"
-                            size="sm"
-                            className="w-full h-8"
-                            disabled={isCreatingFolder || !newFolderName.trim()}
-                          >
-                            {isCreatingFolder ? (
-                              <Spinner className="size-3 animate-spin" />
-                            ) : (
-                              'Create'
-                            )}
-                          </Button>
-                        </form>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )}
-                {filteredFolders.length > 0 && (
-                  <div className="flex flex-wrap items-center justify-start px-0 py-1 mb-2 gap-2">
-                    {!isFolderSelectionMode ? (
-                      <>
+                        <FolderPlusIcon className="size-3.5 text-blue-700 dark:text-blue-300" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      side="bottom"
+                      align="end"
+                      className="w-56"
+                      sideOffset={5}
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <form
+                        onSubmit={handleCreateFolder}
+                        className="p-2 space-y-2"
+                      >
+                        <Input
+                          placeholder="Folder name"
+                          value={newFolderName}
+                          onChange={(e) => setNewFolderName(e.target.value)}
+                          className="h-8 text-sm"
+                          autoFocus
+                        />
                         <Button
-                          variant="outline"
+                          type="submit"
                           size="sm"
-                          onClick={() => {
-                            setIsFolderSelectionMode(true);
+                          className="w-full h-8 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-800 dark:hover:text-blue-200 border border-blue-200 dark:border-blue-800 transition-colors duration-200"
+                          disabled={isCreatingFolder || !newFolderName.trim()}
+                        >
+                          {isCreatingFolder ? (
+                            <Spinner className="size-3 animate-spin" />
+                          ) : (
+                            'Create'
+                          )}
+                        </Button>
+                      </form>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
+              {filteredFolders.length > 0 && (
+                <div className="flex flex-wrap items-center justify-start px-0 py-1 mb-2 gap-2">
+                  {!isFolderSelectionMode ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setIsFolderSelectionMode(true);
+                          setSelectedFolders(new Set());
+                        }}
+                        className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200"
+                      >
+                        Select
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (selectedFolders.size === filteredFolders.length) {
+                            setIsFolderSelectionMode(false);
                             setSelectedFolders(new Set());
-                          }}
-                          className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200"
-                        >
-                          Select
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            if (selectedFolders.size === filteredFolders.length) {
-                              setIsFolderSelectionMode(false);
-                              setSelectedFolders(new Set());
-                            } else {
-                              setSelectedFolders(
-                                new Set(filteredFolders.map((f) => f.id)),
-                              );
-                            }
-                          }}
-                          className="h-6 text-xs px-1.5 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hover:text-cyan-800 dark:hover:text-cyan-200 border border-cyan-200 dark:border-cyan-800 transition-colors duration-200"
-                        >
-                          {selectedFolders.size === filteredFolders.length
-                            ? 'Deselect'
-                            : 'Select All'}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (selectedFolders.size > 0) {
-                              setShowMultiDeleteFolderDialog(true);
-                            }
-                          }}
-                          disabled={selectedFolders.size === 0}
-                          className="h-6 text-xs px-1.5 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 border border-pink-200 dark:border-pink-800 transition-colors duration-200 disabled:opacity-50"
-                        >
-                          Delete
-                          {selectedFolders.size > 1
-                            ? ` (${selectedFolders.size})`
-                            : ''}
-                        </Button>
-                      </>
-                    )}
-                    <DropdownMenu
-                      open={isCreateFolderOpen}
-                      onOpenChange={setIsCreateFolderOpen}
+                          } else {
+                            setSelectedFolders(
+                              new Set(filteredFolders.map((f) => f.id)),
+                            );
+                          }
+                        }}
+                        className="h-6 text-xs px-1.5 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hover:text-cyan-800 dark:hover:text-cyan-200 border border-cyan-200 dark:border-cyan-800 transition-colors duration-200"
+                      >
+                        {selectedFolders.size === filteredFolders.length
+                          ? 'Deselect'
+                          : 'Select All'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (selectedFolders.size > 0) {
+                            setShowMultiDeleteFolderDialog(true);
+                          }
+                        }}
+                        disabled={selectedFolders.size === 0}
+                        className="h-6 text-xs px-1.5 bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 border border-pink-200 dark:border-pink-800 transition-colors duration-200 disabled:opacity-50"
+                      >
+                        Delete
+                        {selectedFolders.size > 1
+                          ? ` (${selectedFolders.size})`
+                          : ''}
+                      </Button>
+                    </>
+                  )}
+                  <DropdownMenu
+                    open={isCreateFolderOpen}
+                    onOpenChange={setIsCreateFolderOpen}
+                  >
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 text-xs px-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-800 dark:hover:text-blue-200 border border-blue-200 dark:border-blue-800 transition-colors duration-200 ml-auto"
+                      >
+                        <FolderPlusIcon className="size-3.5 text-blue-700 dark:text-blue-300" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      side="bottom"
+                      align="end"
+                      className="w-56"
+                      sideOffset={5}
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <DropdownMenuTrigger asChild>
+                      <form
+                        onSubmit={handleCreateFolder}
+                        className="p-2 space-y-2"
+                      >
+                        <Input
+                          placeholder="Folder name"
+                          value={newFolderName}
+                          onChange={(e) => setNewFolderName(e.target.value)}
+                          className="h-8 text-sm"
+                          autoFocus
+                        />
                         <Button
-                          variant="outline"
+                          type="submit"
                           size="sm"
-                          className="h-6 text-xs px-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-800 dark:hover:text-blue-200 border border-blue-200 dark:border-blue-800 transition-colors duration-200 ml-auto"
+                          className="w-full h-8 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-800 dark:hover:text-blue-200 border border-blue-200 dark:border-blue-800 transition-colors duration-200"
+                          disabled={isCreatingFolder || !newFolderName.trim()}
                         >
-                          <FolderPlusIcon className="size-3.5 text-blue-700 dark:text-blue-300" />
+                          {isCreatingFolder ? (
+                            <Spinner className="size-3 animate-spin" />
+                          ) : (
+                            'Create'
+                          )}
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        side="bottom"
-                        align="end"
-                        className="w-56"
-                        sideOffset={5}
-                        onCloseAutoFocus={(e) => e.preventDefault()}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <form
-                          onSubmit={handleCreateFolder}
-                          className="p-2 space-y-2"
-                        >
-                          <Input
-                            placeholder="Folder name"
-                            value={newFolderName}
-                            onChange={(e) => setNewFolderName(e.target.value)}
-                            className="h-8 text-sm"
-                            autoFocus
+                      </form>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {filteredFolders.map((folder) => (
+                    <FolderItem
+                      key={folder.id}
+                      folder={folder}
+                      isExpanded={expandedFolders.has(folder.id)}
+                      onToggleExpand={() => {
+                        setExpandedFolders((prev) => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(folder.id)) {
+                            newSet.delete(folder.id);
+                          } else {
+                            newSet.add(folder.id);
+                          }
+                          return newSet;
+                        });
+                      }}
+                      onRename={handleRenameFolder}
+                      onClone={handleCloneFolder}
+                      onDelete={(folderId) => {
+                        setDeleteFolderId(folderId);
+                        setShowDeleteFolderDialog(true);
+                      }}
+                      isSelectionMode={isFolderSelectionMode}
+                      isSelected={selectedFolders.has(folder.id)}
+                      onToggleSelect={(folderId, isSelected) => {
+                        setSelectedFolders((prev) => {
+                          const newSet = new Set(prev);
+                          if (isSelected) {
+                            newSet.add(folderId);
+                          } else {
+                            newSet.delete(folderId);
+                          }
+                          return newSet;
+                        });
+                      }}
+                    >
+                      {documentsInFolders
+                        .filter((doc) => doc.folderId === folder.id)
+                        .map((doc) => (
+                          <DocumentItem
+                            key={doc.id}
+                            document={doc}
+                            isActive={doc.id === activeDocumentId}
+                            onDelete={(documentId) => {
+                              setDeleteId(documentId);
+                              setShowDeleteDialog(true);
+                            }}
+                            setOpenMobile={setOpenMobile}
+                            onSelect={handleDocumentSelect}
+                            isSelectionMode={isSelectionMode}
+                            isSelected={selectedDocuments.has(doc.id)}
+                            onToggleSelect={handleToggleSelect}
+                            onStar={handleStar}
+                            onClone={handleClone}
+                            onMove={handleMoveDocument}
+                            folders={folders ?? []}
+                            isDragDisabled={isDragDisabled}
                           />
-                          <Button
-                            type="submit"
-                            size="sm"
-                            className="w-full h-8"
-                            disabled={isCreatingFolder || !newFolderName.trim()}
-                          >
-                            {isCreatingFolder ? (
-                              <Spinner className="size-3 animate-spin" />
-                            ) : (
-                              'Create'
-                            )}
-                          </Button>
-                        </form>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )}
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {filteredFolders.map((folder) => (
-                      <FolderItem
-                        key={folder.id}
-                        folder={folder}
-                        isExpanded={expandedFolders.has(folder.id)}
-                        onToggleExpand={() => {
-                          setExpandedFolders((prev) => {
-                            const newSet = new Set(prev);
-                            if (newSet.has(folder.id)) {
-                              newSet.delete(folder.id);
-                            } else {
-                              newSet.add(folder.id);
-                            }
-                            return newSet;
-                          });
-                        }}
-                        onRename={handleRenameFolder}
-                        onClone={handleCloneFolder}
-                        onDelete={(folderId) => {
-                          setDeleteFolderId(folderId);
-                          setShowDeleteFolderDialog(true);
-                        }}
-                        isSelectionMode={isFolderSelectionMode}
-                        isSelected={selectedFolders.has(folder.id)}
-                        onToggleSelect={(folderId, isSelected) => {
-                          setSelectedFolders((prev) => {
-                            const newSet = new Set(prev);
-                            if (isSelected) {
-                              newSet.add(folderId);
-                            } else {
-                              newSet.delete(folderId);
-                            }
-                            return newSet;
-                          });
-                        }}
-                      >
-                        {documentsInFolders
-                          .filter((doc) => doc.folderId === folder.id)
-                          .map((doc) => (
-                            <DocumentItem
-                              key={doc.id}
-                              document={doc}
-                              isActive={doc.id === activeDocumentId}
-                              onDelete={(documentId) => {
-                                setDeleteId(documentId);
-                                setShowDeleteDialog(true);
-                              }}
-                              setOpenMobile={setOpenMobile}
-                              onSelect={handleDocumentSelect}
-                              isSelectionMode={isSelectionMode}
-                              isSelected={selectedDocuments.has(doc.id)}
-                              onToggleSelect={handleToggleSelect}
-                              onStar={handleStar}
-                              onClone={handleClone}
-                              onMove={handleMoveDocument}
-                              folders={folders ?? []}
-                              isDragDisabled={isDragDisabled}
-                            />
-                          ))}
-                      </FolderItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </>
-            )}
-          </SidebarGroup>
-        )}
+                        ))}
+                    </FolderItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </>
+          )}
+        </SidebarGroup>
+      )}
 
       <SidebarGroup>
         <div
@@ -1556,8 +1559,9 @@ export function SidebarDocuments({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className={`transition-transform duration-200 text-sidebar-foreground/50 ${isDocumentsExpanded ? 'rotate-180' : ''
-                  }`}
+                className={`transition-transform duration-200 text-sidebar-foreground/50 ${
+                  isDocumentsExpanded ? 'rotate-180' : ''
+                }`}
               >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
@@ -1743,14 +1747,22 @@ export function SidebarDocuments({
                         {groupedDocuments.favorites.length > 0 && (
                           <>
                             <div
+                              role="button"
+                              tabIndex={0}
                               className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium flex items-center gap-1 cursor-pointer"
                               onClick={() => toggleSection('favorites')}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleSection('favorites');
+                                }
+                              }}
                             >
                               {groupedDocuments.favorites.length === 1
                                 ? 'Favorite'
                                 : 'Favorites'}
                             </div>
-                            {!collapsedSections['favorites'] &&
+                            {!collapsedSections.favorites &&
                               groupedDocuments.favorites.map((doc) => (
                                 <DocumentItem
                                   key={`${doc.id}-${doc.createdAt}`}
@@ -1779,12 +1791,20 @@ export function SidebarDocuments({
                         {groupedDocuments.today.length > 0 && (
                           <>
                             <div
+                              role="button"
+                              tabIndex={0}
                               className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium cursor-pointer"
                               onClick={() => toggleSection('today')}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleSection('today');
+                                }
+                              }}
                             >
                               Today
                             </div>
-                            {!collapsedSections['today'] &&
+                            {!collapsedSections.today &&
                               groupedDocuments.today.map((doc) => (
                                 <DocumentItem
                                   key={`${doc.id}-${doc.createdAt}`}
@@ -1812,12 +1832,20 @@ export function SidebarDocuments({
                         {groupedDocuments.yesterday.length > 0 && (
                           <>
                             <div
+                              role="button"
+                              tabIndex={0}
                               className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4 cursor-pointer"
                               onClick={() => toggleSection('yesterday')}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleSection('yesterday');
+                                }
+                              }}
                             >
                               Yesterday
                             </div>
-                            {!collapsedSections['yesterday'] &&
+                            {!collapsedSections.yesterday &&
                               groupedDocuments.yesterday.map((doc) => (
                                 <DocumentItem
                                   key={`${doc.id}-${doc.createdAt}`}
@@ -1845,12 +1873,20 @@ export function SidebarDocuments({
                         {groupedDocuments.lastWeek.length > 0 && (
                           <>
                             <div
+                              role="button"
+                              tabIndex={0}
                               className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4 cursor-pointer"
                               onClick={() => toggleSection('lastWeek')}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleSection('lastWeek');
+                                }
+                              }}
                             >
                               Last 7 days
                             </div>
-                            {!collapsedSections['lastWeek'] &&
+                            {!collapsedSections.lastWeek &&
                               groupedDocuments.lastWeek.map((doc) => (
                                 <DocumentItem
                                   key={`${doc.id}-${doc.createdAt}`}
@@ -1878,12 +1914,20 @@ export function SidebarDocuments({
                         {groupedDocuments.lastMonth.length > 0 && (
                           <>
                             <div
+                              role="button"
+                              tabIndex={0}
                               className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4 cursor-pointer"
                               onClick={() => toggleSection('lastMonth')}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleSection('lastMonth');
+                                }
+                              }}
                             >
                               Last 30 days
                             </div>
-                            {!collapsedSections['lastMonth'] &&
+                            {!collapsedSections.lastMonth &&
                               groupedDocuments.lastMonth.map((doc) => (
                                 <DocumentItem
                                   key={`${doc.id}-${doc.createdAt}`}
@@ -1911,12 +1955,20 @@ export function SidebarDocuments({
                         {groupedDocuments.older.length > 0 && (
                           <>
                             <div
+                              role="button"
+                              tabIndex={0}
                               className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4 cursor-pointer"
                               onClick={() => toggleSection('older')}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  toggleSection('older');
+                                }
+                              }}
                             >
                               Older
                             </div>
-                            {!collapsedSections['older'] &&
+                            {!collapsedSections.older &&
                               groupedDocuments.older.map((doc) => (
                                 <DocumentItem
                                   key={`${doc.id}-${doc.createdAt}`}

@@ -60,22 +60,22 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
     formatKey: keyof typeof activeFormats;
     command: () => void;
   }[] = [
-      {
-        label: 'Heading 1',
-        formatKey: 'h1',
-        command: () => runCommand(setBlockType(nodes.heading, { level: 1 })),
-      },
-      {
-        label: 'Heading 2',
-        formatKey: 'h2',
-        command: () => runCommand(setBlockType(nodes.heading, { level: 2 })),
-      },
-      {
-        label: 'Paragraph',
-        formatKey: 'p',
-        command: () => runCommand(setBlockType(nodes.paragraph)),
-      },
-    ];
+    {
+      label: 'Heading 1',
+      formatKey: 'h1',
+      command: () => runCommand(setBlockType(nodes.heading, { level: 1 })),
+    },
+    {
+      label: 'Heading 2',
+      formatKey: 'h2',
+      command: () => runCommand(setBlockType(nodes.heading, { level: 2 })),
+    },
+    {
+      label: 'Paragraph',
+      formatKey: 'p',
+      command: () => runCommand(setBlockType(nodes.paragraph)),
+    },
+  ];
 
   const ButtonWithTooltip = ({
     label,
@@ -134,8 +134,8 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
               className={cn(
                 'text-sm rounded-sm',
                 opt.formatKey &&
-                activeFormats[opt.formatKey] &&
-                'bg-accent text-accent-foreground',
+                  activeFormats[opt.formatKey] &&
+                  'bg-accent text-accent-foreground',
               )}
             >
               {opt.label}

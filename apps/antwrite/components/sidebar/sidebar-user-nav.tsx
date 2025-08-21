@@ -286,7 +286,12 @@ export function SidebarUserNav({ user }: { user: User | null }) {
 
               <DropdownMenuItem
                 className="cursor-pointer w-full"
-                onSelect={() => window.open('https://github.com/princemuichkine/antwrite', '_blank')}
+                onSelect={() =>
+                  window.open(
+                    'https://github.com/princemuichkine/antwrite',
+                    '_blank',
+                  )
+                }
                 disabled={isLoading}
               >
                 <LottieIcon

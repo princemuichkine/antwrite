@@ -20,16 +20,22 @@ export default async function HomePage() {
   const documents = user?.id
     ? await getCurrentDocumentsByUserId({ userId: user.id })
     : [];
-  const cookieHeader = readonlyHeaders.get('cookie') || '';
-  const leftCookie = cookieHeader
-    .split('; ')
-    .find((row: string) => row.startsWith('sidebar_state_left='));
-  const isLeftSidebarCollapsed = leftCookie
-    ? leftCookie.split('=')[1] === 'false'
-    : true;
 
   // Create a guest user if no authentication
   const isGuest = !user;
+
+  // For guest users, always keep left sidebar open
+  // For authenticated users, read from cookie
+  let isLeftSidebarCollapsed = false; // Default to open for guests
+  if (!isGuest) {
+    const cookieHeader = readonlyHeaders.get('cookie') || '';
+    const leftCookie = cookieHeader
+      .split('; ')
+      .find((row: string) => row.startsWith('sidebar_state_left='));
+    isLeftSidebarCollapsed = leftCookie
+      ? leftCookie.split('=')[1] === 'false'
+      : true;
+  }
   const appUser = user || {
     id: 'guest-user',
     name: 'Guest User',
@@ -48,6 +54,7 @@ export default async function HomePage() {
       <SidebarProvider
         defaultOpenLeft={!isLeftSidebarCollapsed}
         defaultOpenRight={true}
+        disableLeftToggle={isGuest}
       >
         <div className="flex flex-row h-dvh w-full bg-background">
           <AppSidebar user={appUser} initialDocuments={documents} />

@@ -562,16 +562,16 @@ export default function Home() {
                           animate={
                             card5InView
                               ? {
-                                opacity: 1,
-                                rotate: rot,
-                                y,
-                                transition: {
-                                  delay: 0.2 + i * 0.1,
-                                  type: 'spring',
-                                  stiffness: 140,
-                                  damping: 15,
-                                },
-                              }
+                                  opacity: 1,
+                                  rotate: rot,
+                                  y,
+                                  transition: {
+                                    delay: 0.2 + i * 0.1,
+                                    type: 'spring',
+                                    stiffness: 140,
+                                    damping: 15,
+                                  },
+                                }
                               : {}
                           }
                           className="w-20 h-28 bg-background border border-border rounded-sm flex items-center justify-center mx-[-4px] shadow-sm relative"

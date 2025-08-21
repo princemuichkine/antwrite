@@ -9,7 +9,6 @@ import {
   SidebarHeader,
   SidebarMenu,
   useSidebar,
-  useSidebarWithSide,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { FeedbackWidget } from '@/components/sidebar/feedback-widget';
@@ -37,7 +36,7 @@ function FloatingSidebar({
   initialDocuments?: any[];
   isVisible: boolean;
 }) {
-  const { theme } = useTheme();
+  const { theme, resolvedTheme } = useTheme();
   const isGuestUser = user?.email === 'guest@antwrite.com' || !user;
   const isAuthenticatedUser = user && !isGuestUser;
 
@@ -48,14 +47,14 @@ function FloatingSidebar({
       className={`fixed left-0 w-64 h-[calc(100vh-42px)] bg-sidebar border-y border-r border-border shadow-lg overflow-hidden ${isVisible ? 'rounded-r-sm z-50' : 'z-40'}`}
       style={{
         top: '42px',
-        height: 'calc(100vh - 42px - 4px)' // 4px bottom gap for space
+        height: 'calc(100vh - 42px - 4px)', // 4px bottom gap for space
       }} // Exact position to match the separator line
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{
         duration: isVisible ? 0.2 : 0,
-        ease: [0.4, 0.0, 0.2, 1]
+        ease: [0.4, 0.0, 0.2, 1],
       }}
     >
       <div className="h-full flex flex-col">
@@ -94,7 +93,7 @@ export function AppSidebar({
   initialDocuments,
 }: { user: User | undefined; initialDocuments?: any[] }) {
   const { setOpenMobile, state } = useSidebar();
-  const { theme } = useTheme();
+  const { theme, resolvedTheme } = useTheme();
   const [showFloatingSidebar, setShowFloatingSidebar] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -103,10 +102,18 @@ export function AppSidebar({
   const isAuthenticatedUser = user && !isGuestUser;
 
   // Handle hover detection on left side (below header area) - instant response
+  // Disabled for guest users since they can't collapse the sidebar
   useEffect(() => {
+    // Don't enable hover functionality for guest users
+    if (isGuestUser) {
+      return;
+    }
+
     const handleMouseMove = (e: MouseEvent) => {
-      const isInTriggerArea = e.clientX <= 1 && e.clientY > 60 && state === 'collapsed';
-      const isInFloatingSidebar = showFloatingSidebar && e.clientX <= 320 && e.clientY > 42; // 320px (w-64 + extra tolerance) + 42px top
+      const isInTriggerArea =
+        e.clientX <= 1 && e.clientY > 60 && state === 'collapsed';
+      const isInFloatingSidebar =
+        showFloatingSidebar && e.clientX <= 320 && e.clientY > 42; // 320px (w-64 + extra tolerance) + 42px top
 
       if (isInTriggerArea || isInFloatingSidebar) {
         if (hoverTimeoutRef.current) {
@@ -132,7 +139,7 @@ export function AppSidebar({
         clearTimeout(hoverTimeoutRef.current);
       }
     };
-  }, [state, showFloatingSidebar]);
+  }, [state, showFloatingSidebar, isGuestUser]);
 
   return (
     <>
@@ -147,12 +154,12 @@ export function AppSidebar({
               >
                 <Image
                   src={
-                    theme === 'dark'
+                    resolvedTheme === 'dark'
                       ? '/brand/antwrite-ltw.webp'
                       : '/brand/antwrite-ltb.webp'
                   }
                   // src={
-                  //   theme === 'dark'
+                  //   resolvedTheme === 'dark'
                   //     ? '/brand/logo/antwrite-tw.webp'
                   //     : '/brand/logo/antwrite-tb.webp'
                   // }

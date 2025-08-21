@@ -110,10 +110,10 @@ export function PublishSettingsMenu({
   useEffect(() => {
     setSlug(
       document.slug ||
-      document.title
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, ''),
+        document.title
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, ''),
     );
     const styleObj = (document.style as any) || {};
     setFont(styleObj.font || 'montserrat');
@@ -405,7 +405,8 @@ export function PublishSettingsMenu({
                       }
                     />
                     <div className="flex items-center border-l border-input bg-background">
-                      {(usernameLoading || (usernameCheck.checking && !hasUsername)) && (
+                      {(usernameLoading ||
+                        (usernameCheck.checking && !hasUsername)) && (
                         <div className="flex items-center justify-center size-8">
                           <Loader2 className="size-4 animate-spin text-muted-foreground" />
                         </div>
@@ -421,7 +422,7 @@ export function PublishSettingsMenu({
                               'size-8 rounded-none',
                               claiming
                                 ? 'text-green-700 dark:text-green-300'
-                                : 'text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/40'
+                                : 'text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/40',
                             )}
                             onClick={claimUsername}
                             disabled={claiming}

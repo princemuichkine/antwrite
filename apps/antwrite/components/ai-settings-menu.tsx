@@ -25,7 +25,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import useSWR from 'swr';
 import { Paywall } from '@/components/paywall';
@@ -212,9 +211,7 @@ export function AiSettingsMenu() {
             )}
             {isEditingSample ? (
               <div className="space-y-3">
-                <Label className="text-xs font-medium">
-                  Writing style
-                </Label>
+                <Label className="text-xs font-medium">Writing style</Label>
                 <Textarea
                   placeholder="Paste ~200 characters of your writing so the AI can learn your style. This sample stays on your device."
                   className="h-28 text-sm resize-none bg-background border focus-visible:ring-1 focus-visible:ring-ring"
@@ -255,10 +252,7 @@ export function AiSettingsMenu() {
               // Trained State
               <div className="space-y-4 rounded-sm border p-4">
                 <div className="flex items-center justify-between">
-                  <Label
-                    htmlFor="apply-style"
-                    className="text-xs font-medium"
-                  >
+                  <Label htmlFor="apply-style" className="text-xs font-medium">
                     Apply Writer Style
                   </Label>
                   <Switch
