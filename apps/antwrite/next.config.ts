@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     ppr: true,
   },
+  devIndicators: false,
   images: {
     remotePatterns: [
       {

@@ -387,7 +387,9 @@ export const auth = betterAuth({
     crossSubDomainCookies: {
       enabled: false, // Disable if not needed
     },
-    generateId: () => crypto.randomUUID(), // Use native crypto for faster ID generation
+    database: {
+      generateId: () => crypto.randomUUID(), // Use native crypto for faster ID generation
+    },
   },
 
   trustedOrigins: [

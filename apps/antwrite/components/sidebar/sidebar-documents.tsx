@@ -46,18 +46,39 @@ import { useDocumentUtils } from '@/hooks/use-document-utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { LottieIcon } from '@/components/ui/lottie-icon';
-import { animations } from '@/lib/utils/lottie-animations';
 import useSWRInfinite from 'swr/infinite';
 import useSWR from 'swr';
-import { Loader2 as Spinner } from 'lucide-react';
+import { File, Star, Loader2 as Spinner } from 'lucide-react';
 import {
   DndContext,
   useDraggable,
   useDroppable,
   DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
 } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+
+const DocumentDragPreview = ({
+  document,
+  count,
+}: {
+  document: Document;
+  count: number;
+}) => {
+  return (
+    <div className="flex items-center gap-2 rounded-md border bg-sidebar p-2 text-sm text-sidebar-foreground shadow-lg">
+      <File className="size-4 shrink-0" />
+      <span className="truncate max-w-48">{document.title}</span>
+      {count > 3 && (
+        <span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+          {count}
+        </span>
+      )}
+    </div>
+  );
+};
 
 const FolderItem = ({
   folder,
@@ -120,7 +141,9 @@ const FolderItem = ({
           ) : (
             <FolderIcon className="size-4" />
           )}
-          <span className="truncate max-w-[calc(100%-3rem)] block">{folder.name}</span>
+          <span className="truncate max-w-[calc(100%-3rem)] block">
+            {folder.name}
+          </span>
         </SidebarMenuButton>
         <DropdownMenu modal={true}>
           <DropdownMenuTrigger asChild>
@@ -195,6 +218,8 @@ const PureDocumentItem = ({
   onClone,
   onMove,
   folders,
+  isDragDisabled,
+  showStar,
 }: {
   document: Document;
   isActive: boolean;
@@ -208,6 +233,8 @@ const PureDocumentItem = ({
   onClone: (documentId: string, title: string) => void;
   onMove: (documentId: string, folderId: string | null) => void;
   folders: Folder[];
+  isDragDisabled: boolean;
+  showStar?: boolean;
 }) => {
   const handleDocumentClick = useCallback(
     (e: React.MouseEvent) => {
@@ -248,6 +275,7 @@ const PureDocumentItem = ({
       type: 'document',
       document: document,
     },
+    disabled: isDragDisabled,
   });
 
   return (
@@ -281,6 +309,9 @@ const PureDocumentItem = ({
             onClick={handleDocumentClick}
             className="flex items-center w-full"
           >
+            {showStar && (
+              <Star className="size-3.5 mr-1.5 text-yellow-400 fill-yellow-400 shrink-0" />
+            )}
             <span className="truncate max-w-[calc(100%-2rem)] block">
               {document.title}
             </span>
@@ -309,12 +340,19 @@ const PureDocumentItem = ({
         >
           <DropdownMenuItem
             className="cursor-pointer hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 mb-1"
-            onSelect={() =>
-              onStar(document.id, !(document as any).is_starred)
-            }
+            onSelect={() => onStar(document.id, !(document as any).is_starred)}
           >
             <span>{(document as any).is_starred ? 'Unstar' : 'Star'}</span>
           </DropdownMenuItem>
+
+          {document.folderId && (
+            <DropdownMenuItem
+              className="cursor-pointer hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 mb-1"
+              onSelect={() => onMove(document.id, null)}
+            >
+              <span>Unfile</span>
+            </DropdownMenuItem>
+          )}
 
           <DropdownMenuItem
             className="cursor-pointer hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 mb-1"
@@ -347,6 +385,8 @@ export const DocumentItem = memo(PureDocumentItem, (prevProps, nextProps) => {
   )
     return false;
   if (prevProps.folders.length !== nextProps.folders.length) return false;
+  if (prevProps.isDragDisabled !== nextProps.isDragDisabled) return false;
+  if (prevProps.showStar !== nextProps.showStar) return false;
   return true;
 });
 
@@ -362,6 +402,11 @@ export function SidebarDocuments({
   const { setArtifact } = useArtifact();
   const { createNewDocument, deleteDocument, isCreatingDocument } =
     useDocumentUtils();
+
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(true);
@@ -382,14 +427,36 @@ export function SidebarDocuments({
   const [deleteFolderId, setDeleteFolderId] = useState<string | null>(null);
   const [folderSearchTerm, setFolderSearchTerm] = useState('');
   const [isFolderSelectionMode, setIsFolderSelectionMode] = useState(false);
-  const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
+  const [selectedFolders, setSelectedFolders] = useState<Set<string>>(
+    new Set(),
+  );
   const [showMultiDeleteFolderDialog, setShowMultiDeleteFolderDialog] =
     useState(false);
+
+  const [collapsedSections, setCollapsedSections] = useState<
+    Record<string, boolean>
+  >({});
+  const toggleSection = (section: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const [activeDragItem, setActiveDragItem] = useState<Document | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 500,
+        tolerance: 5,
+      },
+    }),
+  );
 
   const { data: folders, mutate: mutateFolders } = useSWR<Folder[]>(
     user ? '/api/folder' : null,
     fetcher,
   );
+
+  const isDragDisabled = !folders || folders.length < 1;
 
   const {
     data: paginatedDocumentsData,
@@ -401,8 +468,7 @@ export function SidebarDocuments({
     (pageIndex, previousPageData) => {
       if (!user) return null;
       if (previousPageData && !previousPageData.hasMore) return null;
-      if (pageIndex === 0)
-        return `/api/document?limit=${DOCUMENT_PAGE_SIZE}`;
+      if (pageIndex === 0) return `/api/document?limit=${DOCUMENT_PAGE_SIZE}`;
       if (!previousPageData?.documents?.length) return null;
       const lastDoc =
         previousPageData.documents[previousPageData.documents.length - 1];
@@ -428,24 +494,10 @@ export function SidebarDocuments({
   );
   const lastPage = paginatedDocumentsData?.[paginatedDocumentsData.length - 1];
   const hasReachedEnd = lastPage ? !lastPage.hasMore : false;
-  const hasEmptyDocuments =
-    paginatedDocumentsData?.every((page) => page.documents.length === 0) ??
-    false;
 
   const pathname =
     typeof window !== 'undefined' ? window.location.pathname : '';
-  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(
-    null,
-  );
-  const [activeDragItem, setActiveDragItem] = useState<Document | null>(null);
-
-  const { setNodeRef: setRootDroppableRef, isOver: isOverRoot } =
-    useDroppable({
-      id: 'root-droppable',
-      data: {
-        type: 'root',
-      },
-    });
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
 
   useEffect(() => {
     const match = pathname.match(/\/documents\/([^/?]+)/);
@@ -554,6 +606,10 @@ export function SidebarDocuments({
   const [isStarring, setIsStarring] = useState(false);
   const [isCloning, setIsCloning] = useState(false);
 
+  const hasEmptyDocuments =
+    paginatedDocumentsData?.every((page) => page.documents.length === 0) ??
+    false;
+
   const handleToggleSelectionMode = () => {
     setIsSelectionMode(!isSelectionMode);
     setSelectedDocuments(new Set());
@@ -623,9 +679,7 @@ export function SidebarDocuments({
         if (!pages) return pages;
         return pages.map((page) => ({
           ...page,
-          documents: page.documents.filter(
-            (d) => !selectedDocuments.has(d.id),
-          ),
+          documents: page.documents.filter((d) => !selectedDocuments.has(d.id)),
         }));
       }, false);
 
@@ -891,19 +945,35 @@ export function SidebarDocuments({
     }
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const doc = documents.find((d) => d.id === event.active.id);
+    if (doc) {
+      if (isSelectionMode && !selectedDocuments.has(doc.id)) {
+        setSelectedDocuments(new Set());
+        setIsSelectionMode(false);
+      }
+      setActiveDragItem(doc);
+    }
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
-    setActiveDragItem(null);
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const documentId = active.id as string;
+      const document = documents.find((doc) => doc.id === documentId);
       const targetData = over.data.current as { type?: string };
+
       if (targetData?.type === 'folder') {
         const folderId = over.id as string;
         handleMoveDocument(documentId, folderId);
-      } else if (targetData?.type === 'root') {
-        handleMoveDocument(documentId, null);
       }
     }
+
+    setActiveDragItem(null);
+  };
+
+  const handleDragCancel = () => {
+    setActiveDragItem(null);
   };
 
   const handleDocumentSelect = useCallback(
@@ -912,21 +982,15 @@ export function SidebarDocuments({
 
       try {
         if (documentId === 'init' || !documentId) {
-          console.error(
-            '[SidebarDocuments] Invalid document ID:',
-            documentId,
-          );
+          console.error('[SidebarDocuments] Invalid document ID:', documentId);
           return;
         }
 
-        const selectedDocData = documents?.find(
-          (doc) => doc.id === documentId,
-        );
+        const selectedDocData = documents?.find((doc) => doc.id === documentId);
 
         setArtifact((curr: any) => {
           const newTitle = selectedDocData?.title || 'Loading...';
-          const newKind =
-            (selectedDocData?.kind as ArtifactKind) || 'text';
+          const newKind = (selectedDocData?.kind as ArtifactKind) || 'text';
 
           console.log(
             `[SidebarDocuments] Optimistically setting artifact: ID=${documentId}, Title=${newTitle}`,
@@ -949,10 +1013,7 @@ export function SidebarDocuments({
 
         setOpenMobile(false);
       } catch (error) {
-        console.error(
-          '[SidebarDocuments] Error selecting document:',
-          error,
-        );
+        console.error('[SidebarDocuments] Error selecting document:', error);
         toast.error('Failed to load document');
         setArtifact((curr: any) => ({ ...curr, status: 'idle' }));
       }
@@ -1015,6 +1076,26 @@ export function SidebarDocuments({
   };
   const filteredFolders = folders ? filterFolders(folders) : [];
 
+  const filteredDocuments = documents ? filterDocuments(documents) : [];
+  const documentsInFolders = filteredDocuments.filter((d) => d.folderId);
+  const documentsWithoutFolders = filteredDocuments.filter((d) => !d.folderId);
+
+  // Get all favorites from the complete list of documents
+  const allFavorites = filteredDocuments.filter((doc) => (doc as any).is_starred);
+
+  // Group documents that are not in folders
+  const groupedFromRoot = groupDocumentsByDate(documentsWithoutFolders);
+
+  // Create the final grouped object for rendering
+  const groupedDocuments = {
+    favorites: allFavorites,
+    today: groupedFromRoot.today,
+    yesterday: groupedFromRoot.yesterday,
+    lastWeek: groupedFromRoot.lastWeek,
+    lastMonth: groupedFromRoot.lastMonth,
+    older: groupedFromRoot.older,
+  };
+
   if (isLoading && documents.length === 0) {
     return (
       <SidebarGroup>
@@ -1044,7 +1125,6 @@ export function SidebarDocuments({
     );
   }
 
-  const filteredDocuments = documents ? filterDocuments(documents) : [];
   /* if (hasEmptyDocuments && !searchTerm) {
     return (
       <SidebarGroup>
@@ -1098,18 +1178,12 @@ export function SidebarDocuments({
     );
   } */
 
-  const documentsInFolders = filteredDocuments.filter((d) => d.folderId);
-  const documentsWithoutFolders = filteredDocuments.filter(
-    (d) => !d.folderId,
-  );
-
   return (
     <DndContext
-      onDragStart={(event) => {
-        const doc = documents.find((d) => d.id === event.active.id);
-        if (doc) setActiveDragItem(doc);
-      }}
+      sensors={sensors}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
       {((folders && folders.length > 0) ||
         (documents && documents.length >= 2)) && (
@@ -1193,7 +1267,10 @@ export function SidebarDocuments({
                         onCloseAutoFocus={(e) => e.preventDefault()}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <form onSubmit={handleCreateFolder} className="p-2 space-y-2">
+                        <form
+                          onSubmit={handleCreateFolder}
+                          className="p-2 space-y-2"
+                        >
                           <Input
                             placeholder="Folder name"
                             value={newFolderName}
@@ -1294,7 +1371,10 @@ export function SidebarDocuments({
                         onCloseAutoFocus={(e) => e.preventDefault()}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <form onSubmit={handleCreateFolder} className="p-2 space-y-2">
+                        <form
+                          onSubmit={handleCreateFolder}
+                          className="p-2 space-y-2"
+                        >
                           <Input
                             placeholder="Folder name"
                             value={newFolderName}
@@ -1377,6 +1457,7 @@ export function SidebarDocuments({
                               onClone={handleClone}
                               onMove={handleMoveDocument}
                               folders={folders ?? []}
+                              isDragDisabled={isDragDisabled}
                             />
                           ))}
                       </FolderItem>
@@ -1402,9 +1483,7 @@ export function SidebarDocuments({
           }}
         >
           <span className="font-medium">
-            {documents && documents.length === 1
-              ? 'Document'
-              : 'Documents'}{' '}
+            {documents && documents.length === 1 ? 'Document' : 'Documents'}{' '}
             {documents && documents.length > 1 && (
               <span className="text-sidebar-foreground/30">
                 ({documents.length})
@@ -1412,7 +1491,6 @@ export function SidebarDocuments({
             )}
           </span>
           <div className="flex items-center gap-0.5">
-
             <div className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1510,15 +1588,13 @@ export function SidebarDocuments({
                       variant="ghost"
                       size="sm"
                       onClick={
-                        selectedDocuments.size ===
-                          filteredDocuments.length
+                        selectedDocuments.size === filteredDocuments.length
                           ? handleToggleSelectionMode
                           : handleSelectAll
                       }
                       className="h-6 text-xs px-1.5 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hover:text-cyan-800 dark:hover:text-cyan-200 border border-cyan-200 dark:border-cyan-800 transition-colors duration-200"
                     >
-                      {selectedDocuments.size ===
-                        filteredDocuments.length
+                      {selectedDocuments.size === filteredDocuments.length
                         ? 'Deselect'
                         : 'Select All'}
                     </Button>
@@ -1602,195 +1678,212 @@ export function SidebarDocuments({
                         onClone={handleClone}
                         onMove={handleMoveDocument}
                         folders={folders ?? []}
+                        isDragDisabled={isDragDisabled}
                       />
                     ))
                   )
                 ) : (
                   (() => {
-                    const groupedDocuments = groupDocumentsByDate(
-                      documentsWithoutFolders,
-                    );
                     return (
                       <>
                         {groupedDocuments.favorites.length > 0 && (
                           <>
-                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium flex items-center gap-1">
+                            <div
+                              className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium flex items-center gap-1 cursor-pointer"
+                              onClick={() => toggleSection('favorites')}
+                            >
                               {groupedDocuments.favorites.length === 1
                                 ? 'Favorite'
                                 : 'Favorites'}
                             </div>
-                            {groupedDocuments.favorites.map((doc) => (
-                              <DocumentItem
-                                key={`${doc.id}-${doc.createdAt}`}
-                                document={doc}
-                                isActive={doc.id === activeDocumentId}
-                                onDelete={(documentId) => {
-                                  setDeleteId(documentId);
-                                  setShowDeleteDialog(true);
-                                }}
-                                setOpenMobile={setOpenMobile}
-                                onSelect={handleDocumentSelect}
-                                isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(
-                                  doc.id,
-                                )}
-                                onToggleSelect={handleToggleSelect}
-                                onStar={handleStar}
-                                onClone={handleClone}
-                                onMove={handleMoveDocument}
-                                folders={folders ?? []}
-                              />
-                            ))}
+                            {!collapsedSections['favorites'] &&
+                              groupedDocuments.favorites.map((doc) => (
+                                <DocumentItem
+                                  key={`${doc.id}-${doc.createdAt}`}
+                                  document={doc}
+                                  isActive={doc.id === activeDocumentId}
+                                  onDelete={(documentId) => {
+                                    setDeleteId(documentId);
+                                    setShowDeleteDialog(true);
+                                  }}
+                                  setOpenMobile={setOpenMobile}
+                                  onSelect={handleDocumentSelect}
+                                  isSelectionMode={isSelectionMode}
+                                  isSelected={selectedDocuments.has(doc.id)}
+                                  onToggleSelect={handleToggleSelect}
+                                  onStar={handleStar}
+                                  onClone={handleClone}
+                                  onMove={handleMoveDocument}
+                                  folders={folders ?? []}
+                                  isDragDisabled={isDragDisabled}
+                                  showStar
+                                />
+                              ))}
                           </>
                         )}
 
                         {groupedDocuments.today.length > 0 && (
                           <>
-                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium">
+                            <div
+                              className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium cursor-pointer"
+                              onClick={() => toggleSection('today')}
+                            >
                               Today
                             </div>
-                            {groupedDocuments.today.map((doc) => (
-                              <DocumentItem
-                                key={`${doc.id}-${doc.createdAt}`}
-                                document={doc}
-                                isActive={doc.id === activeDocumentId}
-                                onDelete={(documentId) => {
-                                  setDeleteId(documentId);
-                                  setShowDeleteDialog(true);
-                                }}
-                                setOpenMobile={setOpenMobile}
-                                onSelect={handleDocumentSelect}
-                                isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(
-                                  doc.id,
-                                )}
-                                onToggleSelect={handleToggleSelect}
-                                onStar={handleStar}
-                                onClone={handleClone}
-                                onMove={handleMoveDocument}
-                                folders={folders ?? []}
-                              />
-                            ))}
+                            {!collapsedSections['today'] &&
+                              groupedDocuments.today.map((doc) => (
+                                <DocumentItem
+                                  key={`${doc.id}-${doc.createdAt}`}
+                                  document={doc}
+                                  isActive={doc.id === activeDocumentId}
+                                  onDelete={(documentId) => {
+                                    setDeleteId(documentId);
+                                    setShowDeleteDialog(true);
+                                  }}
+                                  setOpenMobile={setOpenMobile}
+                                  onSelect={handleDocumentSelect}
+                                  isSelectionMode={isSelectionMode}
+                                  isSelected={selectedDocuments.has(doc.id)}
+                                  onToggleSelect={handleToggleSelect}
+                                  onStar={handleStar}
+                                  onClone={handleClone}
+                                  onMove={handleMoveDocument}
+                                  folders={folders ?? []}
+                                  isDragDisabled={isDragDisabled}
+                                />
+                              ))}
                           </>
                         )}
 
                         {groupedDocuments.yesterday.length > 0 && (
                           <>
-                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
+                            <div
+                              className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4 cursor-pointer"
+                              onClick={() => toggleSection('yesterday')}
+                            >
                               Yesterday
                             </div>
-                            {groupedDocuments.yesterday.map((doc) => (
-                              <DocumentItem
-                                key={`${doc.id}-${doc.createdAt}`}
-                                document={doc}
-                                isActive={doc.id === activeDocumentId}
-                                onDelete={(documentId) => {
-                                  setDeleteId(documentId);
-                                  setShowDeleteDialog(true);
-                                }}
-                                setOpenMobile={setOpenMobile}
-                                onSelect={handleDocumentSelect}
-                                isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(
-                                  doc.id,
-                                )}
-                                onToggleSelect={handleToggleSelect}
-                                onStar={handleStar}
-                                onClone={handleClone}
-                                onMove={handleMoveDocument}
-                                folders={folders ?? []}
-                              />
-                            ))}
+                            {!collapsedSections['yesterday'] &&
+                              groupedDocuments.yesterday.map((doc) => (
+                                <DocumentItem
+                                  key={`${doc.id}-${doc.createdAt}`}
+                                  document={doc}
+                                  isActive={doc.id === activeDocumentId}
+                                  onDelete={(documentId) => {
+                                    setDeleteId(documentId);
+                                    setShowDeleteDialog(true);
+                                  }}
+                                  setOpenMobile={setOpenMobile}
+                                  onSelect={handleDocumentSelect}
+                                  isSelectionMode={isSelectionMode}
+                                  isSelected={selectedDocuments.has(doc.id)}
+                                  onToggleSelect={handleToggleSelect}
+                                  onStar={handleStar}
+                                  onClone={handleClone}
+                                  onMove={handleMoveDocument}
+                                  folders={folders ?? []}
+                                  isDragDisabled={isDragDisabled}
+                                />
+                              ))}
                           </>
                         )}
 
                         {groupedDocuments.lastWeek.length > 0 && (
                           <>
-                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
+                            <div
+                              className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4 cursor-pointer"
+                              onClick={() => toggleSection('lastWeek')}
+                            >
                               Last 7 days
                             </div>
-                            {groupedDocuments.lastWeek.map((doc) => (
-                              <DocumentItem
-                                key={`${doc.id}-${doc.createdAt}`}
-                                document={doc}
-                                isActive={doc.id === activeDocumentId}
-                                onDelete={(documentId) => {
-                                  setDeleteId(documentId);
-                                  setShowDeleteDialog(true);
-                                }}
-                                setOpenMobile={setOpenMobile}
-                                onSelect={handleDocumentSelect}
-                                isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(
-                                  doc.id,
-                                )}
-                                onToggleSelect={handleToggleSelect}
-                                onStar={handleStar}
-                                onClone={handleClone}
-                                onMove={handleMoveDocument}
-                                folders={folders ?? []}
-                              />
-                            ))}
+                            {!collapsedSections['lastWeek'] &&
+                              groupedDocuments.lastWeek.map((doc) => (
+                                <DocumentItem
+                                  key={`${doc.id}-${doc.createdAt}`}
+                                  document={doc}
+                                  isActive={doc.id === activeDocumentId}
+                                  onDelete={(documentId) => {
+                                    setDeleteId(documentId);
+                                    setShowDeleteDialog(true);
+                                  }}
+                                  setOpenMobile={setOpenMobile}
+                                  onSelect={handleDocumentSelect}
+                                  isSelectionMode={isSelectionMode}
+                                  isSelected={selectedDocuments.has(doc.id)}
+                                  onToggleSelect={handleToggleSelect}
+                                  onStar={handleStar}
+                                  onClone={handleClone}
+                                  onMove={handleMoveDocument}
+                                  folders={folders ?? []}
+                                  isDragDisabled={isDragDisabled}
+                                />
+                              ))}
                           </>
                         )}
 
                         {groupedDocuments.lastMonth.length > 0 && (
                           <>
-                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
+                            <div
+                              className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4 cursor-pointer"
+                              onClick={() => toggleSection('lastMonth')}
+                            >
                               Last 30 days
                             </div>
-                            {groupedDocuments.lastMonth.map((doc) => (
-                              <DocumentItem
-                                key={`${doc.id}-${doc.createdAt}`}
-                                document={doc}
-                                isActive={doc.id === activeDocumentId}
-                                onDelete={(documentId) => {
-                                  setDeleteId(documentId);
-                                  setShowDeleteDialog(true);
-                                }}
-                                setOpenMobile={setOpenMobile}
-                                onSelect={handleDocumentSelect}
-                                isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(
-                                  doc.id,
-                                )}
-                                onToggleSelect={handleToggleSelect}
-                                onStar={handleStar}
-                                onClone={handleClone}
-                                onMove={handleMoveDocument}
-                                folders={folders ?? []}
-                              />
-                            ))}
+                            {!collapsedSections['lastMonth'] &&
+                              groupedDocuments.lastMonth.map((doc) => (
+                                <DocumentItem
+                                  key={`${doc.id}-${doc.createdAt}`}
+                                  document={doc}
+                                  isActive={doc.id === activeDocumentId}
+                                  onDelete={(documentId) => {
+                                    setDeleteId(documentId);
+                                    setShowDeleteDialog(true);
+                                  }}
+                                  setOpenMobile={setOpenMobile}
+                                  onSelect={handleDocumentSelect}
+                                  isSelectionMode={isSelectionMode}
+                                  isSelected={selectedDocuments.has(doc.id)}
+                                  onToggleSelect={handleToggleSelect}
+                                  onStar={handleStar}
+                                  onClone={handleClone}
+                                  onMove={handleMoveDocument}
+                                  folders={folders ?? []}
+                                  isDragDisabled={isDragDisabled}
+                                />
+                              ))}
                           </>
                         )}
 
                         {groupedDocuments.older.length > 0 && (
                           <>
-                            <div className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4">
+                            <div
+                              className="px-0 py-1 text-xs text-sidebar-foreground/50 font-medium mt-4 cursor-pointer"
+                              onClick={() => toggleSection('older')}
+                            >
                               Older
                             </div>
-                            {groupedDocuments.older.map((doc) => (
-                              <DocumentItem
-                                key={`${doc.id}-${doc.createdAt}`}
-                                document={doc}
-                                isActive={doc.id === activeDocumentId}
-                                onDelete={(documentId) => {
-                                  setDeleteId(documentId);
-                                  setShowDeleteDialog(true);
-                                }}
-                                setOpenMobile={setOpenMobile}
-                                onSelect={handleDocumentSelect}
-                                isSelectionMode={isSelectionMode}
-                                isSelected={selectedDocuments.has(
-                                  doc.id,
-                                )}
-                                onToggleSelect={handleToggleSelect}
-                                onStar={handleStar}
-                                onClone={handleClone}
-                                onMove={handleMoveDocument}
-                                folders={folders ?? []}
-                              />
-                            ))}
+                            {!collapsedSections['older'] &&
+                              groupedDocuments.older.map((doc) => (
+                                <DocumentItem
+                                  key={`${doc.id}-${doc.createdAt}`}
+                                  document={doc}
+                                  isActive={doc.id === activeDocumentId}
+                                  onDelete={(documentId) => {
+                                    setDeleteId(documentId);
+                                    setShowDeleteDialog(true);
+                                  }}
+                                  setOpenMobile={setOpenMobile}
+                                  onSelect={handleDocumentSelect}
+                                  isSelectionMode={isSelectionMode}
+                                  isSelected={selectedDocuments.has(doc.id)}
+                                  onToggleSelect={handleToggleSelect}
+                                  onStar={handleStar}
+                                  onClone={handleClone}
+                                  onMove={handleMoveDocument}
+                                  folders={folders ?? []}
+                                  isDragDisabled={isDragDisabled}
+                                />
+                              ))}
                           </>
                         )}
                       </>
@@ -1803,10 +1896,7 @@ export function SidebarDocuments({
         )}
       </SidebarGroup>
 
-      <AlertDialog
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-      >
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this document?</AlertDialogTitle>
@@ -1840,12 +1930,8 @@ export function SidebarDocuments({
             </AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              selected{' '}
-              {selectedDocuments.size === 1
-                ? 'document'
-                : 'documents'}{' '}
-              and remove{' '}
-              {selectedDocuments.size === 1 ? 'it' : 'them'} from our
+              selected {selectedDocuments.size === 1 ? 'document' : 'documents'}{' '}
+              and remove {selectedDocuments.size === 1 ? 'it' : 'them'} from our
               servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1903,7 +1989,8 @@ export function SidebarDocuments({
           <AlertDialogHeader>
             <AlertDialogTitle>Rename Folder</AlertDialogTitle>
             <AlertDialogDescription>
-              Enter a new name for the folder &quot;{renameDialogState.currentName}&quot;.
+              Enter a new name for the folder &quot;
+              {renameDialogState.currentName}&quot;.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <Input
@@ -1962,6 +2049,19 @@ export function SidebarDocuments({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DragOverlay>
+        {activeDragItem ? (
+          <DocumentDragPreview
+            document={activeDragItem}
+            count={
+              isSelectionMode && selectedDocuments.has(activeDragItem.id)
+                ? selectedDocuments.size
+                : 1
+            }
+          />
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }
