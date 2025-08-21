@@ -562,16 +562,16 @@ export default function Home() {
                           animate={
                             card5InView
                               ? {
-                                  opacity: 1,
-                                  rotate: rot,
-                                  y,
-                                  transition: {
-                                    delay: 0.2 + i * 0.1,
-                                    type: 'spring',
-                                    stiffness: 140,
-                                    damping: 15,
-                                  },
-                                }
+                                opacity: 1,
+                                rotate: rot,
+                                y,
+                                transition: {
+                                  delay: 0.2 + i * 0.1,
+                                  type: 'spring',
+                                  stiffness: 140,
+                                  damping: 15,
+                                },
+                              }
                               : {}
                           }
                           className="w-20 h-28 bg-background border border-border rounded-sm flex items-center justify-center mx-[-4px] shadow-sm relative"
@@ -622,7 +622,7 @@ export default function Home() {
                       </div>
                       {/* Chat bubble */}
                       <div className="absolute bottom-2 right-2 w-8 h-4 rounded-sm bg-primary flex items-center justify-center text-[6px] text-primary-foreground shadow">
-                        Ask Leo
+                        Ask Ant
                       </div>
                     </div>
                   </div>

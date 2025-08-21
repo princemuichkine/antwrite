@@ -236,7 +236,22 @@
   display: none;
 }
 
-.hide-scrollbar {
+    .hide-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+    /* Document title grid layout improvements */
+    .document-title-scroll {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .document-title-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .document-title-scroll input {
+        scroll-behavior: smooth;
+        white-space: nowrap;
+    }

@@ -477,6 +477,24 @@ function PureEditor({
           margin: 0 auto;
         }
 
+        @media (min-width: 1024px) {
+          .editor-area, .toolbar {
+            max-width: 900px;
+          }
+        }
+
+        @media (min-width: 1280px) {
+          .editor-area, .toolbar {
+            max-width: 1000px;
+          }
+        }
+
+        @media (min-width: 1536px) {
+          .editor-area, .toolbar {
+            max-width: 1100px;
+          }
+        }
+
         /* --- Synonym plugin styles (hover with Shift) --- */
         div.ProseMirror { position: relative; }
 

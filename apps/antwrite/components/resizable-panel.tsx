@@ -128,7 +128,7 @@ export function ResizablePanel({
         onMouseDown={startResizing}
         onDoubleClick={() => isOpen && setSidebarOpen(false)}
         className={cn(
-          'group relative flex w-2.5 cursor-col-resize items-center justify-center rounded-[2px] mt-0.5 mb-0.5',
+          'group relative flex w-2.5 cursor-col-resize items-center justify-center',
           'transition-colors',
           isResizing
             ? 'bg-primary/30'

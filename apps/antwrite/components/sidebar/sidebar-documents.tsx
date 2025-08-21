@@ -643,17 +643,16 @@ export function SidebarDocuments({
 
     setShowDeleteDialog(false);
 
-    const url = new URL(window.location.href);
-    const documentFromUrl = url.searchParams.get('document');
-    const isCurrentDocument = documentFromUrl === deleteId;
-
-    const redirectUrl = isCurrentDocument ? `/documents/${deleteId}` : '';
+    const isCurrentDocument = activeDocumentId === deleteId;
 
     const success = await deleteDocument(deleteId, {
-      redirectUrl: redirectUrl,
+      redirectUrl: '',
     });
 
     if (success) {
+      if (isCurrentDocument) {
+        router.push('/documents');
+      }
       mutate((pages) => {
         if (!pages) return pages;
         return pages.map((page) => ({
@@ -669,10 +668,8 @@ export function SidebarDocuments({
 
     setShowMultiDeleteDialog(false);
 
-    const url = new URL(window.location.href);
-    const documentFromUrl = url.searchParams.get('document');
     const isCurrentDocumentSelected =
-      documentFromUrl && selectedDocuments.has(documentFromUrl);
+      activeDocumentId && selectedDocuments.has(activeDocumentId);
 
     try {
       mutate((pages) => {
@@ -684,7 +681,7 @@ export function SidebarDocuments({
       }, false);
 
       if (isCurrentDocumentSelected) {
-        router.replace(`/documents/${documentFromUrl}`);
+        router.replace(`/documents`);
       }
 
       const deletePromises = selectedDocumentIds.map((documentId) =>
@@ -1254,9 +1251,9 @@ export function SidebarDocuments({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200"
+                          className="h-6 text-xs px-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-800 dark:hover:text-blue-200 border border-blue-200 dark:border-blue-800 transition-colors duration-200"
                         >
-                          <FolderPlusIcon className="size-3.5 text-sidebar-foreground/50" />
+                          <FolderPlusIcon className="size-3.5 text-blue-700 dark:text-blue-300" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
@@ -1358,9 +1355,9 @@ export function SidebarDocuments({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200 ml-auto"
+                          className="h-6 text-xs px-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-800 dark:hover:text-blue-200 border border-blue-200 dark:border-blue-800 transition-colors duration-200 ml-auto"
                         >
-                          <FolderPlusIcon className="size-3.5 text-sidebar-foreground/50" />
+                          <FolderPlusIcon className="size-3.5 text-blue-700 dark:text-blue-300" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
@@ -1536,7 +1533,7 @@ export function SidebarDocuments({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200"
+                    className="h-6 text-xs px-1.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:text-green-800 dark:hover:text-green-200 border border-green-200 dark:border-green-800 transition-colors duration-200"
                     onClick={(e) => {
                       e.stopPropagation();
                       createNewDocument();
@@ -1545,7 +1542,7 @@ export function SidebarDocuments({
                   >
                     {isCreatingDocument ? (
                       <svg
-                        className="animate-spin size-3 text-sidebar-foreground/50"
+                        className="animate-spin size-3 text-green-700 dark:text-green-300"
                         viewBox="0 0 24 24"
                       >
                         <circle
@@ -1564,7 +1561,7 @@ export function SidebarDocuments({
                         />
                       </svg>
                     ) : (
-                      <FilePlusIcon className="size-3.5 text-sidebar-foreground/50" />
+                      <FilePlusIcon className="size-3.5 text-green-700 dark:text-green-300" />
                     )}
                   </Button>
                 </div>
@@ -1618,7 +1615,7 @@ export function SidebarDocuments({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200 ml-auto"
+                  className="h-6 text-xs px-1.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:text-green-800 dark:hover:text-green-200 border border-green-200 dark:border-green-800 transition-colors duration-200 ml-auto"
                   onClick={(e) => {
                     e.stopPropagation();
                     createNewDocument();
@@ -1627,7 +1624,7 @@ export function SidebarDocuments({
                 >
                   {isCreatingDocument ? (
                     <svg
-                      className="animate-spin size-3 text-sidebar-foreground/50"
+                      className="animate-spin size-3 text-green-700 dark:text-green-300"
                       viewBox="0 0 24 24"
                     >
                       <circle
@@ -1646,7 +1643,7 @@ export function SidebarDocuments({
                       />
                     </svg>
                   ) : (
-                    <FilePlusIcon className="size-3.5 text-sidebar-foreground/50" />
+                    <FilePlusIcon className="size-3.5 text-green-700 dark:text-green-300" />
                   )}
                 </Button>
               </div>

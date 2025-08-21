@@ -556,6 +556,34 @@ export async function searchDocumentsByQuery({
   }
 }
 
+export async function searchChatsByQuery({
+  userId,
+  query,
+  limit = 5,
+}: {
+  userId: string;
+  query: string;
+  limit?: number;
+}): Promise<Chat[]> {
+  try {
+    const data = await db
+      .select()
+      .from(schema.Chat)
+      .where(
+        and(
+          eq(schema.Chat.userId, userId),
+          sql`(${schema.Chat.title} ilike ${`%${query}%`})`,
+        ),
+      )
+      .orderBy(desc(schema.Chat.createdAt))
+      .limit(limit);
+    return data || [];
+  } catch (error) {
+    console.error('Error searching chats by query:', error);
+    return [];
+  }
+}
+
 export async function getCurrentDocumentByTitle({
   userId,
   title,

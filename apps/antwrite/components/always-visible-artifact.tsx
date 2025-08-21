@@ -429,51 +429,32 @@ export function AlwaysVisibleArtifact({
 
   return (
     <div className="flex flex-col h-dvh bg-background">
-      <div className="flex flex-row justify-between items-center border-b px-3 h-[45px]">
-        <div className="flex flex-row gap-2 items-center min-w-0">
-          <SidebarTrigger />
-          {isPending ? (
-            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-          ) : (
-            <div className="flex flex-col min-w-0">
-              <div className="h-6 flex items-center">
-                {editingTitle ? (
-                  <Input
-                    ref={titleInputRef}
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    className="h-6 py-0 px-1 text-sm font-medium grow bg-transparent border-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-75"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSaveTitle();
-                      if (e.key === 'Escape') handleCancelEditTitle();
-                    }}
-                    onBlur={handleSaveTitle}
-                    disabled={isRenamingDocument || !latestDocument}
-                    aria-label="Edit document title"
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    className={`font-medium truncate h-6 leading-6 px-1 bg-transparent border-none text-left w-full ${latestDocument ? 'cursor-pointer hover:underline' : 'text-muted-foreground'}`}
-                    onClick={latestDocument ? handleEditTitle : undefined}
-                    onDoubleClick={latestDocument ? handleEditTitle : undefined}
-                    disabled={!latestDocument}
-                    title={
-                      latestDocument
-                        ? `Rename "${latestDocument.title}"`
-                        : initialDocumentId === 'init'
-                          ? 'Untitled Document'
-                          : 'Loading...'
-                    }
-                  >
-                    {latestDocument?.title ?? artifact.title ?? 'Document'}
-                  </button>
-                )}
-              </div>
+      <div className="grid grid-cols-[auto_1fr_auto] items-center border-b px-3 h-[45px] gap-2">
+        <SidebarTrigger />
+        {isPending ? (
+          <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+        ) : (
+          <div className="flex flex-col min-w-0 max-w-[calc(100vw-400px)]">
+            <div className="h-6 flex items-center overflow-x-auto overflow-y-hidden document-title-scroll">
+              <Input
+                ref={titleInputRef}
+                value={editingTitle ? newTitle : (latestDocument?.title ?? artifact.title ?? 'Document')}
+                onChange={(e) => setNewTitle(e.target.value)}
+                className={`h-6 py-0 px-1 font-medium leading-6 bg-transparent border-none outline-none shadow-none ring-0 text-left min-w-0 flex-1 ${latestDocument ? 'cursor-pointer' : 'text-muted-foreground'} ${!editingTitle ? 'cursor-pointer' : ''}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveTitle();
+                  if (e.key === 'Escape') handleCancelEditTitle();
+                }}
+                onBlur={handleSaveTitle}
+                onClick={latestDocument && !editingTitle ? handleEditTitle : undefined}
+                onDoubleClick={latestDocument && !editingTitle ? handleEditTitle : undefined}
+                disabled={isRenamingDocument || !latestDocument}
+                aria-label="Edit document title"
+              />
             </div>
-          )}
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
+          </div>
+        )}
+        <div className="flex items-center gap-1">
           {documents && documents.length > 0 && (
             <ArtifactActions
               artifact={artifact}
@@ -507,7 +488,7 @@ export function AlwaysVisibleArtifact({
           />
         )}
 
-        <div className="px-8 py-6 mx-auto max-w-3xl">
+        <div className="px-8 py-6 mx-auto max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
           {isPending ? (
             <EditorSkeleton />
           ) : (

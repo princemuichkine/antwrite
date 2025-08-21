@@ -24,7 +24,7 @@ export function SidebarToggle({
         <Button
           onClick={toggleSidebar}
           variant="outline"
-          className="md:px-2 md:h-fit"
+          className="size-8 min-w-8 max-w-8 p-0 flex items-center justify-center shrink-0"
           onMouseEnter={() => setHoveredSidebar(true)}
           onMouseLeave={() => setHoveredSidebar(false)}
         >

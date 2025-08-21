@@ -4,7 +4,6 @@ import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
-import Image from 'next/image';
 import useSWR from 'swr';
 
 import { Button } from '@/components/ui/button';
@@ -23,10 +22,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import { ChatTabs } from './chat-tabs';
 
 function PureChatHeader({
   chatId,
-  isReadonly,
+  // isReadonly,
   className,
 }: {
   chatId: string;
@@ -63,176 +63,163 @@ function PureChatHeader({
         className,
       )}
     >
-      <Button
-        variant="outline"
-        className="size-8 flex items-center justify-center dark:hover:bg-zinc-700 p-0 border-r border-border"
-        onClick={handleResetChat}
-        disabled={isCreatingChat}
-        title="New Chat"
-      >
-        {isCreatingChat ? (
-          <svg
-            className="animate-spin size-4 text-muted-foreground"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-              fill="none"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        ) : (
-          <PlusIcon />
-        )}
-      </Button>
+      <ChatTabs activeChatId={chatId} />
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="size-8 ml-auto text-muted-foreground hover:text-foreground"
+      <div className="flex items-center gap-2 ml-auto">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-foreground"
+            >
+              <LottieIcon
+                animationData={animations.history}
+                size={19}
+                loop={false}
+                autoplay={false}
+                initialFrame={0}
+              />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="w-[--radix-popper-anchor-width] min-w-[280px]"
+            sideOffset={4}
           >
-            <LottieIcon
-              animationData={animations.history}
-              size={19}
-              loop={false}
-              autoplay={false}
-              initialFrame={0}
-            />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-[--radix-popper-anchor-width] min-w-[280px]"
-          sideOffset={4}
-        >
-          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-            Recent conversations
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+              Recent conversations
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
 
-          {recentChats.length === 0 ? (
-            <DropdownMenuItem disabled className="py-1.5 px-2 text-center">
-              No recent conversations
-            </DropdownMenuItem>
-          ) : (
-            recentChats.map((chat) => (
-              <DropdownMenuItem
-                key={chat.id}
-                onClick={() => {
-                  // Dispatch an event to load this chat in the current document view
-                  window.dispatchEvent(
-                    new CustomEvent('load-chat', {
-                      detail: { chatId: chat.id },
-                    }),
-                  );
-                }}
-                className="py-2.5 px-4 rounded-sm hover:bg-accent/50 transition-colors duration-200"
-              >
-                <div className="flex flex-col w-full overflow-hidden">
-                  <span className="truncate font-medium text-sm">
-                    {chat.title}
-                  </span>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(chat.createdAt).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        year:
-                          new Date(chat.createdAt).getFullYear() !==
-                            new Date().getFullYear()
-                            ? 'numeric'
-                            : undefined,
-                      })}
+            {recentChats.length === 0 ? (
+              <DropdownMenuItem disabled className="py-1.5 px-2 text-center">
+                No recent conversations
+              </DropdownMenuItem>
+            ) : (
+              recentChats.map((chat) => (
+                <DropdownMenuItem
+                  key={chat.id}
+                  onClick={() => {
+                    // Dispatch an event to load this chat in the current document view
+                    window.dispatchEvent(
+                      new CustomEvent('load-chat', {
+                        detail: { chatId: chat.id },
+                      }),
+                    );
+                  }}
+                  className="py-2.5 px-4 rounded-sm hover:bg-accent/50 transition-colors duration-200"
+                >
+                  <div className="flex flex-col w-full overflow-hidden">
+                    <span className="truncate font-medium text-sm">
+                      {chat.title}
                     </span>
-                  </div>
-                  {(chat.document_context?.active ||
-                    (chat.document_context?.mentioned &&
-                      chat.document_context.mentioned.length > 0)) && (
-                      <div className="mt-1.5 pt-1.5 border-t border-border/50 text-xs flex flex-col gap-1 overflow-hidden">
-                        {chat.document_context.active && (
-                          <div className="flex items-center gap-1.5 text-muted-foreground truncate">
-                            <span className="font-medium text-foreground/80 shrink-0">
-                              Active:
-                            </span>
-                            <Link
-                              href={`/documents/${chat.document_context.active}`}
-                              className="truncate hover:underline text-blue-500 dark:text-blue-400"
-                              onClick={(e) => e.stopPropagation()}
-                              title={
-                                chat.document_context.activeTitle ||
-                                chat.document_context.active
-                              }
-                            >
-                              {chat.document_context.activeTitle ||
-                                chat.document_context.active}
-                            </Link>
-                          </div>
-                        )}
-                        {chat.document_context.mentioned &&
-                          chat.document_context.mentioned.length > 0 && (
-                            <div className="flex items-start gap-1.5 text-muted-foreground">
-                              <span className="font-medium text-foreground/80 shrink-0 pt-px">
-                                Mentioned:
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(chat.createdAt).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year:
+                            new Date(chat.createdAt).getFullYear() !==
+                              new Date().getFullYear()
+                              ? 'numeric'
+                              : undefined,
+                        })}
+                      </span>
+                    </div>
+                    {(chat.document_context?.active ||
+                      (chat.document_context?.mentioned &&
+                        chat.document_context.mentioned.length > 0)) && (
+                        <div className="mt-1.5 pt-1.5 border-t border-border/50 text-xs flex flex-col gap-1 overflow-hidden">
+                          {chat.document_context.active && (
+                            <div className="flex items-center gap-1.5 text-muted-foreground truncate">
+                              <span className="font-medium text-foreground/80 shrink-0">
+                                Active:
                               </span>
-                              <div className="flex flex-wrap gap-x-2 gap-y-1 overflow-hidden">
-                                {chat.document_context.mentioned.map(
-                                  (docId: string, index: number) => (
-                                    <Link
-                                      key={docId}
-                                      href={`/documents/${docId}`}
-                                      className="truncate hover:underline text-blue-500 dark:text-blue-400"
-                                      onClick={(e) => e.stopPropagation()} // Prevent dropdown item click
-                                      title={
-                                        chat.document_context.mentionedTitles?.[
-                                        index
-                                        ] || docId
-                                      }
-                                    >
-                                      {chat.document_context.mentionedTitles?.[
-                                        index
-                                      ] || docId}
-                                    </Link>
-                                  ),
-                                )}
-                              </div>
+                              <Link
+                                href={`/documents/${chat.document_context.active}`}
+                                className="truncate hover:underline text-blue-500 dark:text-blue-400"
+                                onClick={(e) => e.stopPropagation()}
+                                title={
+                                  chat.document_context.activeTitle ||
+                                  chat.document_context.active
+                                }
+                              >
+                                {chat.document_context.activeTitle ||
+                                  chat.document_context.active}
+                              </Link>
                             </div>
                           )}
-                      </div>
-                    )}
-                </div>
-              </DropdownMenuItem>
-            ))
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+                          {chat.document_context.mentioned &&
+                            chat.document_context.mentioned.length > 0 && (
+                              <div className="flex items-start gap-1.5 text-muted-foreground">
+                                <span className="font-medium text-foreground/80 shrink-0 pt-px">
+                                  Mentioned:
+                                </span>
+                                <div className="flex flex-wrap gap-x-2 gap-y-1 overflow-hidden">
+                                  {chat.document_context.mentioned.map(
+                                    (docId: string, index: number) => (
+                                      <Link
+                                        key={docId}
+                                        href={`/documents/${docId}`}
+                                        className="truncate hover:underline text-blue-500 dark:text-blue-400"
+                                        onClick={(e) => e.stopPropagation()} // Prevent dropdown item click
+                                        title={
+                                          chat.document_context.mentionedTitles?.[
+                                          index
+                                          ] || docId
+                                        }
+                                      >
+                                        {chat.document_context.mentionedTitles?.[
+                                          index
+                                        ] || docId}
+                                      </Link>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                        </div>
+                      )}
+                  </div>
+                </DropdownMenuItem>
+              ))
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      {/* GitHub Link */}
-      <Button variant="outline" size="icon" className="size-8 shrink-0" asChild>
-        <Link
-          href="https://github.com/princemuichkine/antwrite"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Button
+          variant="outline"
+          className="size-8 flex items-center justify-center dark:hover:bg-zinc-700 p-0 border-r border-border shrink-0"
+          onClick={handleResetChat}
+          disabled={isCreatingChat}
+          title="New Chat"
         >
-          <Image
-            src="/images/github-logo.png"
-            alt="Github"
-            width={16}
-            height={16}
-            className="dark:invert"
-          />
-        </Link>
-      </Button>
+          {isCreatingChat ? (
+            <svg
+              className="animate-spin size-4 text-muted-foreground"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="none"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          ) : (
+            <PlusIcon />
+          )}
+        </Button>
+      </div>
     </header>
   );
 }

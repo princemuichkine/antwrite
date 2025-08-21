@@ -7,6 +7,7 @@ import { animations } from '@/lib/utils/lottie-animations';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
@@ -110,9 +111,9 @@ export function AiSettingsMenu() {
   if (isSubscriptionLoading) return null;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <DropdownMenu>
+    <DropdownMenu>
+      <Tooltip>
+        <TooltipTrigger asChild>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
@@ -121,7 +122,7 @@ export function AiSettingsMenu() {
               onMouseLeave={() => setHoveredSettings(false)}
             >
               <LottieIcon
-                animationData={animations.settings}
+                animationData={animations.molette}
                 size={19}
                 loop={false}
                 autoplay={false}
@@ -130,168 +131,175 @@ export function AiSettingsMenu() {
               />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-64 p-3 shadow-lg rounded-sm border bg-popover"
-            align="end"
-            sideOffset={6}
-          >
-            <div className="mb-4">
-              <span className="text-sm font-semibold text-foreground">
-                AI Preferences
-              </span>
-            </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Preferences</TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent
+        className="w-80 p-0 shadow-lg rounded-sm border bg-popover"
+        align="end"
+        sideOffset={6}
+      >
+        <div className="p-3 border-b">
+          <h3 className="text-sm font-medium text-foreground">Preferences</h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            Customize agent behavior
+          </p>
+        </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-medium">Suggestion Length</Label>
-              <div className="flex items-center gap-1.5">
-                {(['short', 'medium', 'long'] as SuggestionLength[]).map(
-                  (len) => (
-                    <Button
-                      key={len}
-                      variant={suggestionLength === len ? 'secondary' : 'ghost'}
-                      size="sm"
-                      className={cn(
-                        'flex-1 h-8 text-xs capitalize',
-                        suggestionLength === len
-                          ? 'font-semibold'
-                          : 'text-muted-foreground',
-                      )}
-                      onClick={() => setSuggestionLength(len)}
-                    >
-                      {len}
-                    </Button>
-                  ),
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label
-                htmlFor="custom-instructions"
-                className="text-xs font-medium"
-              >
-                Custom Instructions
-              </Label>
-              <Textarea
-                id="custom-instructions"
-                placeholder="Guide the AI... e.g., 'Be concise', 'Act like a helpful expert', 'Translate to French'"
-                className="h-24 text-sm resize-none bg-background border focus-visible:ring-1 focus-visible:ring-ring"
-                value={customInstructions}
-                onChange={(e) => setCustomInstructions(e.target.value)}
-              />
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                Your instructions guide the AI&apos;s tone and behavior.
-              </p>
-            </div>
-
-            <Separator className="my-4" />
-
-            {/* Writing Voice Section */}
-            <div className="space-y-4 relative group">
-              {!hasSubscription && (
-                <div className="absolute inset-0 z-10 bg-background/70 backdrop-blur-sm rounded-sm flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
+        <div className="p-3">
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Suggestion length</Label>
+            <div className="flex items-center gap-1.5">
+              {(['short', 'medium', 'long'] as SuggestionLength[]).map(
+                (len) => (
                   <Button
+                    key={len}
+                    variant={suggestionLength === len ? 'secondary' : 'ghost'}
                     size="sm"
-                    variant="outline"
-                    className="pointer-events-auto"
-                    onClick={() => setPaywallOpen(true)}
+                    className={cn(
+                      'flex-1 h-8 text-xs capitalize',
+                      suggestionLength === len
+                        ? 'font-semibold'
+                        : 'text-muted-foreground',
+                    )}
+                    onClick={() => setSuggestionLength(len)}
                   >
-                    Upgrade
+                    {len}
                   </Button>
-                </div>
+                ),
               )}
-              {isEditingSample ? (
-                <div className="space-y-3">
-                  <Label className="text-xs font-medium">
-                    Train Writer Style
+            </div>
+          </div>
+        </div>
+
+        <div className="p-3 -mt-2">
+          <div className="space-y-2">
+            <Label
+              htmlFor="custom-instructions"
+              className="text-xs font-medium"
+            >
+              Instructions
+            </Label>
+            <Textarea
+              id="custom-instructions"
+              placeholder="Guide the AI... e.g., 'Be concise', 'Act like a helpful expert', 'Translate to French'"
+              className="h-24 text-sm resize-none bg-background border focus-visible:ring-1 focus-visible:ring-ring"
+              value={customInstructions}
+              onChange={(e) => setCustomInstructions(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground leading-tight">
+              Your instructions guide the agent&apos;s tone and behavior.
+            </p>
+          </div>
+        </div>
+
+        <DropdownMenuSeparator />
+
+        {/* Writing Voice Section */}
+        <div className="p-3">
+          <div className="space-y-4 relative group">
+            {!hasSubscription && (
+              <div className="absolute inset-0 z-10 bg-background/70 backdrop-blur-sm rounded-sm flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="pointer-events-auto"
+                  onClick={() => setPaywallOpen(true)}
+                >
+                  Upgrade
+                </Button>
+              </div>
+            )}
+            {isEditingSample ? (
+              <div className="space-y-3">
+                <Label className="text-xs font-medium">
+                  Writing style
+                </Label>
+                <Textarea
+                  placeholder="Paste ~200 characters of your writing so the AI can learn your style. This sample stays on your device."
+                  className="h-28 text-sm resize-none bg-background border focus-visible:ring-1 focus-visible:ring-ring"
+                  value={writingSample}
+                  onChange={(e) => setWritingSample(e.target.value)}
+                  disabled={!hasSubscription}
+                />
+
+                <Progress
+                  value={Math.min(100, (writingSample.length / 200) * 100)}
+                  className="h-1.5 rounded-sm [&>div]:bg-green-600 dark:[&>div]:bg-green-500"
+                />
+
+                {generationError && (
+                  <p className="text-[11px] text-destructive leading-tight">
+                    {generationError}
+                  </p>
+                )}
+
+                <Button
+                  size="sm"
+                  className="w-full"
+                  variant="outline"
+                  disabled={
+                    isGeneratingSummary ||
+                    writingSample.length < 200 ||
+                    !hasSubscription
+                  }
+                  onClick={handleGenerateSummary}
+                >
+                  {isGeneratingSummary && (
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  )}
+                  {isGeneratingSummary ? 'Analyzing...' : 'Train'}
+                </Button>
+              </div>
+            ) : (
+              // Trained State
+              <div className="space-y-4 rounded-sm border p-4">
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="apply-style"
+                    className="text-xs font-medium"
+                  >
+                    Apply Writer Style
                   </Label>
-                  <Textarea
-                    placeholder="Paste ~200 characters of your writing so the AI can learn your style. This sample stays on your device."
-                    className="h-28 text-sm resize-none bg-background border focus-visible:ring-1 focus-visible:ring-ring"
-                    value={writingSample}
-                    onChange={(e) => setWritingSample(e.target.value)}
+                  <Switch
+                    id="apply-style"
+                    checked={applyStyle}
+                    onCheckedChange={toggleApplyStyle}
+                    className="scale-110"
                     disabled={!hasSubscription}
                   />
+                </div>
 
-                  <Progress
-                    value={Math.min(100, (writingSample.length / 200) * 100)}
-                    className="h-1.5"
-                  />
-
-                  {generationError && (
-                    <p className="text-[11px] text-destructive leading-tight">
-                      {generationError}
-                    </p>
-                  )}
-
+                <div className="flex items-center gap-3">
                   <Button
+                    variant="secondary"
                     size="sm"
-                    className="w-full"
-                    variant="outline"
-                    disabled={
-                      isGeneratingSummary ||
-                      writingSample.length < 200 ||
-                      !hasSubscription
-                    }
-                    onClick={handleGenerateSummary}
+                    className="flex-1"
+                    onClick={startRetrain}
+                    disabled={!hasSubscription}
                   >
-                    {isGeneratingSummary && (
-                      <Loader2 className="mr-2 size-4 animate-spin" />
-                    )}
-                    {isGeneratingSummary ? 'Analyzing...' : 'Train'}
+                    Retrain
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="flex-1"
+                    onClick={handleClearProfile}
+                    disabled={!hasSubscription}
+                  >
+                    Clear
                   </Button>
                 </div>
-              ) : (
-                // Trained State
-                <div className="space-y-4 rounded-sm border p-4">
-                  <div className="flex items-center justify-between">
-                    <Label
-                      htmlFor="apply-style"
-                      className="text-xs font-medium"
-                    >
-                      Apply Writer Style
-                    </Label>
-                    <Switch
-                      id="apply-style"
-                      checked={applyStyle}
-                      onCheckedChange={toggleApplyStyle}
-                      className="scale-110"
-                      disabled={!hasSubscription}
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="flex-1"
-                      onClick={startRetrain}
-                      disabled={!hasSubscription}
-                    >
-                      Retrain
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="flex-1"
-                      onClick={handleClearProfile}
-                      disabled={!hasSubscription}
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-              )}
-              <Paywall
-                isOpen={isPaywallOpen}
-                onOpenChange={setPaywallOpen}
-                required={false}
-              />
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TooltipTrigger>
-      <TooltipContent side="bottom">AI Settings</TooltipContent>
-    </Tooltip>
+              </div>
+            )}
+            <Paywall
+              isOpen={isPaywallOpen}
+              onOpenChange={setPaywallOpen}
+              required={false}
+            />
+          </div>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

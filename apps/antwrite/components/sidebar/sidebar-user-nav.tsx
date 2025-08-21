@@ -281,6 +281,24 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                 />
                 {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
               </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                className="cursor-pointer w-full"
+                onSelect={() => window.open('https://github.com/princemuichkine/antwrite', '_blank')}
+                disabled={isLoading}
+              >
+                <LottieIcon
+                  animationData={animations.code}
+                  size={19}
+                  loop={false}
+                  autoplay={false}
+                  initialFrame={0}
+                />
+                Open-source
+              </DropdownMenuItem>
+
               {!isStripeEnabled && <DropdownMenuSeparator />}
 
               <DropdownMenuItem

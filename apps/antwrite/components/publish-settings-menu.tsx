@@ -29,6 +29,11 @@ import {
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { HuePicker } from 'react-color';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface PublishSettingsMenuProps {
   document: Document;
@@ -306,279 +311,310 @@ export function PublishSettingsMenu({
         }
       }}
     >
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            'h-8 w-8 p-0 flex items-center justify-center transition-colors',
-            isPublished ? 'text-blue-500' : 'text-muted-foreground',
-          )}
-        >
-          <LottieIcon animationData={animations.globe} size={19} />
-        </Button>
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                'h-8 w-8 p-0 flex items-center justify-center transition-colors',
+                isPublished ? 'text-blue-500' : 'text-muted-foreground',
+              )}
+            >
+              <LottieIcon animationData={animations.globe} size={19} />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Publish</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent
-        className="group w-64 p-3 shadow-lg rounded-sm border bg-popover space-y-3 relative"
+        className="w-80 p-0 shadow-lg rounded-sm border bg-popover"
         align="end"
         sideOffset={6}
       >
-        {/* Hover overlay for unsubscribed users */}
-        {disabled && (
-          <div className="absolute inset-0 z-10 bg-background/70 backdrop-blur-sm rounded-sm flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
-            <Button
-              size="sm"
-              variant="outline"
-              className="pointer-events-auto"
-              onClick={() => setPaywallOpen(true)}
-            >
-              Upgrade
-            </Button>
-          </div>
-        )}
-        <div>
-          <Label className="text-sm font-medium">Publish Settings</Label>
+        <div className="p-3 border-b">
+          <h3 className="text-sm font-medium text-foreground">Publish</h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            Manage your document&apos;s visibility
+          </p>
         </div>
-        {!isPublished ? (
-          <>
-            {' '}
-            {/* Publish state */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="pub-username"
-                className="text-xs font-medium block"
-              >
-                Username
-              </Label>
-              <div className="flex gap-2 items-center">
-                <Input
-                  id="pub-username"
-                  value={hasUsername ? `@${username}` : username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    if (usernameCheck.available !== null) {
-                      setUsernameCheck({ checking: false, available: null });
-                    }
-                    if (hasUsername) {
-                      setHasUsername(false);
-                    }
-                  }}
-                  disabled={
-                    usernameLoading ||
-                    claiming ||
-                    hasUsername ||
-                    isPublishing ||
-                    disabled
-                  }
-                  className={cn(
-                    'flex-1 h-8',
-                    hasUsername
-                      ? 'opacity-50 bg-transparent border border-input text-muted-foreground'
-                      : usernameCheck.available === false
-                        ? 'border-destructive text-destructive focus-visible:ring-destructive'
-                        : usernameCheck.available === true
-                          ? 'border-green-500 text-green-500 focus-visible:ring-green-500'
-                          : '',
-                  )}
-                  placeholder={
-                    usernameLoading
-                      ? 'Loading username...'
-                      : 'Choose a username'
-                  }
-                />
-                {usernameLoading && (
-                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                )}
-                {usernameCheck.checking && !hasUsername && (
-                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                )}
-                {!hasUsername &&
-                  !usernameCheck.checking &&
-                  usernameCheck.available && (
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="size-8 shrink-0"
-                      onClick={claimUsername}
-                      disabled={claiming}
-                    >
-                      {claiming ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <Check className="size-4" />
-                      )}
-                    </Button>
-                  )}
-                {hasUsername && (
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="size-8 shrink-0"
-                    onClick={() => {
-                      setHasUsername(false);
-                      setUsernameCheck({ checking: false, available: null });
-                    }}
-                    disabled={disabled}
-                  >
-                    <Edit2 className="size-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="pub-title" className="text-xs font-medium block">
-                Slug
-              </Label>
-              <Input
-                id="pub-title"
-                value={slug}
-                onChange={handleSlugChange}
-                className="h-8"
-                disabled={isPublishing || disabled}
-                placeholder="Page slug"
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-medium block">Text Color</Label>
-                <ToggleGroup
-                  type="single"
-                  value={textColor === undefined ? 'default' : 'custom'}
-                  onValueChange={handleColorModeChange}
-                  className="grid grid-cols-2"
-                  disabled={isPublishing || disabled}
-                >
-                  <ToggleGroupItem value="default" className="text-xs h-8">
-                    Default
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="custom" className="text-xs h-8">
-                    Custom
-                  </ToggleGroupItem>
-                </ToggleGroup>
-                {textColor !== undefined && (
-                  <>
-                    <div className="pt-2">
-                      <HuePicker
-                        color={textColor}
-                        onChange={(c) => setTextColor(c.hex)}
-                        width="100%"
-                      />
-                    </div>
-                    {(() => {
-                      const { h, s } = hexToHSL(textColor);
-                      const light = `hsl(${h}, ${s}%, 90%)`;
-                      const dark = `hsl(${h}, ${s}%, 20%)`;
-                      return (
-                        <div className="grid grid-cols-2 gap-2 pt-2 text-xs">
-                          <div className="flex flex-col items-center">
-                            <div
-                              className="h-6 w-full rounded"
-                              style={{ backgroundColor: light }}
-                            />
-                            <span className="mt-1">Light</span>
-                          </div>
-                          <div className="flex flex-col items-center">
-                            <div
-                              className="h-6 w-full rounded"
-                              style={{ backgroundColor: dark }}
-                            />
-                            <span className="mt-1">Dark</span>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </>
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs font-medium block">Font</Label>
-                <Select
-                  value={font}
-                  onValueChange={(val) => setFont(val as FontOption)}
-                  disabled={isPublishing || disabled}
-                >
-                  <SelectTrigger
-                    className={cn(
-                      'h-8 w-full text-xs',
-                      googleFonts[font].className,
-                    )}
-                  >
-                    <SelectValue placeholder="Font" />
-                  </SelectTrigger>
-                  <SelectContent className="text-xs">
-                    {(Object.keys(googleFonts) as FontOption[]).map((key) => (
-                      <SelectItem
-                        key={key}
-                        value={key}
-                        className={cn('capitalize', googleFonts[key].className)}
-                      >
-                        {key}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="flex justify-end px-3 pt-4 pb-2 border-t bg-background/50 -mx-3 -mb-3 mt-4">
+        <div className="relative group">
+          {/* Hover overlay for unsubscribed users */}
+          {disabled && (
+            <div className="absolute inset-0 z-10 bg-background/70 backdrop-blur-sm rounded-sm flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
               <Button
                 size="sm"
-                variant="default"
-                className="w-full"
-                onClick={() => {
-                  if (disabled) {
-                    setPaywallOpen(true);
-                    return;
-                  }
-                  handleToggle();
-                }}
-                disabled={
-                  isPublishing || !hasUsername || disabled || !sanitizedUsername
-                }
+                variant="outline"
+                className="pointer-events-auto"
+                onClick={() => setPaywallOpen(true)}
               >
-                {isPublishing ? (
-                  <Loader2 className="size-4 animate-spin mx-auto" />
-                ) : (
-                  'Publish'
-                )}
+                Upgrade
               </Button>
             </div>
-          </>
-        ) : (
-          <div className="space-y-2">
-            {/* Copy and View always visible */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start gap-2"
-              onClick={() => navigator.clipboard.writeText(url)}
-              disabled={disabled}
-            >
-              <CopyIcon className="size-4" /> Copy Link
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => window.open(url, '_blank')}
-              disabled={disabled}
-            >
-              <LottieIcon animationData={animations.globe} size={19} /> View
-            </Button>
-            <Button
-              size="sm"
-              variant="default"
-              className="w-full"
-              onClick={() => handleToggle()}
-              disabled={isPublishing || disabled}
-            >
-              {isPublishing ? (
-                <Loader2 className="size-4 animate-spin mx-auto" />
-              ) : (
-                'Unpublish'
-              )}
-            </Button>
+          )}
+          <div className="p-3">
+            {!isPublished ? (
+              <div className="space-y-3">
+                {' '}
+                {/* Publish state */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="pub-username"
+                    className="text-xs font-medium block"
+                  >
+                    Username
+                  </Label>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      id="pub-username"
+                      value={hasUsername ? `@${username}` : username}
+                      onChange={(e) => {
+                        setUsername(e.target.value);
+                        if (usernameCheck.available !== null) {
+                          setUsernameCheck({
+                            checking: false,
+                            available: null,
+                          });
+                        }
+                        if (hasUsername) {
+                          setHasUsername(false);
+                        }
+                      }}
+                      disabled={
+                        usernameLoading ||
+                        claiming ||
+                        hasUsername ||
+                        isPublishing ||
+                        disabled
+                      }
+                      className={cn(
+                        'flex-1 h-8',
+                        hasUsername
+                          ? 'opacity-50 bg-transparent border border-input text-muted-foreground'
+                          : usernameCheck.available === false
+                            ? 'border-destructive text-destructive focus-visible:ring-destructive'
+                            : usernameCheck.available === true
+                              ? 'border-green-500 text-green-500 focus-visible:ring-green-500'
+                              : '',
+                      )}
+                      placeholder={
+                        usernameLoading
+                          ? 'Loading username...'
+                          : 'Choose a username'
+                      }
+                    />
+                    {usernameLoading && (
+                      <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                    )}
+                    {usernameCheck.checking && !hasUsername && (
+                      <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                    )}
+                    {!hasUsername &&
+                      !usernameCheck.checking &&
+                      usernameCheck.available && (
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="size-8 shrink-0"
+                          onClick={claimUsername}
+                          disabled={claiming}
+                        >
+                          {claiming ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Check className="size-4" />
+                          )}
+                        </Button>
+                      )}
+                    {hasUsername && (
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="size-8 shrink-0"
+                        onClick={() => {
+                          setHasUsername(false);
+                          setUsernameCheck({
+                            checking: false,
+                            available: null,
+                          });
+                        }}
+                        disabled={disabled}
+                      >
+                        <Edit2 className="size-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="pub-title"
+                    className="text-xs font-medium block"
+                  >
+                    Slug
+                  </Label>
+                  <Input
+                    id="pub-title"
+                    value={slug}
+                    onChange={handleSlugChange}
+                    className="h-8"
+                    disabled={isPublishing || disabled}
+                    placeholder="Page slug"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium block">
+                      Text Color
+                    </Label>
+                    <ToggleGroup
+                      type="single"
+                      value={textColor === undefined ? 'default' : 'custom'}
+                      onValueChange={handleColorModeChange}
+                      className="grid grid-cols-2"
+                      disabled={isPublishing || disabled}
+                    >
+                      <ToggleGroupItem value="default" className="text-xs h-8">
+                        Default
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="custom" className="text-xs h-8">
+                        Custom
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                    {textColor !== undefined && (
+                      <>
+                        <div className="pt-2">
+                          <HuePicker
+                            color={textColor}
+                            onChange={(c) => setTextColor(c.hex)}
+                            width="100%"
+                          />
+                        </div>
+                        {(() => {
+                          const { h, s } = hexToHSL(textColor);
+                          const light = `hsl(${h}, ${s}%, 90%)`;
+                          const dark = `hsl(${h}, ${s}%, 20%)`;
+                          return (
+                            <div className="grid grid-cols-2 gap-2 pt-2 text-xs">
+                              <div className="flex flex-col items-center">
+                                <div
+                                  className="h-6 w-full rounded"
+                                  style={{ backgroundColor: light }}
+                                />
+                                <span className="mt-1">Light</span>
+                              </div>
+                              <div className="flex flex-col items-center">
+                                <div
+                                  className="h-6 w-full rounded"
+                                  style={{ backgroundColor: dark }}
+                                />
+                                <span className="mt-1">Dark</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium block">Font</Label>
+                    <Select
+                      value={font}
+                      onValueChange={(val) => setFont(val as FontOption)}
+                      disabled={isPublishing || disabled}
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          'h-8 w-full text-xs',
+                          googleFonts[font].className,
+                        )}
+                      >
+                        <SelectValue placeholder="Font" />
+                      </SelectTrigger>
+                      <SelectContent className="text-xs">
+                        {(Object.keys(googleFonts) as FontOption[]).map(
+                          (key) => (
+                            <SelectItem
+                              key={key}
+                              value={key}
+                              className={cn(
+                                'capitalize',
+                                googleFonts[key].className,
+                              )}
+                            >
+                              {key}
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex justify-end px-3 pt-4 pb-2 border-t bg-background/50 -mx-3 -mb-3 mt-4">
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="w-full"
+                    onClick={() => {
+                      if (disabled) {
+                        setPaywallOpen(true);
+                        return;
+                      }
+                      handleToggle();
+                    }}
+                    disabled={
+                      isPublishing ||
+                      !hasUsername ||
+                      disabled ||
+                      !sanitizedUsername
+                    }
+                  >
+                    {isPublishing ? (
+                      <Loader2 className="size-4 animate-spin mx-auto" />
+                    ) : (
+                      'Publish'
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {/* Copy and View always visible */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start gap-2"
+                  onClick={() => navigator.clipboard.writeText(url)}
+                  disabled={disabled}
+                >
+                  <CopyIcon className="size-4" /> Copy Link
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => window.open(url, '_blank')}
+                  disabled={disabled}
+                >
+                  <LottieIcon animationData={animations.globe} size={19} /> View
+                </Button>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="w-full"
+                  onClick={() => handleToggle()}
+                  disabled={isPublishing || disabled}
+                >
+                  {isPublishing ? (
+                    <Loader2 className="size-4 animate-spin mx-auto" />
+                  ) : (
+                    'Unpublish'
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </DropdownMenuContent>
       <Paywall
         isOpen={isPaywallOpen}

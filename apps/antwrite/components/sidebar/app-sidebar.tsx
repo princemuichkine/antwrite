@@ -45,10 +45,10 @@ function FloatingSidebar({
 
   return (
     <motion.div
-      className={`fixed left-0 w-64 h-[calc(100vh-43px)] bg-sidebar border-r border-b border-border shadow-lg overflow-hidden ${isVisible ? 'rounded-r-sm z-50' : 'z-40'}`}
+      className={`fixed left-0 w-64 h-[calc(100vh-42px)] bg-sidebar border-y border-r border-border shadow-lg overflow-hidden ${isVisible ? 'rounded-r-sm z-50' : 'z-40'}`}
       style={{
-        top: '43px',
-        height: 'calc(100vh - 43px - 4px)' // 4px bottom gap for space
+        top: '42px',
+        height: 'calc(100vh - 42px - 4px)' // 4px bottom gap for space
       }} // Exact position to match the separator line
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
@@ -105,8 +105,8 @@ export function AppSidebar({
   // Handle hover detection on left side (below header area) - instant response
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const isInTriggerArea = e.clientX <= 50 && e.clientY > 60 && state === 'collapsed';
-      const isInFloatingSidebar = showFloatingSidebar && e.clientX <= 320 && e.clientY > 43; // 320px (w-64 + extra tolerance) + 43px top
+      const isInTriggerArea = e.clientX <= 1 && e.clientY > 60 && state === 'collapsed';
+      const isInFloatingSidebar = showFloatingSidebar && e.clientX <= 320 && e.clientY > 42; // 320px (w-64 + extra tolerance) + 42px top
 
       if (isInTriggerArea || isInFloatingSidebar) {
         if (hoverTimeoutRef.current) {

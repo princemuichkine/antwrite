@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Plus, X, ArrowUpIcon } from 'lucide-react';
+import { Plus, ArrowUpIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Markdown } from '@/components/markdown';
 import Image from 'next/image';
@@ -148,13 +148,14 @@ export default function AIChatWidget({
             className="fixed bottom-4 right-4 z-50"
           >
             <Button
-              className="rounded-sm px-6 py-3 shadow-lg"
+              variant="outline"
+              className="rounded-sm px-6 py-3 shadow-lg bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:text-green-800 dark:hover:text-green-200 border border-green-200 dark:border-green-800"
               onClick={(e) => {
                 e.stopPropagation();
                 setOpen(true);
               }}
             >
-              Ask Leo
+              Ask
             </Button>
           </motion.div>
         )}
@@ -179,6 +180,7 @@ export default function AIChatWidget({
             >
               <div className="flex flex-col h-full overflow-hidden">
                 <header className="flex sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b border-border items-center px-3 h-[45px] gap-2 transition-all duration-200">
+                  <div className="flex-1" />
                   <Button
                     variant="ghost"
                     size="icon"
@@ -187,16 +189,6 @@ export default function AIChatWidget({
                     title="New Chat"
                   >
                     <Plus className="size-4" />
-                  </Button>
-                  <div className="flex-1" />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 shrink-0"
-                    onClick={() => setOpen(false)}
-                    title="Close Chat"
-                  >
-                    <X className="size-4" />
                   </Button>
                 </header>
 

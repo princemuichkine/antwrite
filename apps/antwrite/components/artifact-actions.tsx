@@ -38,7 +38,7 @@ function PureArtifactActions({
     // Fallback actions for when definition is not found
     const fallbackActions = [
       {
-        description: 'Copy to clipboard',
+        description: 'Copy',
         icon: <CopyIcon size={16} />,
         onClick: () => {
           navigator.clipboard.writeText(artifact.content);

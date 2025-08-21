@@ -826,17 +826,13 @@ function PureSendButton({
   input: string;
   uploadQueue: Array<string>;
 }) {
-  const hasText = input.trim().length > 0;
   const isDisabled = input.trim().length === 0 || uploadQueue.length > 0;
 
   return (
     <Button
       data-testid="send-button"
       className={cn(
-        'rounded-sm p-1.5 h-fit transition-colors duration-200',
-        hasText
-          ? 'bg-white hover:bg-neutral-200 dark:bg-neutral-100 dark:hover:bg-neutral-300 text-black'
-          : 'bg-background/30 hover:bg-accent/30 border border-border/30 text-accent-foreground opacity-60 hover:opacity-100',
+        'rounded-sm p-1.5 h-fit transition-colors duration-200 bg-white hover:bg-neutral-200 dark:bg-neutral-100 dark:hover:bg-neutral-300 text-black',
         isDisabled && 'opacity-50',
       )}
       onClick={(event) => {

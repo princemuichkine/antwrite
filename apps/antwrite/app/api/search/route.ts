@@ -3,6 +3,7 @@ import { db, Document, Folder, Chat } from '@antwrite/db';
 import { and, eq, ilike, inArray } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
+import { searchDocumentsByQuery, searchChatsByQuery } from '@/lib/db/queries';
 
 export async function GET(req: NextRequest) {
   const readonlyHeaders = await headers();
@@ -24,17 +25,7 @@ export async function GET(req: NextRequest) {
 
     switch (type) {
       case 'document':
-        results = await db
-          .select()
-          .from(Document)
-          .where(
-            and(
-              eq(Document.userId, userId),
-              ilike(Document.title, `%${query}%`),
-              eq(Document.is_current, true),
-            ),
-          )
-          .limit(limit);
+        results = await searchDocumentsByQuery({ userId, query, limit });
         break;
       case 'folder': {
         // Fetch folders and their documents
@@ -82,25 +73,15 @@ export async function GET(req: NextRequest) {
         break;
       }
       case 'chat':
-        results = await db
-          .select()
-          .from(Chat)
-          .where(and(eq(Chat.userId, userId), ilike(Chat.title, `%${query}%`)))
-          .limit(limit);
+        results = await searchChatsByQuery({ userId, query, limit });
         break;
       default: {
         // If no type or an invalid type is specified, search across all types
-        const allDocuments = await db
-          .select()
-          .from(Document)
-          .where(
-            and(
-              eq(Document.userId, userId),
-              ilike(Document.title, `%${query}%`),
-              eq(Document.is_current, true),
-            ),
-          )
-          .limit(limit);
+        const allDocuments = await searchDocumentsByQuery({
+          userId,
+          query,
+          limit,
+        });
         const allFolders = await db
           .select()
           .from(Folder)
@@ -108,11 +89,7 @@ export async function GET(req: NextRequest) {
             and(eq(Folder.userId, userId), ilike(Folder.name, `%${query}%`)),
           )
           .limit(limit);
-        const allChats = await db
-          .select()
-          .from(Chat)
-          .where(and(eq(Chat.userId, userId), ilike(Chat.title, `%${query}%`)))
-          .limit(limit);
+        const allChats = await searchChatsByQuery({ userId, query, limit });
         results = [...allDocuments, ...allFolders, ...allChats];
       }
     }

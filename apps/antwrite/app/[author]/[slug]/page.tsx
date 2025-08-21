@@ -4,9 +4,9 @@ import * as schema from '@antwrite/db';
 import { eq, and } from 'drizzle-orm';
 import { Blog } from '@/components/blog';
 import AIChatWidget from '@/components/ai-chat-widget';
-import ThemeToggle from '@/components/theme-toggle';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { BlogThemeToggle } from '@/components/blog-theme-toggle';
 
 export default async function Page({ params }: any) {
   const { author, slug } = await params;
@@ -33,7 +33,7 @@ export default async function Page({ params }: any) {
   const dateString = new Date(doc.createdAt).toLocaleDateString('en-US');
   return (
     <>
-      <ThemeToggle />
+      <BlogThemeToggle />
       <Link href="/">
         <Button variant="outline" className="fixed top-4 right-4 z-50">
           Sign up to Antwrite

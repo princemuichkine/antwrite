@@ -110,63 +110,69 @@ export function ContextSelector({
         const documentsPromise =
           !searchTypeFilter || searchTypeFilter === 'document'
             ? fetch(
-                `/api/search?query=${encodeURIComponent(
-                  searchQuery,
-                )}&type=document&limit=10`,
+              `/api/search?query=${encodeURIComponent(
+                searchQuery,
+              )}&type=document&limit=10`,
+            )
+              .then((res) =>
+                res.ok ? res.json() : Promise.resolve({ results: [] }),
               )
-                .then((res) => (res.ok ? res.json() : { results: [] }))
-                .then((data) =>
-                  (data.results || [])
-                    .filter((doc: any) => doc.title && doc.title !== 'Untitled')
-                    .map((doc: any) => ({
-                      id: doc.id,
-                      title: doc.title,
-                      type: 'document' as const,
-                      icon: <FileText className="size-2.5" />,
-                    })),
-                )
+              .then((data: { results: any[] }) =>
+                (data.results || [])
+                  .filter((doc: any) => doc.title && doc.title !== 'Untitled')
+                  .map((doc: any) => ({
+                    id: doc.id,
+                    title: doc.title,
+                    type: 'document' as const,
+                    icon: <FileText className="size-2.5" />,
+                  })),
+              )
             : Promise.resolve([]);
 
         const foldersPromise =
           !searchTypeFilter || searchTypeFilter === 'folder'
             ? fetch(
-                `/api/search?query=${encodeURIComponent(
-                  searchQuery,
-                )}&type=folder&limit=10`,
+              `/api/search?query=${encodeURIComponent(
+                searchQuery,
+              )}&type=folder&limit=10`,
+            )
+              .then((res) =>
+                res.ok ? res.json() : Promise.resolve({ results: [] }),
               )
-                .then((res) => (res.ok ? res.json() : { results: [] }))
-                .then((data) =>
-                  (data.results || []).map((folder: any) => ({
-                    id: folder.id,
-                    title: folder.name,
-                    type: 'folder' as const,
-                    icon: <Folder className="size-2.5" />,
-                    items: (folder.documents || []).map((doc: any) => ({
-                      id: doc.id,
-                      title: doc.title,
-                      type: 'document' as const,
-                      icon: <FileText className="size-2.5" />,
-                    })),
+              .then((data: { results: any[] }) =>
+                (data.results || []).map((folder: any) => ({
+                  id: folder.id,
+                  title: folder.name,
+                  type: 'folder' as const,
+                  icon: <Folder className="size-2.5" />,
+                  items: (folder.documents || []).map((doc: any) => ({
+                    id: doc.id,
+                    title: doc.title,
+                    type: 'document' as const,
+                    icon: <FileText className="size-2.5" />,
                   })),
-                )
+                })),
+              )
             : Promise.resolve([]);
 
         const chatsPromise =
           !searchTypeFilter || searchTypeFilter === 'chat'
             ? fetch(
-                `/api/search?query=${encodeURIComponent(
-                  searchQuery,
-                )}&type=chat&limit=10`,
+              `/api/search?query=${encodeURIComponent(
+                searchQuery,
+              )}&type=chat&limit=10`,
+            )
+              .then((res) =>
+                res.ok ? res.json() : Promise.resolve({ results: [] }),
               )
-                .then((res) => (res.ok ? res.json() : { results: [] }))
-                .then((data) =>
-                  (data.results || []).map((chat: any) => ({
-                    id: chat.id,
-                    title: chat.title,
-                    type: 'chat' as const,
-                    icon: <MessageSquare className="size-2.5" />,
-                  })),
-                )
+              .then((data: { results: any[] }) =>
+                (data.results || []).map((chat: any) => ({
+                  id: chat.id,
+                  title: chat.title,
+                  type: 'chat' as const,
+                  icon: <MessageSquare className="size-2.5" />,
+                })),
+              )
             : Promise.resolve([]);
         const tabsPromise = Promise.resolve([]); // Placeholder for active tabs
 
@@ -229,12 +235,12 @@ export function ContextSelector({
 
   const style = position
     ? {
-        position: 'fixed' as const,
-        top: position.y,
-        left: position.x,
-        transform: 'translateY(-100%)',
-        zIndex: 50,
-      }
+      position: 'fixed' as const,
+      top: position.y,
+      left: position.x,
+      transform: 'translateY(-100%)',
+      zIndex: 50,
+    }
     : {};
 
   const renderItem = (item: ContextItem, isSubItem = false) => {

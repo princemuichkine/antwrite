@@ -8,6 +8,8 @@ import { documentSchema } from '@/lib/editor/config';
 import { getActiveEditorView } from '@/lib/editor/editor-state';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { LottieIcon } from '@/components/ui/lottie-icon';
+import { animations } from '@/lib/utils/lottie-animations';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -40,7 +42,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
   const wordCount = textContent.trim().split(/\s+/).filter(Boolean).length;
   const buttonClass = (format: string) =>
     cn(
-      'h-8 w-8 p-0 flex items-center justify-center rounded-sm border border-border bg-background text-foreground',
+      'h-8 w-8 min-w-8 max-w-8 p-0 flex items-center justify-center rounded-sm border border-border bg-background text-foreground shrink-0',
       activeFormats[format]
         ? 'border-accent bg-accent text-accent-foreground'
         : '',
@@ -58,22 +60,22 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
     formatKey: keyof typeof activeFormats;
     command: () => void;
   }[] = [
-    {
-      label: 'Heading 1',
-      formatKey: 'h1',
-      command: () => runCommand(setBlockType(nodes.heading, { level: 1 })),
-    },
-    {
-      label: 'Heading 2',
-      formatKey: 'h2',
-      command: () => runCommand(setBlockType(nodes.heading, { level: 2 })),
-    },
-    {
-      label: 'Paragraph',
-      formatKey: 'p',
-      command: () => runCommand(setBlockType(nodes.paragraph)),
-    },
-  ];
+      {
+        label: 'Heading 1',
+        formatKey: 'h1',
+        command: () => runCommand(setBlockType(nodes.heading, { level: 1 })),
+      },
+      {
+        label: 'Heading 2',
+        formatKey: 'h2',
+        command: () => runCommand(setBlockType(nodes.heading, { level: 2 })),
+      },
+      {
+        label: 'Paragraph',
+        formatKey: 'p',
+        command: () => runCommand(setBlockType(nodes.paragraph)),
+      },
+    ];
 
   const ButtonWithTooltip = ({
     label,
@@ -109,7 +111,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="h-8 px-3 min-w-28 flex items-center justify-between gap-2 text-sm rounded-sm border border-border bg-background text-foreground"
+            className="h-8 px-3 min-w-28 flex items-center justify-between gap-2 text-sm rounded-sm border border-border bg-background text-foreground shrink-0"
             tabIndex={0}
           >
             <span className="truncate text-sm font-medium">
@@ -132,8 +134,8 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
               className={cn(
                 'text-sm rounded-sm',
                 opt.formatKey &&
-                  activeFormats[opt.formatKey] &&
-                  'bg-accent text-accent-foreground',
+                activeFormats[opt.formatKey] &&
+                'bg-accent text-accent-foreground',
               )}
             >
               {opt.label}
@@ -145,7 +147,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
       <Separator orientation="vertical" className="mx-2 h-6" />
 
       <ButtonWithTooltip
-        label="Bullet List"
+        label="Bullet list"
         formatKey="bulletList"
         onClick={() =>
           activeFormats.bulletList
@@ -156,7 +158,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
         <List className="size-5 text-foreground" />
       </ButtonWithTooltip>
       <ButtonWithTooltip
-        label="Numbered List"
+        label="Numbered list"
         formatKey="orderedList"
         onClick={() =>
           activeFormats.orderedList
@@ -182,6 +184,23 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
         onClick={() => runCommand(toggleMark(marks.em))}
       >
         <Italic className="size-5 text-foreground" />
+      </ButtonWithTooltip>
+
+      <Separator orientation="vertical" className="mx-2 h-6" />
+
+      <ButtonWithTooltip
+        label="Grammar"
+        formatKey="grammar"
+        onClick={() => {
+          // TODO: Implement grammar correction functionality
+          console.log('Grammar correction triggered');
+        }}
+      >
+        <LottieIcon
+          animationData={animations.checkmark}
+          size={19}
+          className="text-foreground"
+        />
       </ButtonWithTooltip>
 
       <div className="flex-1" />

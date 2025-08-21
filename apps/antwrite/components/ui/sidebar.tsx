@@ -389,7 +389,7 @@ function SidebarTrigger({
       data-side={targetSide}
       variant="outline"
       className={cn(
-        'h-8 w-8 p-0 flex items-center justify-center border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground dark:hover:bg-sidebar-accent transition-colors duration-200',
+        'h-8 w-8 min-w-8 max-w-8 p-0 flex items-center justify-center border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground dark:hover:bg-sidebar-accent transition-colors duration-200 shrink-0',
         className,
       )}
       onClick={(event) => {
