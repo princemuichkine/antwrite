@@ -10,7 +10,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { cn, fetcher } from '@/lib/utils';
-import { Loader2, CopyIcon, Edit2, Check } from 'lucide-react';
+import { Loader2, Edit2, Check } from 'lucide-react';
 import { LottieIcon } from '@/components/ui/lottie-icon';
 import { animations } from '@/lib/utils/lottie-animations';
 import type { Document } from '@antwrite/db';
@@ -364,7 +364,7 @@ export function PublishSettingsMenu({
                   >
                     Username
                   </Label>
-                  <div className="flex gap-2 items-center">
+                  <div className="flex rounded-sm border border-input overflow-hidden">
                     <Input
                       id="pub-username"
                       value={hasUsername ? `@${username}` : username}
@@ -388,13 +388,13 @@ export function PublishSettingsMenu({
                         disabled
                       }
                       className={cn(
-                        'flex-1 h-8',
+                        'border-0 h-8 flex-1',
                         hasUsername
-                          ? 'opacity-50 bg-transparent border border-input text-muted-foreground'
+                          ? 'opacity-50 bg-transparent text-muted-foreground'
                           : usernameCheck.available === false
-                            ? 'border-destructive text-destructive focus-visible:ring-destructive'
+                            ? 'text-destructive focus-visible:ring-destructive'
                             : usernameCheck.available === true
-                              ? 'border-green-500 text-green-500 focus-visible:ring-green-500'
+                              ? 'text-green-600 focus-visible:ring-green-500'
                               : '',
                       )}
                       placeholder={
@@ -403,46 +403,53 @@ export function PublishSettingsMenu({
                           : 'Choose a username'
                       }
                     />
-                    {usernameLoading && (
-                      <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                    )}
-                    {usernameCheck.checking && !hasUsername && (
-                      <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                    )}
-                    {!hasUsername &&
-                      !usernameCheck.checking &&
-                      usernameCheck.available && (
+                    <div className="flex items-center border-l border-input bg-background">
+                      {(usernameLoading || (usernameCheck.checking && !hasUsername)) && (
+                        <div className="flex items-center justify-center size-8">
+                          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                        </div>
+                      )}
+                      {!hasUsername &&
+                        !usernameCheck.checking &&
+                        !usernameLoading &&
+                        usernameCheck.available && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className={cn(
+                              'size-8 rounded-none',
+                              claiming
+                                ? 'text-green-700 dark:text-green-300'
+                                : 'text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/40'
+                            )}
+                            onClick={claimUsername}
+                            disabled={claiming}
+                          >
+                            {claiming ? (
+                              <Loader2 className="size-3 animate-spin" />
+                            ) : (
+                              <Check className="size-3" />
+                            )}
+                          </Button>
+                        )}
+                      {hasUsername && (
                         <Button
                           size="icon"
-                          variant="outline"
-                          className="size-8 shrink-0"
-                          onClick={claimUsername}
-                          disabled={claiming}
+                          variant="ghost"
+                          className="size-8 rounded-none hover:bg-accent/50"
+                          onClick={() => {
+                            setHasUsername(false);
+                            setUsernameCheck({
+                              checking: false,
+                              available: null,
+                            });
+                          }}
+                          disabled={disabled}
                         >
-                          {claiming ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Check className="size-4" />
-                          )}
+                          <Edit2 className="size-3" />
                         </Button>
                       )}
-                    {hasUsername && (
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="size-8 shrink-0"
-                        onClick={() => {
-                          setHasUsername(false);
-                          setUsernameCheck({
-                            checking: false,
-                            available: null,
-                          });
-                        }}
-                        disabled={disabled}
-                      >
-                        <Edit2 className="size-4" />
-                      </Button>
-                    )}
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -553,8 +560,7 @@ export function PublishSettingsMenu({
                 <div className="flex justify-end px-3 pt-4 pb-2 border-t bg-background/50 -mx-3 -mb-3 mt-4">
                   <Button
                     size="sm"
-                    variant="default"
-                    className="w-full"
+                    className="w-full h-8 rounded-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:text-green-800 dark:hover:text-green-200 border border-green-200 dark:border-green-800 transition-colors duration-200"
                     onClick={() => {
                       if (disabled) {
                         setPaywallOpen(true);
@@ -583,25 +589,16 @@ export function PublishSettingsMenu({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full justify-start gap-2"
-                  onClick={() => navigator.clipboard.writeText(url)}
-                  disabled={disabled}
-                >
-                  <CopyIcon className="size-4" /> Copy Link
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
+                  className="w-full h-8 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/40 hover:text-teal-800 dark:hover:text-teal-200 border border-teal-200 dark:border-teal-800 transition-colors duration-200"
                   onClick={() => window.open(url, '_blank')}
                   disabled={disabled}
                 >
-                  <LottieIcon animationData={animations.globe} size={19} /> View
+                  View
                 </Button>
                 <Button
                   size="sm"
                   variant="default"
-                  className="w-full"
+                  className="w-full h-8 rounded-sm bg-pink-50 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/40 hover:text-pink-800 dark:hover:text-pink-200 border border-pink-200 dark:border-pink-800 transition-colors duration-200"
                   onClick={() => handleToggle()}
                   disabled={isPublishing || disabled}
                 >

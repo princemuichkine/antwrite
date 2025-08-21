@@ -1188,7 +1188,7 @@ export function SidebarDocuments({
             <div
               role="button"
               tabIndex={0}
-              className="px-0 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/70 transition-colors duration-200"
+              className="px-0 py-1 text-xs text-sidebar-foreground dark:text-sidebar-foreground/70 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/80 dark:hover:text-sidebar-foreground/60 transition-colors duration-200"
               onClick={() => setIsFoldersExpanded(!isFoldersExpanded)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -1470,7 +1470,7 @@ export function SidebarDocuments({
         <div
           role="button"
           tabIndex={0}
-          className="px-0 py-1 text-xs text-sidebar-foreground/50 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/70 transition-colors duration-200"
+          className="px-0 py-1 text-xs text-sidebar-foreground dark:text-sidebar-foreground/70 flex items-center justify-between cursor-pointer hover:text-sidebar-foreground/80 dark:hover:text-sidebar-foreground/60 transition-colors duration-200"
           onClick={() => setIsDocumentsExpanded(!isDocumentsExpanded)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
