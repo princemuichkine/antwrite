@@ -26,7 +26,7 @@ export function GuestSidebarFooter() {
       >
         <LottieIcon
           animationData={theme === 'dark' ? animations.sun : animations.point}
-          size={16}
+          size={19}
           loop={false}
           autoplay={false}
           initialFrame={0}

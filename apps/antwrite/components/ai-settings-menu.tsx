@@ -1,7 +1,9 @@
 'use client';
 
-import { Settings, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LottieIcon } from '@/components/ui/lottie-icon';
+import { animations } from '@/lib/utils/lottie-animations';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +47,7 @@ export function AiSettingsMenu() {
 
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [hoveredSettings, setHoveredSettings] = useState(false);
 
   const { data: subscriptionData, isLoading: isSubscriptionLoading } = useSWR<{
     hasActiveSubscription: boolean;
@@ -114,8 +117,17 @@ export function AiSettingsMenu() {
             <Button
               variant="outline"
               className="size-8 p-0 flex items-center justify-center border rounded-sm hover:bg-muted"
+              onMouseEnter={() => setHoveredSettings(true)}
+              onMouseLeave={() => setHoveredSettings(false)}
             >
-              <Settings className="size-4" />
+              <LottieIcon
+                animationData={animations.settings}
+                size={19}
+                loop={false}
+                autoplay={false}
+                initialFrame={0}
+                isHovered={hoveredSettings}
+              />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent

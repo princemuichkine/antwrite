@@ -14,6 +14,8 @@ import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { PanelLeftIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LottieIcon } from '@/components/ui/lottie-icon';
+import { animations } from '@/lib/utils/lottie-animations';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -375,6 +377,10 @@ function SidebarTrigger({
   const contextSide = useContext(SidebarInnerContext);
   const targetSide = side || contextSide || 'left';
   const { toggleSidebar } = useSidebarWithSide(targetSide);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Check if children are provided (custom icon from parent)
+  const hasCustomIcon = props.children;
 
   return (
     <Button
@@ -390,13 +396,22 @@ function SidebarTrigger({
         onClick?.(event);
         toggleSidebar();
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       {...props}
     >
-      <PanelLeftIcon
-        className={cn('size-4 transition-transform duration-200', {
-          'rotate-180': targetSide === 'right',
-        })}
-      />
+      {hasCustomIcon ? (
+        props.children
+      ) : (
+        <LottieIcon
+          animationData={animations.sidepanel}
+          size={19}
+          loop={false}
+          autoplay={false}
+          initialFrame={0}
+          isHovered={isHovered}
+        />
+      )}
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
@@ -689,7 +704,7 @@ function SidebarMenuAction({
         'peer-data-[size=lg]/menu-button:top-2.5',
         'group-data-[collapsible=icon]:hidden',
         showOnHover &&
-          'group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 peer-data-[active=true]/menu-button:text-sidebar-accent-foreground data-[state=open]:opacity-100 md:opacity-0',
+        'group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 peer-data-[active=true]/menu-button:text-sidebar-accent-foreground data-[state=open]:opacity-100 md:opacity-0',
         className,
       )}
       {...props}

@@ -16,7 +16,7 @@ interface LottieIconProps {
 
 const LottieIconComponent = ({
   animationData,
-  size = 18,
+  size = 20, // Increased from 18 for bolder appearance
   className = '',
   loop = false,
   autoplay = false,
@@ -34,10 +34,10 @@ const LottieIconComponent = ({
   const isDark = resolvedTheme === 'dark';
   const color = useMemo(() => {
     if (customColor) return customColor;
-    // Default to current text color - we'll use a neutral approach that works with CSS
+    // Default to current text color - using pure white/black for maximum contrast
     return isDark
-      ? ([1, 1, 1] as [number, number, number])
-      : ([0, 0, 0] as [number, number, number]);
+      ? ([1, 1, 1] as [number, number, number]) // Pure white in dark mode
+      : ([0, 0, 0] as [number, number, number]); // Pure black in light mode
   }, [isDark, customColor]);
 
   // Use external hover state if provided, otherwise use internal state
@@ -144,9 +144,8 @@ const LottieIconComponent = ({
     <div
       role="button"
       tabIndex={0}
-      className={`inline-flex items-center justify-center transition-all duration-200 ease-out ${
-        isHovered ? 'scale-110' : ''
-      } ${className}`}
+      className={`inline-flex items-center justify-center transition-all duration-200 ease-out ${isHovered ? 'scale-110' : ''
+        } ${className}`}
       style={{ width: size, height: size }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

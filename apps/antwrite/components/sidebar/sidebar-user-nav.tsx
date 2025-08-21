@@ -273,7 +273,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                   animationData={
                     theme === 'dark' ? animations.sun : animations.point
                   }
-                  size={16}
+                  size={19}
                   loop={false}
                   autoplay={false}
                   initialFrame={0}
@@ -299,7 +299,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                   <>
                     <LottieIcon
                       animationData={animations.logout}
-                      size={16}
+                      size={19}
                       loop={false}
                       autoplay={false}
                       initialFrame={0}

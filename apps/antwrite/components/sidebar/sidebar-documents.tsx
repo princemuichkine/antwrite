@@ -1252,9 +1252,9 @@ export function SidebarDocuments({
                     >
                       <DropdownMenuTrigger asChild>
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer"
+                          variant="outline"
+                          size="sm"
+                          className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200"
                         >
                           <FolderPlusIcon className="size-3.5 text-sidebar-foreground/50" />
                         </Button>
@@ -1356,9 +1356,9 @@ export function SidebarDocuments({
                     >
                       <DropdownMenuTrigger asChild>
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer ml-auto"
+                          variant="outline"
+                          size="sm"
+                          className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200 ml-auto"
                         >
                           <FolderPlusIcon className="size-3.5 text-sidebar-foreground/50" />
                         </Button>
@@ -1534,9 +1534,9 @@ export function SidebarDocuments({
               !searchTerm.trim() && (
                 <div className="flex items-center justify-end px-0 py-1 mb-2">
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer"
+                    variant="outline"
+                    size="sm"
+                    className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200"
                     onClick={(e) => {
                       e.stopPropagation();
                       createNewDocument();
@@ -1616,9 +1616,9 @@ export function SidebarDocuments({
                   </>
                 )}
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-5 hover:bg-accent/50 transition-colors duration-200 text-sidebar-foreground rounded-sm flex items-center justify-center cursor-pointer ml-auto"
+                  variant="outline"
+                  size="sm"
+                  className="h-6 text-xs px-1.5 border text-sidebar-foreground/50 hover:bg-accent/50 transition-colors duration-200 ml-auto"
                   onClick={(e) => {
                     e.stopPropagation();
                     createNewDocument();

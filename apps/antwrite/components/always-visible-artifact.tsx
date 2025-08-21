@@ -12,7 +12,6 @@ import React, {
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-
 import type { Document } from '@antwrite/db';
 import { generateUUID } from '@/lib/utils';
 import { useArtifact } from '@/hooks/use-artifact';
@@ -523,7 +522,7 @@ export function AlwaysVisibleArtifact({
                 initialLastSaved={
                   latestDocument ? new Date(latestDocument.updatedAt) : null
                 }
-                onStatusChange={(newSaveState: SaveState) => {}}
+                onStatusChange={(newSaveState: SaveState) => { }}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
               />
             </Suspense>

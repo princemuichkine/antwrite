@@ -10,7 +10,9 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { cn, fetcher } from '@/lib/utils';
-import { Loader2, GlobeIcon, CopyIcon, Edit2, Check } from 'lucide-react';
+import { Loader2, CopyIcon, Edit2, Check } from 'lucide-react';
+import { LottieIcon } from '@/components/ui/lottie-icon';
+import { animations } from '@/lib/utils/lottie-animations';
 import type { Document } from '@antwrite/db';
 import type { User } from '@/lib/auth';
 import useSWR from 'swr';
@@ -103,10 +105,10 @@ export function PublishSettingsMenu({
   useEffect(() => {
     setSlug(
       document.slug ||
-        document.title
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, ''),
+      document.title
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, ''),
     );
     const styleObj = (document.style as any) || {};
     setFont(styleObj.font || 'montserrat');
@@ -312,7 +314,7 @@ export function PublishSettingsMenu({
             isPublished ? 'text-blue-500' : 'text-muted-foreground',
           )}
         >
-          <GlobeIcon className="size-4" />
+          <LottieIcon animationData={animations.globe} size={19} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -560,7 +562,7 @@ export function PublishSettingsMenu({
               onClick={() => window.open(url, '_blank')}
               disabled={disabled}
             >
-              <GlobeIcon className="size-4" /> View
+              <LottieIcon animationData={animations.globe} size={19} /> View
             </Button>
             <Button
               size="sm"

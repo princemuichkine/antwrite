@@ -121,30 +121,29 @@ export function ResizablePanel({
         </div>
       )}
 
-      {/* Resize handle - only show for right panel when open or animating */}
-      {(side === 'left' || isOpen) && (
-        <div
-          role="button"
-          tabIndex={0}
-          onMouseDown={startResizing}
+      {/* Resize handle - always visible for better UX */}
+      <div
+        role="button"
+        tabIndex={0}
+        onMouseDown={startResizing}
+        onDoubleClick={() => isOpen && setSidebarOpen(false)}
+        className={cn(
+          'group relative flex w-2.5 cursor-col-resize items-center justify-center rounded-[2px] mt-0.5 mb-0.5',
+          'transition-colors',
+          isResizing
+            ? 'bg-primary/30'
+            : 'hover:bg-primary/10 dark:hover:bg-primary/20',
+        )}
+      >
+        <GripVertical
           className={cn(
-            'group relative flex w-2.5 cursor-col-resize items-center justify-center rounded-sm',
-            'transition-colors',
+            'size-4 text-muted-foreground/40 transition-colors',
             isResizing
-              ? 'bg-primary/30'
-              : 'hover:bg-primary/10 dark:hover:bg-primary/20',
+              ? 'text-primary'
+              : 'group-hover:text-primary/80 dark:group-hover:text-primary',
           )}
-        >
-          <GripVertical
-            className={cn(
-              'size-4 text-muted-foreground/40 transition-colors',
-              isResizing
-                ? 'text-primary'
-                : 'group-hover:text-primary/80 dark:group-hover:text-primary',
-            )}
-          />
-        </div>
-      )}
+        />
+      </div>
 
       {side === 'right' && (
         <>
@@ -162,8 +161,19 @@ export function ResizablePanel({
               right: isOpen ? '0px' : `-${size}px`,
             }}
           >
-            <div className="size-full">{children}</div>
+            <div className="size-full">
+              {children}
+            </div>
           </div>
+
+          {/* Invisible clickable area when collapsed */}
+          {!isOpen && (
+            <div
+              className="fixed top-0 h-full w-2.5 cursor-pointer transition-all duration-200 ease-linear z-10 hover:bg-primary/10 dark:hover:bg-primary/20"
+              style={{ right: '0px' }}
+              onClick={() => setSidebarOpen(true)}
+            />
+          )}
         </>
       )}
     </div>

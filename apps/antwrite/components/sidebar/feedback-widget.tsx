@@ -99,7 +99,7 @@ export function FeedbackWidget({ className }: { className?: string }) {
             <SidebarMenuButton className="group data-[state=open]:bg-accent/50 data-[state=open]:text-sidebar-accent-foreground text-accent-foreground w-full h-10 hover:bg-accent/50 transition-colors duration-200">
               <LottieIcon
                 animationData={animations.chat}
-                size={16}
+                size={19}
                 loop={false}
                 autoplay={false}
                 initialFrame={0}
