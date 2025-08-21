@@ -15,12 +15,6 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
-import {
-  MentionsInput,
-  Mention,
-  type SuggestionDataItem,
-  type MentionsInputProps,
-} from 'react-mentions';
 import { sanitizeUIMessages, cn } from '@/lib/utils';
 import { ArrowUpIcon, StopIcon } from '../icons';
 import { Button } from '../ui/button';
@@ -29,92 +23,15 @@ import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { useDocumentContext } from '@/hooks/use-document-context';
 
-interface DocumentSuggestion extends SuggestionDataItem {
-  id: string;
-  display: string;
-}
+import { Badge } from '../ui/badge';
+import { ContextSelector, type ContextItem } from '../context-selector';
 
 export interface MentionedDocument {
   id: string;
   title: string;
 }
 
-const mentionInputStyle: MentionsInputProps['style'] = {
-  control: {
-    fontSize: 14,
-    lineHeight: 1.5,
-    borderRadius: '0.25rem', // rounded-sm
-    backgroundColor: 'hsl(var(--muted))', // Use CSS variable
-    border: '1px solid hsl(var(--border))', // Use CSS variable
-    color: 'hsl(var(--foreground))', // Use CSS variable for text
-  },
-  '&multiLine': {
-    control: {
-      fontFamily: 'inherit',
-      minHeight: 56,
-    },
-    highlighter: {
-      padding: 9, // Adjust to match textarea padding
-      paddingBottom: 41, // Match pb-10
-      border: '1px solid transparent',
-    },
-    input: {
-      padding: '9px 12px', // Match highlighter padding
-      paddingBottom: 41,
-      minHeight: 30, // Adjust for alignment
-      outline: 'none',
-      border: 'none',
-      lineHeight: 1.5,
-      fontSize: 14, // text-base
-      color: 'hsl(var(--foreground))', // Use CSS variable for input text
-    },
-  },
-  suggestions: {
-    list: {
-      backgroundColor: 'hsl(var(--background))',
-      border: '1px solid hsl(var(--border))',
-      fontSize: 14,
-      borderRadius: '0.375rem',
-      boxShadow:
-        '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-      maxHeight: 240,
-      overflowY: 'auto',
-      zIndex: 20,
-      marginTop: '-1px',
-      position: 'absolute',
-      bottom: '100%',
-      left: 0,
-      width: 320,
-    },
-    item: {
-      padding: '8px 12px',
-      borderBottom: '1px solid hsl(var(--border))',
-      color: 'hsl(var(--foreground))',
-      '&focused': {
-        backgroundColor: 'hsl(var(--accent))',
-        color: 'hsl(var(--accent-foreground))',
-      },
-    },
-  },
-};
 
-const mentionStyleLight: React.CSSProperties = {
-  backgroundColor: '#dbeafe',
-  padding: '1px 2px',
-  borderRadius: '0.25rem',
-  fontWeight: 500,
-  boxDecorationBreak: 'clone',
-  WebkitBoxDecorationBreak: 'clone',
-};
-
-const mentionStyleDark: React.CSSProperties = {
-  backgroundColor: 'rgba(59, 130, 246, 0.2)',
-  padding: '1px 2px',
-  borderRadius: '0.25rem',
-  fontWeight: 500,
-  boxDecorationBreak: 'clone',
-  WebkitBoxDecorationBreak: 'clone',
-};
 
 function PureMultimodalInput({
   chatId,
@@ -148,19 +65,14 @@ function PureMultimodalInput({
   onMentionsChange: (mentions: MentionedDocument[]) => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const mentionInputRef = useRef<any>(null);
   const { width } = useWindowSize();
   const { documentId: activeDocumentId, documentTitle: activeDocumentTitle } =
     useDocumentContext();
 
-  const [fileSuggestions, setFileSuggestions] = useState<DocumentSuggestion[]>(
-    [],
-  );
-  const [isSuggestionLoading, setIsSuggestionLoading] = useState(false);
-  const [currentMentionValue, setCurrentMentionValue] = useState('');
-
-  const [inputValue, setInputValue] = useState(input);
-  const [markupValue, setMarkupValue] = useState('');
+  const [showMentionContextSelector, setShowMentionContextSelector] = useState(false);
+  const [showAddContextSelector, setShowAddContextSelector] = useState(false);
+  const [mentionStartPosition, setMentionStartPosition] = useState<number>(-1);
+  const [mentionSelectorPosition, setMentionSelectorPosition] = useState<{ x: number; y: number } | undefined>(undefined);
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     'input',
@@ -168,43 +80,67 @@ function PureMultimodalInput({
   );
   useEffect(() => {
     const initialVal = localStorageInput || '';
-    setInputValue(initialVal);
+    setInput(initialVal);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    setInput(inputValue);
-    setLocalStorageInput(inputValue);
-    const mentions = parseMentionsFromMarkup(markupValue);
-    onMentionsChange(mentions);
-  }, [
-    inputValue,
-    markupValue,
-    setInput,
-    setLocalStorageInput,
-    onMentionsChange,
-  ]);
 
-  const parseMentionsFromMarkup = (markup: string): MentionedDocument[] => {
-    const mentionRegex = /@\[([^)]+)\]\\((\\S+)\\)/g;
-    const mentions: MentionedDocument[] = [];
-    let match: RegExpExecArray | null;
-    match = mentionRegex.exec(markup);
-    while (match !== null) {
-      mentions.push({ title: match[1], id: match[2] });
-      match = mentionRegex.exec(markup);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setInput(newValue);
+    setLocalStorageInput(newValue);
+
+    // Check for @ mentions
+    const cursorPosition = e.target.selectionStart;
+    const textBeforeCursor = newValue.substring(0, cursorPosition);
+    const atIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (atIndex !== -1) {
+      const afterAt = textBeforeCursor.substring(atIndex + 1);
+      // Show context selector immediately when @ is typed, even with no text after it
+      if (!afterAt.includes(' ')) {
+        setMentionStartPosition(atIndex);
+
+        // Calculate position for context selector
+        if (textareaRef.current) {
+          const textarea = textareaRef.current;
+          const rect = textarea.getBoundingClientRect();
+
+          // Create a temporary element to measure text position
+          const tempDiv = document.createElement('div');
+          tempDiv.style.position = 'absolute';
+          tempDiv.style.visibility = 'hidden';
+          tempDiv.style.whiteSpace = 'pre-wrap';
+          tempDiv.style.font = getComputedStyle(textarea).font;
+          tempDiv.style.width = textarea.clientWidth + 'px';
+          tempDiv.style.padding = getComputedStyle(textarea).padding;
+          tempDiv.textContent = textBeforeCursor;
+
+          document.body.appendChild(tempDiv);
+          const textHeight = tempDiv.scrollHeight;
+          const lineHeight = parseInt(getComputedStyle(textarea).lineHeight);
+          const lines = Math.floor(textHeight / lineHeight);
+          document.body.removeChild(tempDiv);
+
+          const selectorY = rect.top - 200; // Position above the current line
+          const selectorX = rect.left + 20; // Small offset from left edge
+
+          setMentionSelectorPosition({ x: selectorX, y: selectorY });
+        }
+
+        setShowMentionContextSelector(true);
+        setShowAddContextSelector(false); // Close add context selector if open
+      } else {
+        setShowMentionContextSelector(false);
+        setMentionStartPosition(-1);
+        setMentionSelectorPosition(undefined);
+      }
+    } else {
+      setShowMentionContextSelector(false);
+      setMentionStartPosition(-1);
+      setMentionSelectorPosition(undefined);
     }
-    return mentions;
-  };
-
-  const handleInputChange = (
-    event: any,
-    newValue: string,
-    newPlainTextValue: string,
-    mentions: Array<{ id: string; display: string }>,
-  ) => {
-    setInputValue(newValue);
-    setMarkupValue(newPlainTextValue);
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -231,54 +167,70 @@ function PureMultimodalInput({
     handleSubmit(undefined, options);
 
     setAttachments([]);
-    setInputValue('');
-    setMarkupValue('');
+    setInput('');
+    setLocalStorageInput('');
     onMentionsChange([]); // Clear confirmed mentions in parent
 
     if (width && width > 768) {
-      mentionInputRef.current?.focus();
+      textareaRef.current?.focus();
     }
   }, [
     attachments,
     activeDocumentId,
-    confirmedMentions, // Use prop
+    confirmedMentions,
     handleSubmit,
     setAttachments,
+    setInput,
+    setLocalStorageInput,
     width,
-    onMentionsChange, // Add dependency
+    onMentionsChange,
   ]);
 
-  // Fetch suggestions for react-mentions
-  const fetchSuggestions = (
-    query: string,
-    callback: (data: SuggestionDataItem[]) => void,
-  ) => {
-    if (!query) {
-      setFileSuggestions([]);
-      callback([]);
-      return;
+  // Handle context item selection
+  const handleContextSelect = (item: ContextItem) => {
+    const currentValue = input;
+    const beforeMention = currentValue.substring(0, mentionStartPosition);
+    const afterCursor = currentValue.substring(textareaRef.current?.selectionStart || mentionStartPosition + 1);
+
+    // Insert the @item text in the input AND add it as a badge
+    const newValue = `${beforeMention}@${item.title} ${afterCursor}`;
+    setInput(newValue);
+    setLocalStorageInput(newValue);
+
+    // Add to confirmed mentions (for now, only documents)
+    if (item.type === 'document') {
+      const newMentions = [...confirmedMentions];
+      const existingIndex = newMentions.findIndex(m => m.id === item.id);
+      if (existingIndex === -1) {
+        newMentions.push({ id: item.id, title: item.title });
+      }
+      onMentionsChange(newMentions);
     }
-    setIsSuggestionLoading(true);
-    fetch(`/api/search?query=${encodeURIComponent(query)}`)
-      .then((response) => response.json())
-      .then((data) => {
-        const suggestions = (data.results || []).map((doc: any) => ({
-          id: doc.id,
-          display: doc.title, // Use display for react-mentions
-        }));
-        setFileSuggestions(suggestions);
-        callback(suggestions);
-      })
-      .catch((error) => {
-        console.error('Error searching documents:', error);
-        callback([]);
-      })
-      .finally(() => {
-        setIsSuggestionLoading(false);
-      });
+
+    setShowMentionContextSelector(false);
+    setMentionStartPosition(-1);
+
+    // Focus back to textarea
+    setTimeout(() => {
+      textareaRef.current?.focus();
+      const newCursorPosition = beforeMention.length + item.title.length + 2; // +2 for @ and space
+      textareaRef.current?.setSelectionRange(newCursorPosition, newCursorPosition);
+    }, 0);
   };
 
-  // Upload logic (unchanged)
+  // Handle Add Context button click
+  const handleAddContextClick = () => {
+    setMentionStartPosition(input.length);
+    setShowAddContextSelector(true);
+    setShowMentionContextSelector(false); // Close mention selector if open
+
+    // Focus the textarea after a brief delay
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
+  };
+
+  // Upload logic
   const uploadFile = async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -332,42 +284,7 @@ function PureMultimodalInput({
     [setAttachments],
   );
 
-  // Determine styles based on theme (Keep as is)
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  useEffect(() => {
-    setIsDarkMode(document.documentElement.classList.contains('dark'));
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          setIsDarkMode(document.documentElement.classList.contains('dark'));
-        }
-      });
-    });
-    observer.observe(document.documentElement, { attributes: true });
-    return () => observer.disconnect();
-  }, []);
-
-  const currentMentionStyle = isDarkMode ? mentionStyleDark : mentionStyleLight;
-
-  const renderSuggestion = (
-    suggestion: SuggestionDataItem,
-    search: string,
-    highlightedDisplay: React.ReactNode,
-    index: number,
-    focused: boolean,
-  ) => {
-    return (
-      <div
-        className={cn('px-1 py-1', {
-          'bg-accent text-accent-foreground': focused,
-        })}
-      >
-        <span>{highlightedDisplay}</span>
-      </div>
-    );
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (
       event.key === 'Enter' &&
       !event.shiftKey &&
@@ -375,21 +292,24 @@ function PureMultimodalInput({
     ) {
       event.preventDefault();
 
-      if (status === 'ready' && inputValue.trim() !== '') {
+      if (status === 'ready' && input.trim() !== '') {
         submitForm();
       } else if (status !== 'ready') {
         toast.error('Please wait for the model to finish its response!');
       }
     }
+
+    // Handle escape to close context selectors
+    if (event.key === 'Escape' && (showMentionContextSelector || showAddContextSelector)) {
+      setShowMentionContextSelector(false);
+      setShowAddContextSelector(false);
+      setMentionStartPosition(-1);
+      setMentionSelectorPosition(undefined);
+    }
   };
 
   return (
-    <div
-      className="relative w-full flex flex-col gap-4"
-      onKeyDown={handleKeyDown}
-      role="textbox"
-      tabIndex={0}
-    >
+    <div className="relative w-full flex flex-col gap-4">
       {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 &&
@@ -407,38 +327,174 @@ function PureMultimodalInput({
       />
 
       <div className="relative">
-        <MentionsInput
-          inputRef={mentionInputRef}
-          style={mentionInputStyle}
-          value={inputValue}
-          onChange={handleInputChange}
-          placeholder="Ask, learn, write anything... (@ to mention documents, / to use tools)"
-          allowSpaceInQuery
-          className={cx(className)}
-          classNames={{
-            input: 'placeholder:text-muted-foreground',
-          }}
-          a11ySuggestionsListLabel={'Suggested documents for mention'}
-          singleLine={false}
-        >
-          <Mention
-            trigger="@"
-            data={fetchSuggestions}
-            renderSuggestion={renderSuggestion}
-            markup="@[__display__](__id__)"
-            displayTransform={(id: string, display: string) => `@${display}`}
-            appendSpaceOnAdd
-            className="mention-item"
-            style={currentMentionStyle}
+        {/* Document Mentions as Badges */}
+        {confirmedMentions.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {confirmedMentions.map((doc) => (
+              <Badge
+                key={doc.id}
+                variant="secondary"
+                className="text-xs px-2 py-1 hover:bg-secondary/80 group relative"
+              >
+                {doc.title}
+                <button
+                  className="absolute top-0.5 left-0.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground focus:opacity-100 text-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+
+                    // Remove from confirmed mentions
+                    const newMentions = confirmedMentions.filter(m => m.id !== doc.id);
+                    onMentionsChange(newMentions);
+
+                    // Also remove from text input
+                    const currentValue = input;
+                    const mentionText = `@${doc.title}`;
+                    const newValue = currentValue.replace(mentionText, '').trim();
+                    setInput(newValue);
+                    setLocalStorageInput(newValue);
+                  }}
+                  aria-label={`Remove ${doc.title} mention`}
+                >
+                  ×
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Add Context Button */}
+        <div className="mb-2 relative">
+          <button
+            type="button"
+            onClick={handleAddContextClick}
+            className="add-context-button flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors bg-background hover:bg-accent rounded-sm border border-border/50"
+          >
+            <span>@</span>
+            <span>Add context</span>
+          </button>
+
+          {/* Add Context Button Context Selector */}
+          <ContextSelector
+            isOpen={showAddContextSelector}
+            onClose={() => {
+              setShowAddContextSelector(false);
+              setMentionStartPosition(-1);
+            }}
+            onSelect={handleContextSelect}
+            className="absolute bottom-full left-0 z-50 mb-1"
           />
-        </MentionsInput>
+        </div>
+
+        <div className="relative mention-input">
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={(e) => {
+              // Handle backspace/delete for @mentions
+              if (e.key === 'Backspace' || e.key === 'Delete') {
+                const cursorPosition = textareaRef.current?.selectionStart || 0;
+                const textBeforeCursor = input.substring(0, cursorPosition);
+                const textAfterCursor = input.substring(cursorPosition);
+
+                // Check if we're inside or at the boundary of an @mention
+                const atIndex = textBeforeCursor.lastIndexOf('@');
+                if (atIndex !== -1) {
+                  const afterAt = textBeforeCursor.substring(atIndex);
+                  const mentionMatch = afterAt.match(/^@[^@\s]+/);
+
+                  if (mentionMatch && (e.key === 'Backspace' || e.key === 'Delete')) {
+                    e.preventDefault();
+
+                    // Remove the entire @mention
+                    const newValue = textBeforeCursor.substring(0, atIndex) + textAfterCursor;
+                    setInput(newValue);
+                    setLocalStorageInput(newValue);
+
+                    // Update cursor position
+                    setTimeout(() => {
+                      textareaRef.current?.setSelectionRange(atIndex, atIndex);
+                    }, 0);
+
+                    // Update mentions
+                    const mentionText = mentionMatch[0];
+                    const updatedMentions = confirmedMentions.filter(m => `@${m.title}` !== mentionText);
+                    onMentionsChange(updatedMentions);
+                    return;
+                  }
+                }
+              }
+
+              // Call the original handleKeyDown
+              handleKeyDown(e);
+            }}
+            placeholder="Ask, learn, write anything... (@ to mention documents, / to use tools)"
+            className={cn(
+              "flex min-h-[120px] w-full rounded-sm border border-border/50 bg-muted px-3 py-5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 focus-visible:border-border disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-colors overflow-hidden relative z-10 mention-textarea",
+              className
+            )}
+            rows={1}
+          />
+
+          {/* Overlay for styled @mentions */}
+          <div
+            className="absolute inset-0 px-3 py-5 text-sm pointer-events-none z-20 bg-transparent"
+            style={{
+              fontFamily: 'inherit',
+              fontSize: '14px',
+              lineHeight: '1.25rem',
+              wordWrap: 'break-word',
+              whiteSpace: 'pre-wrap',
+              overflowWrap: 'break-word'
+            }}
+          >
+            {input.split(/(@\w+)/g).map((part, index) => {
+              if (part.startsWith('@')) {
+                const mentionTitle = part.slice(1);
+                const isValidMention = confirmedMentions.some(m => m.title === mentionTitle);
+                if (isValidMention) {
+                  return (
+                    <span key={index} className="mention-tag">
+                      {part.slice(1)}
+                    </span>
+                  );
+                }
+                // For @mentions that are not in confirmedMentions, show them as normal text
+                // unless the context selector is open (indicating it's a pending mention)
+                const isPendingMention = showMentionContextSelector && part.length > 1;
+                if (isPendingMention) {
+                  return <span key={index} className="opacity-0 select-none">{part.replace(/./g, ' ')}</span>;
+                }
+                // Show @ as normal text
+                return <span key={index} className="text-foreground">{part}</span>;
+              }
+              return <span key={index} className="text-foreground">{part}</span>;
+            })}
+          </div>
+
+
+
+
+        </div>
+
+        {/* Mention Context Selector */}
+        <ContextSelector
+          isOpen={showMentionContextSelector}
+          onClose={() => {
+            setShowMentionContextSelector(false);
+            setMentionStartPosition(-1);
+            setMentionSelectorPosition(undefined);
+          }}
+          onSelect={handleContextSelect}
+          position={mentionSelectorPosition}
+        />
 
         <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
           {status === 'submitted' ? (
             <StopButton stop={stop} setMessages={setMessages} />
           ) : (
             <SendButton
-              input={inputValue}
+              input={input}
               submitForm={submitForm}
               uploadQueue={uploadQueue}
             />
@@ -455,6 +511,7 @@ export const MultimodalInput = memo(
     if (prevProps.input !== nextProps.input) return false;
     if (prevProps.status !== nextProps.status) return false;
     if (!equal(prevProps.attachments, nextProps.attachments)) return false;
+    if (!equal(prevProps.confirmedMentions, nextProps.confirmedMentions)) return false;
     return true;
   },
 );
@@ -500,7 +557,7 @@ function PureSendButton({
         event.preventDefault();
         submitForm();
       }}
-      disabled={input.trim().length === 0 || uploadQueue.length > 0} // Check input.trim()
+      disabled={input.trim().length === 0 || uploadQueue.length > 0}
     >
       <ArrowUpIcon size={14} />
     </Button>

@@ -38,14 +38,14 @@ export const Overview = () => {
         <div className="flex flex-col gap-3 text-sm text-muted-foreground">
           <p className="leading-relaxed">
             Press{' '}
-            <kbd className="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold text-primary bg-background border border-border rounded-md shadow-sm min-w-[30px] justify-center">
+            <kbd className="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold text-primary bg-background border border-border rounded-sm shadow-sm min-w-[30px] justify-center">
               TAB
             </kbd>{' '}
             to generate a suggestion.
           </p>
           <p className="leading-relaxed">
             Highlight text and press{' '}
-            <kbd className="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold text-primary bg-background border border-border rounded-md shadow-sm min-w-[70px] justify-center">
+            <kbd className="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold text-primary bg-background border border-border rounded-sm shadow-sm min-w-[70px] justify-center">
               ⌘/Ctrl + K
             </kbd>{' '}
             to edit.
@@ -53,7 +53,7 @@ export const Overview = () => {
           <p className="leading-relaxed">Send a message in the chat input below.</p>
           <p className="leading-relaxed">
             Hold{' '}
-            <kbd className="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold text-primary bg-background border border-border rounded-md shadow-sm min-w-[40px] justify-center">
+            <kbd className="inline-flex items-center px-2 py-1 text-xs font-mono font-semibold text-primary bg-background border border-border rounded-sm shadow-sm min-w-[40px] justify-center">
               Shift
             </kbd>{' '}
             and hover over text for synonyms.

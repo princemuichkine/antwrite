@@ -260,13 +260,6 @@ export function Chat({
   const wrappedSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (documentContextActive && messages.length === initialMessages.length) {
-      toast.success(`Using document context: ${documentTitle}`, {
-        icon: <FileText className="size-4" />,
-        duration: 3000,
-        id: `doc-context-${documentId}`,
-      });
-    }
 
     console.log('[Chat] Submitting with Model:', selectedChatModel);
 

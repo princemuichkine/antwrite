@@ -131,7 +131,7 @@ function PureChatHeader({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[--radix-popper-anchor-width] min-w-[280px]" sideOffset={4}>
           <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-            Recent Conversations
+            Recent conversations
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
 

@@ -124,6 +124,46 @@
   }
 }
 
+
+    /* Style @mentions in textarea inputs */
+    .mention-input {
+        position: relative;
+    }
+
+    .mention-textarea {
+        background: hsl(var(--muted)) !important;
+        position: relative;
+        z-index: 2;
+        color: transparent;
+    }
+
+    .mention-textarea::selection {
+        background: rgba(59, 130, 246, 0.3) !important;
+        color: transparent !important;
+    }
+
+    /* Style for @mention badges */
+    .mention-tag {
+        display: inline-block;
+        background: hsl(var(--primary) / 0.1);
+        color: hsl(var(--primary));
+        border: 1px solid hsl(var(--primary) / 0.2);
+        border-radius: 0.15rem;
+        padding: 0.0015rem 0.20rem;
+        margin: 0 0.005rem;
+        font-size: 0.875em;
+        font-weight: 500;
+        white-space: nowrap;
+        user-select: all;
+        cursor: pointer;
+    }
+
+    .dark .mention-tag {
+        background: rgba(59, 130, 246, 0.2);
+        color: rgb(147, 197, 253);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
 .editor-area {
     background: hsl(8% 1% 99%);
 }

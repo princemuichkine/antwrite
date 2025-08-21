@@ -14,20 +14,7 @@ interface SuggestedActionsProps {
 
 function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   // Empty suggested actions - no hardcoded presets
-  return (
-    <div
-      data-testid="suggested-actions"
-      className="flex items-center justify-center w-full"
-    >
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-sm text-muted-foreground py-1"
-      >
-        Type a message to start a conversation
-      </motion.p>
-    </div>
-  );
+  return null;
 }
 
 export const SuggestedActions = memo(PureSuggestedActions, () => true);
