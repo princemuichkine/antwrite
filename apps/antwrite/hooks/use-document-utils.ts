@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useArtifact } from './use-artifact';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { generateUUID } from '@/lib/utils';
 import { useSidebar } from '@/components/ui/sidebar';
 import type { ArtifactKind } from '@/components/artifact';
@@ -64,7 +64,7 @@ export function useDocumentUtils() {
       router.refresh();
     } catch (error) {
       console.error('Error creating new document:', error);
-      toast.error('Failed to create new document');
+      toast({ type: 'error', description: 'Failed to create new document' });
     } finally {
       setIsCreatingChat(false);
     }
@@ -124,18 +124,16 @@ export function useDocumentUtils() {
         setOpenMobile(false);
       }
 
-      toast.success('Document created', {
-        id: 'document-created',
-        duration: 2000,
-      });
+      toast({ type: 'success', description: 'Document created' });
 
       router.push(`/documents/${newDocId}`);
     } catch (error) {
       console.error('[Document] Error creating document:', error);
 
-      toast.error('Failed to create document', {
-        description: error instanceof Error ? error.message : String(error),
-        duration: 5000,
+      toast({
+        type: 'error',
+        description:
+          error instanceof Error ? error.message : String(error),
       });
     } finally {
       setTimeout(() => {
@@ -153,7 +151,7 @@ export function useDocumentUtils() {
       return;
 
     if (!newTitle.trim()) {
-      toast.error('Document title cannot be empty');
+      toast({ type: 'error', description: 'Document title cannot be empty' });
       return;
     }
 
@@ -199,14 +197,10 @@ export function useDocumentUtils() {
         );
       }
 
-      toast.success('Document renamed', {
-        duration: 2000,
-      });
+      toast({ type: 'success', description: 'Document renamed' });
     } catch (error: any) {
       console.error('Error renaming document:', error);
-      toast.error('Failed to rename document', {
-        description: error.message,
-      });
+      toast({ type: 'error', description: error.message });
     } finally {
       setIsRenamingDocument(false);
     }
@@ -265,7 +259,7 @@ export function useDocumentUtils() {
       return document;
     } catch (error) {
       console.error('[useDocumentUtils] Error creating document:', error);
-      toast.error('Failed to create document');
+      toast({ type: 'error', description: 'Failed to create document' });
       return null;
     } finally {
       setIsCreatingDocument(false);
@@ -314,7 +308,7 @@ export function useDocumentUtils() {
       return document;
     } catch (error) {
       console.error('[useDocumentUtils] Error loading document:', error);
-      toast.error('Failed to load document');
+      toast({ type: 'error', description: 'Failed to load document' });
       return null;
     }
   };
@@ -334,7 +328,7 @@ export function useDocumentUtils() {
           '[useDocumentUtils] Invalid document ID for deletion:',
           documentId,
         );
-        toast.error('Cannot delete: Invalid document ID');
+        toast({ type: 'error', description: 'Cannot delete: Invalid document ID' });
         return false;
       }
 
@@ -359,11 +353,11 @@ export function useDocumentUtils() {
         router.refresh();
       }
 
-      toast.success('Document deleted');
+      toast({ type: 'success', description: 'Document deleted' });
       return true;
     } catch (error) {
       console.error('[useDocumentUtils] Error deleting document:', error);
-      toast.error('Failed to delete document');
+      toast({ type: 'error', description: 'Failed to delete document' });
       return false;
     }
   };

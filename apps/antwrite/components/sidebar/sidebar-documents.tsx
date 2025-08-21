@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { User } from '@/lib/auth';
 import { memo, useCallback, useEffect, useState, useMemo } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { cn, fetcher } from '@/lib/utils';
 import {
   MoreHorizontalIcon,
@@ -693,13 +693,19 @@ export function SidebarDocuments({
       setSelectedDocuments(new Set());
       setIsSelectionMode(false);
 
-      toast.success(`${selectedDocumentIds.length} documents deleted`);
+      toast({
+        type: 'success',
+        description: `${selectedDocumentIds.length} documents deleted`,
+      });
     } catch (error) {
       console.error(
         '[SidebarDocuments] Error deleting multiple documents:',
         error,
       );
-      toast.error('Failed to delete some documents');
+      toast({
+        type: 'error',
+        description: 'Failed to delete some documents',
+      });
 
       mutate();
     }
@@ -741,10 +747,16 @@ export function SidebarDocuments({
         }));
       }, false);
 
-      toast.success(isStarred ? 'Document starred' : 'Document unstarred');
+      toast({
+        type: 'success',
+        description: isStarred ? 'Document starred' : 'Document unstarred',
+      });
     } catch (error: any) {
       console.error('Error toggling star:', error);
-      toast.error(error.message || 'Failed to toggle star');
+      toast({
+        type: 'error',
+        description: error.message || 'Failed to toggle star',
+      });
     } finally {
       setIsStarring(false);
     }
@@ -779,7 +791,10 @@ export function SidebarDocuments({
       // Refresh the documents list to show the new clone
       mutate();
 
-      toast.success('Document cloned successfully');
+      toast({
+        type: 'success',
+        description: 'Document cloned successfully',
+      });
 
       // Navigate to the cloned document
       if (result.document?.id) {
@@ -787,7 +802,10 @@ export function SidebarDocuments({
       }
     } catch (error: any) {
       console.error('Error cloning document:', error);
-      toast.error(error.message || 'Failed to clone document');
+      toast({
+        type: 'error',
+        description: error.message || 'Failed to clone document',
+      });
     } finally {
       setIsCloning(false);
     }
@@ -804,9 +822,15 @@ export function SidebarDocuments({
         body: JSON.stringify({ folderId }),
       });
       mutate();
-      toast.success('Document moved');
+      toast({
+        type: 'success',
+        description: 'Document moved',
+      });
     } catch (error) {
-      toast.error('Failed to move document');
+      toast({
+        type: 'error',
+        description: 'Failed to move document',
+      });
     }
   };
 
@@ -829,12 +853,18 @@ export function SidebarDocuments({
       }
 
       mutateFolders(); // Re-fetch folders
-      toast.success(`Folder "${name}" created`);
+      toast({
+        type: 'success',
+        description: `Folder "${name}" created`,
+      });
       setNewFolderName('');
       setIsCreateFolderOpen(false);
     } catch (error) {
       console.error('[SidebarDocuments] Error creating folder:', error);
-      toast.error('Failed to create folder');
+      toast({
+        type: 'error',
+        description: 'Failed to create folder',
+      });
     } finally {
       setIsCreatingFolder(false);
     }
@@ -868,9 +898,15 @@ export function SidebarDocuments({
         body: JSON.stringify({ newName }),
       });
       mutateFolders();
-      toast.success(`Folder renamed to "${newName}"`);
+      toast({
+        type: 'success',
+        description: `Folder renamed to "${newName}"`,
+      });
     } catch (error) {
-      toast.error('Failed to rename folder');
+      toast({
+        type: 'error',
+        description: 'Failed to rename folder',
+      });
     } finally {
       setRenameDialogState({
         isOpen: false,
@@ -894,9 +930,15 @@ export function SidebarDocuments({
       });
       mutateFolders();
       mutate(); // Re-fetch documents as well
-      toast.success('Folder cloned');
+      toast({
+        type: 'success',
+        description: 'Folder cloned',
+      });
     } catch (error) {
-      toast.error('Failed to clone folder');
+      toast({
+        type: 'error',
+        description: 'Failed to clone folder',
+      });
     }
   };
 
@@ -909,9 +951,15 @@ export function SidebarDocuments({
       });
       mutateFolders();
       mutate(); // Re-fetch documents to update their folderId to null
-      toast.success('Folder deleted');
+      toast({
+        type: 'success',
+        description: 'Folder deleted',
+      });
     } catch (error) {
-      toast.error('Failed to delete folder');
+      toast({
+        type: 'error',
+        description: 'Failed to delete folder',
+      });
     } finally {
       setShowDeleteFolderDialog(false);
       setDeleteFolderId(null);
@@ -933,9 +981,15 @@ export function SidebarDocuments({
 
       mutateFolders();
       mutate();
-      toast.success(`${folderIds.length} folders deleted`);
+      toast({
+        type: 'success',
+        description: `${folderIds.length} folders deleted`,
+      });
     } catch (error) {
-      toast.error('Failed to delete some folders');
+      toast({
+        type: 'error',
+        description: 'Failed to delete some folders',
+      });
     } finally {
       setSelectedFolders(new Set());
       setIsFolderSelectionMode(false);
@@ -1011,7 +1065,10 @@ export function SidebarDocuments({
         setOpenMobile(false);
       } catch (error) {
         console.error('[SidebarDocuments] Error selecting document:', error);
-        toast.error('Failed to load document');
+        toast({
+          type: 'error',
+          description: 'Failed to load document',
+        });
         setArtifact((curr: any) => ({ ...curr, status: 'idle' }));
       }
     },

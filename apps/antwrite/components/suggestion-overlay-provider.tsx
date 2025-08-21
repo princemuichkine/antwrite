@@ -10,7 +10,7 @@ import {
 } from 'react';
 import SuggestionOverlay from './suggestion-overlay';
 import { useArtifact } from '@/hooks/use-artifact';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { getActiveEditorView } from '@/lib/editor/editor-state';
 import {
   ACTIVATE_SUGGESTION_CONTEXT,
@@ -121,7 +121,7 @@ export function SuggestionOverlayProvider({
   const handleAcceptSuggestion = useCallback(
     (suggestion: string) => {
       if (!artifact.documentId || artifact.documentId === 'init') {
-        toast.error('Cannot apply suggestion: No document loaded.');
+        toast({ type: 'default', description: 'Cannot apply suggestion: No document loaded.' });
         return;
       }
 
@@ -142,9 +142,9 @@ export function SuggestionOverlayProvider({
         closeSuggestionOverlay(); // This will also handle deactivating plugin state
       } else {
         if (!selectionRange) {
-          toast.warning('Cannot apply suggestion: Text range not captured.');
+          toast({ type: 'default', description: 'Cannot apply suggestion: Text range not captured.' });
         } else {
-          toast.warning('Cannot apply suggestion: No text was selected.');
+          toast({ type: 'default', description: 'Cannot apply suggestion: No text was selected.' });
         }
       }
     },
@@ -211,13 +211,13 @@ export function SuggestionOverlayProvider({
               to,
             });
           } else {
-            toast.info('Select text in the editor before pressing Cmd+K.');
+            toast({ type: 'default', description: 'Select text in the editor before pressing Cmd+K.' });
           }
         } else {
           console.warn(
             '[Provider] Cmd+K pressed, but no active editor view found.',
           );
-          toast.error('Cannot open suggestion overlay: Editor not active.');
+          toast({ type: 'error', description: 'Cannot open suggestion overlay: Editor not active.' });
         }
       }
     };
@@ -243,7 +243,7 @@ export function SuggestionOverlayProvider({
           selectedText={selectedText}
           position={position}
           onAcceptSuggestion={handleAcceptSuggestion}
-          // highlightedTextProps is no longer needed as the plugin handles highlighting
+        // highlightedTextProps is no longer needed as the plugin handles highlighting
         />
       )}
     </SuggestionOverlayContext.Provider>

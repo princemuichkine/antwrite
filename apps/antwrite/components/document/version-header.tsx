@@ -10,7 +10,7 @@ import {
   isYesterday,
   differenceInDays,
 } from 'date-fns';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 
 import type { Document } from '@antwrite/db';
 import { getDocumentTimestampByIndex } from '@/lib/utils';
@@ -45,7 +45,10 @@ export const VersionHeader = ({
       currentVersionIndex < 0 ||
       currentVersionIndex >= documents.length
     ) {
-      toast.error('Invalid version selected');
+      toast({
+        type: 'error',
+        description: 'Invalid version selected',
+      });
       return;
     }
 
@@ -93,10 +96,10 @@ export const VersionHeader = ({
       });
       window.dispatchEvent(event);
 
-      toast.success('Version restored successfully');
+      toast({ type: 'success', description: 'Version restored successfully' });
     } catch (error) {
       console.error('[Version] Error restoring version:', error);
-      toast.error('Failed to restore version');
+      toast({ type: 'error', description: 'Failed to restore version' });
     } finally {
       setIsMutating(false);
     }

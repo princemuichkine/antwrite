@@ -9,7 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../ui/tooltip';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 
 export function PureMessageActions({
   chatId,
@@ -41,7 +41,10 @@ export function PureMessageActions({
                     ? message.content
                     : JSON.stringify(message.content);
                 await copyToClipboard(content);
-                toast.success('Copied to clipboard!');
+                toast({
+                  type: 'success',
+                  description: 'Copied to clipboard!',
+                });
               }}
             >
               <CopyIcon />

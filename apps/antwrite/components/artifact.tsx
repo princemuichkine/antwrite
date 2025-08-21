@@ -22,7 +22,7 @@ import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { Button } from './ui/button';
 import { CheckIcon } from './icons';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { Input } from './ui/input';
 import { useDocumentUtils } from '@/hooks/use-document-utils';
 import { Pencil as PencilIcon, X as XIcon } from 'lucide-react';
@@ -159,7 +159,10 @@ export function PureArtifact({
     if (!documents || documents.length === 0) {
       if (documentsError) {
         console.error('[Artifact] Error loading documents:', documentsError);
-        toast.error('Failed to load document');
+        toast({
+          type: 'error',
+          description: 'Failed to load document',
+        });
       }
       return;
     }
@@ -261,7 +264,10 @@ export function PureArtifact({
           error instanceof Error ? error.message : 'Unknown error occurred',
         );
         consecutiveErrorsRef.current++;
-        toast.error('Failed to save document. Please try again.');
+        toast({
+          type: 'error',
+          description: 'Failed to save document. Please try again.',
+        });
       }
     },
     [
@@ -408,7 +414,10 @@ export function PureArtifact({
   // Function to handle saving the document title
   const handleSaveTitle = async () => {
     if (!newTitle.trim()) {
-      toast.error('Please enter a document title');
+      toast({
+        type: 'error',
+        description: 'Please enter a document title',
+      });
       return;
     }
 
@@ -468,54 +477,54 @@ export function PureArtifact({
             initial={
               isMobile
                 ? {
-                    opacity: 1,
-                    x: artifact.boundingBox.left,
-                    y: artifact.boundingBox.top,
-                    height: artifact.boundingBox.height,
-                    width: artifact.boundingBox.width,
-                    borderRadius: 50,
-                  }
+                  opacity: 1,
+                  x: artifact.boundingBox.left,
+                  y: artifact.boundingBox.top,
+                  height: artifact.boundingBox.height,
+                  width: artifact.boundingBox.width,
+                  borderRadius: 50,
+                }
                 : {
-                    opacity: 1,
-                    x: artifact.boundingBox.left,
-                    y: artifact.boundingBox.top,
-                    height: artifact.boundingBox.height,
-                    width: artifact.boundingBox.width,
-                    borderRadius: 50,
-                  }
+                  opacity: 1,
+                  x: artifact.boundingBox.left,
+                  y: artifact.boundingBox.top,
+                  height: artifact.boundingBox.height,
+                  width: artifact.boundingBox.width,
+                  borderRadius: 50,
+                }
             }
             animate={
               isMobile
                 ? {
-                    opacity: 1,
-                    x: 0,
-                    y: 0,
-                    height: windowHeight,
-                    width: windowWidth ? windowWidth : 'calc(100dvw)',
-                    borderRadius: 0,
-                    transition: {
-                      delay: 0,
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 30,
-                      duration: 5000,
-                    },
-                  }
+                  opacity: 1,
+                  x: 0,
+                  y: 0,
+                  height: windowHeight,
+                  width: windowWidth ? windowWidth : 'calc(100dvw)',
+                  borderRadius: 0,
+                  transition: {
+                    delay: 0,
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 30,
+                    duration: 5000,
+                  },
+                }
                 : {
-                    opacity: 1,
-                    x: 0,
-                    y: 0,
-                    height: windowHeight,
-                    width: windowWidth,
-                    borderRadius: 0,
-                    transition: {
-                      delay: 0,
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 30,
-                      duration: 5000,
-                    },
-                  }
+                  opacity: 1,
+                  x: 0,
+                  y: 0,
+                  height: windowHeight,
+                  width: windowWidth,
+                  borderRadius: 0,
+                  transition: {
+                    delay: 0,
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 30,
+                    duration: 5000,
+                  },
+                }
             }
             exit={{
               opacity: 0,
@@ -533,9 +542,9 @@ export function PureArtifact({
                     setArtifact((currentArtifact) =>
                       currentArtifact.status === 'streaming'
                         ? {
-                            ...currentArtifact,
-                            isVisible: false,
-                          }
+                          ...currentArtifact,
+                          isVisible: false,
+                        }
                         : { ...currentArtifact, isVisible: false },
                     );
                   }}

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { X, Check, ChevronDown, GripVertical, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { cn } from '@/lib/utils';
 import { useAiOptionsValue } from '@/hooks/ai-options';
 import { useSuggestionOverlay } from './suggestion-overlay-provider';
@@ -266,13 +266,19 @@ export default function SuggestionOverlay({
   const handleSubmitPrompt = useCallback(
     async (prompt: string) => {
       if (!documentId) {
-        toast.error('No document is currently open');
+        toast({
+          type: 'error',
+          description: 'No document is currently open',
+        });
         return;
       }
 
       // Don't proceed if no text was selected for suggestion context
       if (!selectedText || selectedText.trim() === '') {
-        toast.warning('Please select text to generate a suggestion for');
+        toast({
+          type: 'notice',
+          description: 'Please select text to generate a suggestion for',
+        });
         return;
       }
 

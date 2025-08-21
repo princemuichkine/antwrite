@@ -16,7 +16,7 @@ import { animations } from '@/lib/utils/lottie-animations';
 import type { Document } from '@antwrite/db';
 import type { User } from '@/lib/auth';
 import useSWR from 'swr';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import useSWRMutation from 'swr/mutation';
 import { Paywall } from '@/components/paywall';
 import { googleFonts, type FontOption } from '@/lib/fonts';
@@ -245,7 +245,6 @@ export function PublishSettingsMenu({
   );
 
   const handleToggle = useCallback(() => {
-    toast.dismiss();
     const newVisibility = (
       document.visibility === 'public' ? 'private' : 'public'
     ) as 'public' | 'private';
@@ -271,7 +270,10 @@ export function PublishSettingsMenu({
       .then((updated: Document) => onUpdate(updated))
       .catch((e: Error) => {
         onUpdate(document);
-        toast.error(e.message);
+        toast({
+          type: 'error',
+          description: e.message,
+        });
       });
   }, [
     document,
@@ -284,7 +286,6 @@ export function PublishSettingsMenu({
   ]);
 
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    toast.dismiss();
     const formattedSlug = e.target.value
       .toLowerCase()
       .replace(/\s+/g, '-')

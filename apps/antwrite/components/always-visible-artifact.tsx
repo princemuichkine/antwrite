@@ -19,7 +19,7 @@ import { ArtifactActions } from '@/components/artifact-actions';
 import { VersionHeader } from '@/components/document/version-header';
 import { useDocumentUtils } from '@/hooks/use-document-utils';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { Input } from './ui/input';
 import { useDocumentContext } from '@/hooks/use-document-context';
 import type { ArtifactKind } from '@/components/artifact';
@@ -238,7 +238,10 @@ export function AlwaysVisibleArtifact({
       try {
         await renameDocument(trimmedNewTitle);
       } catch (error) {
-        toast.error('Failed to rename document.');
+        toast({
+          type: 'error',
+          description: 'Failed to rename document.',
+        });
         setDocuments(originalDocuments);
         console.error('Rename failed:', error);
       } finally {
@@ -315,7 +318,10 @@ export function AlwaysVisibleArtifact({
         });
       } catch (error) {
         console.error('Error creating document with specific ID:', error);
-        toast.error('Failed to create document');
+        toast({
+          type: 'error',
+          description: 'Failed to create document',
+        });
       }
     },
     [isCreatingDocument, createDocument],
@@ -336,7 +342,10 @@ export function AlwaysVisibleArtifact({
         });
       } catch (error) {
         console.error('Error creating document from editor:', error);
-        toast.error('Failed to create document');
+        toast({
+          type: 'error',
+          description: 'Failed to create document',
+        });
       }
     },
     [isCreatingDocument, initialDocumentId, createDocument],

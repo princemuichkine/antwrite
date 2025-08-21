@@ -7,7 +7,7 @@ import { ChatHeader } from '@/components/chat/chat-header';
 import { generateUUID } from '@/lib/utils';
 import { MultimodalInput } from './multimodal-input';
 import { Messages } from './messages';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { Loader2 } from 'lucide-react';
 import { useDocumentContext } from '@/hooks/use-document-context';
 import type { MentionedDocument } from './multimodal-input';
@@ -190,7 +190,10 @@ export function Chat({
           `[Chat useEffect] CATCH BLOCK - Error loading chat ${idToLoad}:`,
           error,
         );
-        toast.error(`Failed to load chat history for ${idToLoad}`);
+        toast({
+          type: 'error',
+          description: `Failed to load chat history for ${idToLoad}`,
+        });
         setMessages(initialMessages);
         setInput('');
       } finally {

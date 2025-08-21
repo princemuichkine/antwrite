@@ -4,7 +4,7 @@ import { artifactDefinitions, type UIArtifact } from './artifact';
 import { type Dispatch, memo, type SetStateAction, useState } from 'react';
 import type { ArtifactActionContext } from './create-artifact';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { Loader2, Copy as CopyIcon } from 'lucide-react';
 
 interface ArtifactActionsProps {
@@ -42,7 +42,10 @@ function PureArtifactActions({
         icon: <CopyIcon size={16} />,
         onClick: () => {
           navigator.clipboard.writeText(artifact.content);
-          toast.success('Copied to clipboard!');
+          toast({
+            type: 'default',
+            description: 'Copied to clipboard!',
+          });
         },
       },
     ];
@@ -125,7 +128,10 @@ function PureArtifactActions({
                   try {
                     await Promise.resolve(action.onClick(actionContext));
                   } catch (error) {
-                    toast.error('Failed to execute action');
+                    toast({
+                      type: 'error',
+                      description: 'Failed to execute action',
+                    });
                   } finally {
                     setIsLoading(false);
                   }

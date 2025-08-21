@@ -4,7 +4,7 @@ import { Artifact } from '@/components/create-artifact';
 import { DiffView } from '@/components/document/diffview';
 import { Editor } from '@/components/document/text-editor';
 import { ClockRewind, RedoIcon, UndoIcon, CopyIcon } from '@/components/icons';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Markdown } from '@/components/markdown';
 
@@ -111,7 +111,7 @@ export const textArtifact = new Artifact<'text', TextArtifactMetadata>({
       description: 'Copy',
       onClick: ({ content }) => {
         navigator.clipboard.writeText(content);
-        toast.success('Copied to clipboard!');
+        toast({ type: 'default', description: 'Copied to clipboard!' });
       },
     },
   ],

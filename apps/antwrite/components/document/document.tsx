@@ -11,7 +11,7 @@ import {
   CheckCircleFillIcon,
   CrossIcon,
 } from '@/components/icons';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { useArtifact } from '@/hooks/use-artifact';
 import { Button } from '@/components/ui/button';
 
@@ -103,7 +103,7 @@ function PureDocumentToolResult({
     // Optimistically apply locally
     setArtifact((current) => ({
       ...current,
-      content: result.newContent,
+      content: result.newContent!,
     }));
     window.dispatchEvent(
       new CustomEvent('apply-document-update', {
@@ -125,7 +125,10 @@ function PureDocumentToolResult({
       })
       .catch((err) => {
         console.error('[DocumentToolResult] Save update error:', err);
-        toast.error(`Failed to save update: ${err.message}`);
+        toast({
+          type: 'error',
+          description: `Failed to save update: ${err.message}`,
+        });
       })
       .finally(() => {
         setIsSaving(false);
@@ -143,7 +146,7 @@ function PureDocumentToolResult({
       },
     });
     window.dispatchEvent(event);
-    toast.info('Update proposal rejected.');
+    toast({ type: 'default', description: 'Update proposal rejected.' });
   }, [result.id, result.originalContent, type]);
 
   if (result.error) {

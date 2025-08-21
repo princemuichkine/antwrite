@@ -2,7 +2,7 @@
 
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { sendFeedbackToDiscord } from '@/lib/actions/feedback';
 import { authClient } from '@/lib/auth-client';
 import { CheckCircle as SealCheck, Loader2 as Spinner } from 'lucide-react';
@@ -52,7 +52,10 @@ export function FeedbackWidget({ className }: { className?: string }) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!userId) {
-      toast.error('Please login to submit feedback');
+      toast({
+        type: 'error',
+        description: 'Please login to submit feedback',
+      });
       return;
     }
 
@@ -80,9 +83,10 @@ export function FeedbackWidget({ className }: { className?: string }) {
       }, 2500);
     } catch (error: any) {
       console.error('Error submitting feedback:', error);
-      toast.error(
-        `Error submitting feedback: ${error.message || 'Unknown error sending to Discord'}`,
-      );
+      toast({
+        type: 'error',
+        description: `Error submitting feedback: ${error.message || 'Unknown error sending to Discord'}`,
+      });
       setStatus('error');
     }
   };

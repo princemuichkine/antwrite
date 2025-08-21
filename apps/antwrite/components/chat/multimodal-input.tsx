@@ -13,7 +13,7 @@ import {
   memo,
   useLayoutEffect,
 } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/toast';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 import { sanitizeUIMessages, cn } from '@/lib/utils';
 import { ArrowUpIcon, StopIcon, FileIcon, CrossIcon } from '../icons';
@@ -418,9 +418,15 @@ function PureMultimodalInput({
         };
       }
       const { error } = await response.json();
-      toast.error(error);
+      toast({
+        type: 'error',
+        description: error.message,
+      });
     } catch (error) {
-      toast.error('Failed to upload file, please try again!');
+      toast({
+        type: 'error',
+        description: 'Failed to upload file, please try again!',
+      });
     }
   };
 
@@ -461,7 +467,10 @@ function PureMultimodalInput({
       if (status === 'ready' && input.trim() !== '') {
         submitForm();
       } else if (status !== 'ready') {
-        toast.error('Please wait for the model to finish its response!');
+        toast({
+          type: 'error',
+          description: 'Please wait for the model to finish its response!',
+        });
       }
     }
 
