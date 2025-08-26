@@ -110,7 +110,7 @@ export function ResizablePanel({
   }, [isResizing, minSize, maxSize, side, setSidebarOpen]);
 
   return (
-    <div className="flex flex-row h-full">
+    <div className="flex flex-row h-full" data-resizable-panel>
       {/* Left side panel */}
       {side === 'left' && (
         <div
@@ -134,6 +134,7 @@ export function ResizablePanel({
             ? 'bg-primary/30'
             : 'hover:bg-primary/10 dark:hover:bg-primary/20',
         )}
+        data-resizable-panel
       >
         <GripVertical
           className={cn(
@@ -178,6 +179,7 @@ export function ResizablePanel({
                   setSidebarOpen(true);
                 }
               }}
+              data-resizable-panel
             />
           )}
         </>

@@ -42,11 +42,13 @@ export const AuthGuardProvider = ({
     if (!isGuest) return;
 
     const handleClick = (e: Event) => {
-      // Don't trigger on the auth modal itself, theme toggle, or if modal just closed
+      // Don't trigger on the auth modal itself, theme toggle, sidebar components, or if modal just closed
       const target = e.target as HTMLElement;
       if (
         target.closest('[data-auth-modal]') ||
         target.closest('[data-theme-toggle]') ||
+        target.closest('[data-sidebar]') ||
+        target.closest('[data-resizable-panel]') ||
         modalJustClosed
       )
         return;

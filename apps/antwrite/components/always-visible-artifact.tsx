@@ -490,7 +490,7 @@ export function AlwaysVisibleArtifact({
               onUpdate={handleDocumentUpdate}
             />
           )}
-          <AiSettingsMenu />
+          {!user?.email?.includes('guest') && <AiSettingsMenu />}
           <SidebarTrigger side="right" />
         </div>
       </div>
@@ -520,7 +520,7 @@ export function AlwaysVisibleArtifact({
                 initialLastSaved={
                   latestDocument ? new Date(latestDocument.updatedAt) : null
                 }
-                onStatusChange={(newSaveState: SaveState) => {}}
+                onStatusChange={(newSaveState: SaveState) => { }}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
               />
             </Suspense>

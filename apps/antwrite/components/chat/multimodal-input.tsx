@@ -22,6 +22,7 @@ import { SuggestedActions } from '../suggested-actions';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { useDocumentContext } from '@/hooks/use-document-context';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
 
 import { Badge } from '../ui/badge';
 import { ContextSelector, type ContextItem } from '../context-selector';
@@ -83,6 +84,7 @@ function PureMultimodalInput({
   const { width } = useWindowSize();
   const { documentId: activeDocumentId, documentTitle: activeDocumentTitle } =
     useDocumentContext();
+  const { isGuest } = useAuthGuard();
   const badgesContainerRef = useRef<HTMLDivElement>(null);
   const atButtonContainerRef = useRef<HTMLDivElement>(null);
   const measurementRef = useRef<HTMLDivElement>(null);
@@ -202,6 +204,11 @@ function PureMultimodalInput({
       : 0;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // Prevent guest users from typing anything
+    if (isGuest) {
+      return;
+    }
+
     const newValue = e.target.value;
     setInput(newValue);
     setLocalStorageInput(newValue);
@@ -380,6 +387,8 @@ function PureMultimodalInput({
 
   // Handle Add Context button click
   const handleAddContextClick = () => {
+    if (isGuest) return;
+
     setMentionStartPosition(input.length);
     setShowAddContextSelector(true);
     setShowMentionContextSelector(false); // Close mention selector if open
@@ -457,6 +466,11 @@ function PureMultimodalInput({
   );
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Prevent guest users from any keyboard input
+    if (isGuest) {
+      return;
+    }
+
     if (
       event.key === 'Enter' &&
       !event.shiftKey &&
@@ -530,9 +544,11 @@ function PureMultimodalInput({
             <button
               type="button"
               onClick={handleAddContextClick}
+              disabled={isGuest}
               className={cn(
                 'add-context-button flex items-center gap-1 text-xs text-accent-foreground bg-background/30 hover:bg-accent/30 transition-colors rounded-sm border border-border/30 opacity-60 hover:opacity-100 h-6',
                 confirmedMentions.length > 0 ? 'px-1.5' : 'px-2',
+                isGuest && 'opacity-30 cursor-not-allowed',
               )}
             >
               <span className="text-base leading-none">@</span>
@@ -609,6 +625,7 @@ function PureMultimodalInput({
               ref={textareaRef}
               value={input}
               onChange={handleInputChange}
+              disabled={isGuest}
               onKeyDown={(e) => {
                 // Handle backspace for @mentions
                 if (e.key === 'Backspace') {
@@ -659,7 +676,7 @@ function PureMultimodalInput({
                 // Call the original handleKeyDown for other keys like Enter, Escape
                 handleKeyDown(e);
               }}
-              placeholder="Ask, learn, write anything..."
+              placeholder={isGuest ? "Sign up to start chatting..." : "Ask, learn, write anything..."}
               className={cn(
                 'flex min-h-[60px] h-60px max-h-[350px] w-full bg-transparent p-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-auto relative z-10 mention-textarea text-transparent caret-black dark:caret-white',
                 className,
@@ -733,6 +750,7 @@ function PureMultimodalInput({
             <ChatModeSelector
               selectedMode={chatMode}
               onModeChange={onChatModeChange}
+              disabled={isGuest}
             />
             <ModelSelector
               selectedModelId={selectedModelId}
@@ -740,6 +758,7 @@ function PureMultimodalInput({
               minimal={true}
               open={isModelSelectorOpen}
               onOpenChange={handleModelSelectorOpenChange}
+              disabled={isGuest}
             />
           </div>
           <div>
@@ -750,6 +769,7 @@ function PureMultimodalInput({
                 input={input}
                 submitForm={submitForm}
                 uploadQueue={uploadQueue}
+                isGuest={isGuest}
               />
             )}
           </div>
@@ -830,12 +850,14 @@ function PureSendButton({
   submitForm,
   input,
   uploadQueue,
+  isGuest,
 }: {
   submitForm: () => void;
   input: string;
   uploadQueue: Array<string>;
+  isGuest: boolean;
 }) {
-  const isDisabled = input.trim().length === 0 || uploadQueue.length > 0;
+  const isDisabled = input.trim().length === 0 || uploadQueue.length > 0 || isGuest;
 
   return (
     <Button
@@ -859,5 +881,6 @@ const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.uploadQueue.length !== nextProps.uploadQueue.length)
     return false;
   if (prevProps.input !== nextProps.input) return false;
+  if (prevProps.isGuest !== nextProps.isGuest) return false;
   return true;
 });

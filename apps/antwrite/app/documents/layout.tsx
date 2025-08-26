@@ -6,6 +6,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import { getCurrentDocumentsByUserId } from '@/lib/db/queries';
+import { AuthGuardProvider } from '@/hooks/use-auth-guard';
 
 export const experimental_ppr = true;
 
@@ -36,28 +37,29 @@ export default async function DocumentsLayout({
   }
 
   return (
-    <SidebarProvider
-      defaultOpenLeft={!isLeftSidebarCollapsed}
-      defaultOpenRight={true}
-      disableLeftToggle={isGuest}
-    >
-      <div className="flex flex-row h-dvh w-full bg-background">
-        <AppSidebar user={user} initialDocuments={documents} />
-        <main className="flex-1 flex flex-row min-w-0">
-          <div className="flex-1 min-w-0 overflow-hidden border-r subtle-border">
-            {children}
-          </div>
-          <ResizablePanel
-            side="right"
-            defaultSize={400}
-            minSize={300}
-            maxSize={600}
-            className="border-l subtle-border transition-all duration-200"
-          >
-            <Chat initialMessages={[]} />
-          </ResizablePanel>
-        </main>
-      </div>
-    </SidebarProvider>
+    <AuthGuardProvider initialIsGuest={isGuest}>
+      <SidebarProvider
+        defaultOpenLeft={!isLeftSidebarCollapsed}
+        defaultOpenRight={true}
+      >
+        <div className="flex flex-row h-dvh w-full bg-background">
+          <AppSidebar user={user} initialDocuments={documents} />
+          <main className="flex-1 flex flex-row min-w-0">
+            <div className="flex-1 min-w-0 overflow-hidden border-r subtle-border">
+              {children}
+            </div>
+            <ResizablePanel
+              side="right"
+              defaultSize={400}
+              minSize={300}
+              maxSize={600}
+              className="border-l subtle-border transition-all duration-200"
+            >
+              <Chat initialMessages={[]} />
+            </ResizablePanel>
+          </main>
+        </div>
+      </SidebarProvider>
+    </AuthGuardProvider>
   );
 }

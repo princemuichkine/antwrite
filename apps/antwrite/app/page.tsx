@@ -54,7 +54,6 @@ export default async function HomePage() {
       <SidebarProvider
         defaultOpenLeft={!isLeftSidebarCollapsed}
         defaultOpenRight={true}
-        disableLeftToggle={isGuest}
       >
         <div className="flex flex-row h-dvh w-full bg-background">
           <AppSidebar user={appUser} initialDocuments={documents} />
