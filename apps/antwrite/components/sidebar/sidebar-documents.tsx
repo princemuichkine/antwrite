@@ -68,11 +68,11 @@ const DocumentDragPreview = ({
   count: number;
 }) => {
   return (
-    <div className="flex items-center gap-2 rounded-md border bg-sidebar p-2 text-sm text-sidebar-foreground shadow-lg">
+    <div className="flex items-center gap-2 rounded-sm border bg-sidebar p-2 text-sm text-sidebar-foreground shadow-lg">
       <File className="size-4 shrink-0" />
       <span className="truncate max-w-48">{document.title}</span>
       {count > 3 && (
-        <span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+        <span className="ml-auto flex size-5 items-center justify-center rounded-sm bg-primary text-xs text-primary-foreground">
           {count}
         </span>
       )}

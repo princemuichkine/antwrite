@@ -110,10 +110,10 @@ export function PublishSettingsMenu({
   useEffect(() => {
     setSlug(
       document.slug ||
-        document.title
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, ''),
+      document.title
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, ''),
     );
     const styleObj = (document.style as any) || {};
     setFont(styleObj.font || 'montserrat');
@@ -407,10 +407,10 @@ export function PublishSettingsMenu({
                     <div className="flex items-center border-l border-input bg-background">
                       {(usernameLoading ||
                         (usernameCheck.checking && !hasUsername)) && (
-                        <div className="flex items-center justify-center size-8">
-                          <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                        </div>
-                      )}
+                          <div className="flex items-center justify-center size-8">
+                            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                          </div>
+                        )}
                       {!hasUsername &&
                         !usernameCheck.checking &&
                         !usernameLoading &&
@@ -419,7 +419,7 @@ export function PublishSettingsMenu({
                             size="icon"
                             variant="ghost"
                             className={cn(
-                              'size-8 rounded-none',
+                              'size-8 rounded-sm',
                               claiming
                                 ? 'text-green-700 dark:text-green-300'
                                 : 'text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/40',
@@ -438,7 +438,7 @@ export function PublishSettingsMenu({
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="size-8 rounded-none hover:bg-accent/50"
+                          className="size-8 rounded-sm hover:bg-accent/50"
                           onClick={() => {
                             setHasUsername(false);
                             setUsernameCheck({

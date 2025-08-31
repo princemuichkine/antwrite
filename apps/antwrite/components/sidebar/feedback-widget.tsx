@@ -129,7 +129,7 @@ export function FeedbackWidget({ className }: { className?: string }) {
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
                     transition={TRANSITION_CONTENT}
                   >
-                    <div className="rounded-full bg-green-500/10 p-3">
+                    <div className="rounded-sm bg-green-500/10 p-3">
                       <SealCheck className="size-8 text-green-500" />
                     </div>
                     <p className="text-foreground mt-5 mb-2 text-center text-sm font-medium">

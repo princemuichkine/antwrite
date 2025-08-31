@@ -80,7 +80,7 @@ export const ChatTabs = ({
           <button
             type="button"
             onClick={(e) => handleCloseTab(e, tab.id)}
-            className="ml-2 p-0.5 rounded-full hover:bg-muted-foreground/20"
+            className="ml-2 p-0.5 rounded-sm hover:bg-muted-foreground/20"
           >
             <CrossIcon size={12} />
           </button>

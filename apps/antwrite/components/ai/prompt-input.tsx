@@ -24,7 +24,7 @@ export type PromptInputProps = HTMLAttributes<HTMLFormElement>;
 export const PromptInput = ({ className, ...props }: PromptInputProps) => (
   <form
     className={cn(
-      'w-full divide-y overflow-hidden rounded-xl border bg-background shadow-sm',
+      'w-full divide-y overflow-hidden rounded-sm border bg-background shadow-sm',
       className
     )}
     {...props}
@@ -68,7 +68,7 @@ export const PromptInputTextarea = ({
   return (
     <Textarea
       className={cn(
-        'w-full resize-none rounded-none border-none p-3 shadow-none outline-none ring-0',
+        'w-full resize-none rounded-sm border-none p-3 shadow-none outline-none ring-0',
         'field-sizing-content max-h-[6lh] bg-transparent dark:bg-transparent',
         'focus-visible:ring-0',
         className
@@ -105,7 +105,7 @@ export const PromptInputTools = ({
   <div
     className={cn(
       'flex items-center gap-1',
-      '[&_button:first-child]:rounded-bl-xl',
+      '[&_button:first-child]:rounded-bl-sm',
       className
     )}
     {...props}
@@ -126,7 +126,7 @@ export const PromptInputButton = ({
   return (
     <Button
       className={cn(
-        'shrink-0 gap-1.5 rounded-lg',
+        'shrink-0 gap-1.5 rounded-sm',
         variant === 'ghost' && 'text-muted-foreground',
         newSize === 'default' && 'px-3',
         className
@@ -163,7 +163,7 @@ export const PromptInputSubmit = ({
 
   return (
     <Button
-      className={cn('gap-1.5 rounded-lg', className)}
+      className={cn('gap-1.5 rounded-sm', className)}
       size={size}
       type="submit"
       variant={variant}
