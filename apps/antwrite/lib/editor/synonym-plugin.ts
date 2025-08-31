@@ -96,7 +96,7 @@ export function synonymsPlugin(): Plugin<SynonymPluginState> {
       const btn = document.createElement('button');
       btn.textContent = syn;
       btn.className =
-        'synonym-option px-2 py-1 text-sm rounded hover:bg-muted transition-colors';
+        'synonym-option px-2 py-1 text-sm rounded-sm hover:bg-muted transition-colors';
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         view.dispatch(

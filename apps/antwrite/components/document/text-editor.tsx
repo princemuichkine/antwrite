@@ -588,7 +588,7 @@ function PureEditor({
           cursor: pointer;
           font: inherit;
           color: inherit;
-          border-radius: 3px;
+          border-radius: 4px;
         }
 
         .synonym-overlay-menu .synonym-option:hover {
@@ -601,7 +601,7 @@ function PureEditor({
           position: absolute;
           inset: 0;
           background-color: rgba(100,100,100,0.2);
-          border-radius: 2px;
+          border-radius: 4px;
           pointer-events: none;
           z-index: 1;
         }
@@ -664,12 +664,12 @@ function PureEditor({
 
         .emoji-suggestion-panel::-webkit-scrollbar-track {
           background: #374151;
-          border-radius: 3px;
+          border-radius: 4px;
         }
 
         .emoji-suggestion-panel::-webkit-scrollbar-thumb {
           background: #6b7280;
-          border-radius: 3px;
+          border-radius: 4px;
         }
 
         .emoji-suggestion-panel::-webkit-scrollbar-thumb:hover {

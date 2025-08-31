@@ -110,7 +110,7 @@ export const WelcomeModal = ({ open, onOpenChange }: WelcomeModalProps) => {
             animation: highlightText 0.6s 0.7s forwards var(--ease-out-quad);
             background-color: transparent;
             padding: 0.1em 0.2em;
-            border-radius: 3px;
+            border-radius: 4px;
             display: inline; /* Or inline-block if needed for specific highlight styles */
           }
           @keyframes highlightText {
@@ -124,7 +124,7 @@ export const WelcomeModal = ({ open, onOpenChange }: WelcomeModalProps) => {
             left: 5%;
             right: 5%;
             background-color: hsl(var(--card));
-            border-radius: 0.75rem;
+            border-radius: 4px;
             padding: 0.625rem; /* Increased from 0.5rem */
             box-shadow: 0 6px 16px -2px rgba(0,0,0,0.1), 0 3px 8px -2px rgba(0,0,0,0.06);
             opacity: 0;
@@ -144,7 +144,7 @@ export const WelcomeModal = ({ open, onOpenChange }: WelcomeModalProps) => {
           .demo-overlay-input-placeholder {
             width: 100%;
             padding: 0.375rem 0.625rem;
-            border-radius: 0.5rem;
+            border-radius: 4px;
             border: 1px solid hsl(var(--border));
             font-size: 0.75rem;
             color: hsl(var(--muted-foreground));
@@ -189,7 +189,7 @@ export const WelcomeModal = ({ open, onOpenChange }: WelcomeModalProps) => {
 
           .demo-overlay-diff-view {
             border: 1px solid hsl(var(--border));
-            border-radius: 0.5rem;
+            border-radius: 4px;
             padding: 0.5rem;
             font-size: 0.75rem;
             background-color: var(--muted-background-subtle, rgba(0,0,0,0.015));
@@ -244,7 +244,7 @@ export const WelcomeModal = ({ open, onOpenChange }: WelcomeModalProps) => {
             position: absolute;
             top: -2px; left: -2px; right: -2px; bottom: -2px;
             background-color: transparent;
-            border-radius: 3px;
+            border-radius: 4px;
             pointer-events: none;
             animation: synonymLoadingState 0.7s 0.7s forwards var(--ease-out-quad); /* Delay 0.7s */
           }
@@ -260,7 +260,7 @@ export const WelcomeModal = ({ open, onOpenChange }: WelcomeModalProps) => {
             background-color: hsl(var(--popover));
             color: hsl(var(--popover-foreground));
             border: 1px solid hsl(var(--border));
-            border-radius: 0.5rem;
+            border-radius: 4px;
             padding: 7px 9px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.2);
             display: flex;
@@ -274,7 +274,7 @@ export const WelcomeModal = ({ open, onOpenChange }: WelcomeModalProps) => {
           }
           .demo-synonym-menu-animated span {
             padding: 4px 6px;
-            border-radius: 0.375rem;
+            border-radius: 4px;
             transition: background-color 0.2s, color 0.2s;
           }
           .demo-synonym-menu-animated span:hover {
@@ -294,7 +294,7 @@ export const WelcomeModal = ({ open, onOpenChange }: WelcomeModalProps) => {
           /* Metallic macOS style frame for hero image */
           .hero-frame {
             border: 8px solid #c0c0c0;
-            border-radius: 1rem;
+            border-radius: 4px;
             background: linear-gradient(145deg, #e0e0e0, #f9f9f9);
             padding: 4px;
           }
@@ -629,7 +629,7 @@ const FeaturesSection = () => {
                                                 style={{ zIndex: 10 - Math.abs(offset) }}
                                             >
                                                 {i === proIndex && (
-                                                    <span className="absolute top-1 right-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-[10px] px-1 rounded border border-green-200 dark:border-green-800">
+                                                    <span className="absolute top-1 right-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-[10px] px-1 rounded-sm border border-green-200 dark:border-green-800">
                                                         Pro
                                                     </span>
                                                 )}
@@ -667,9 +667,9 @@ const FeaturesSection = () => {
                                         </div>
                                         {/* Content preview */}
                                         <div className="p-3 space-y-1">
-                                            <div className="h-2.5 bg-muted rounded w-2/3" />
-                                            <div className="h-2.5 bg-muted rounded w-full" />
-                                            <div className="h-2.5 bg-muted rounded w-5/6" />
+                                            <div className="h-2.5 bg-muted rounded-sm w-2/3" />
+                                            <div className="h-2.5 bg-muted rounded-sm w-full" />
+                                            <div className="h-2.5 bg-muted rounded-sm w-5/6" />
                                         </div>
                                         {/* Chat bubble */}
                                         <div className="absolute bottom-2 right-2 w-8 h-4 rounded-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800 flex items-center justify-center text-[6px] shadow transition-colors duration-200">

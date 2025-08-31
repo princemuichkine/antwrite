@@ -43,11 +43,11 @@ const Editor = dynamic(
 
 const EditorSkeleton = () => (
   <div className="space-y-4 animate-pulse">
-    <div className="h-6 bg-muted rounded w-3/4" />
-    <div className="h-4 bg-muted rounded w-full" />
-    <div className="h-4 bg-muted rounded w-5/6" />
-    <div className="h-4 bg-muted rounded w-full" />
-    <div className="h-4 bg-muted rounded w-1/2" />
+    <div className="h-6 bg-muted rounded-sm w-3/4" />
+    <div className="h-4 bg-muted rounded-sm w-full" />
+    <div className="h-4 bg-muted rounded-sm w-5/6" />
+    <div className="h-4 bg-muted rounded-sm w-full" />
+    <div className="h-4 bg-muted rounded-sm w-1/2" />
   </div>
 );
 
@@ -529,7 +529,7 @@ export function AlwaysVisibleArtifact({
       <div className="grid grid-cols-[auto_1fr_auto] items-center border-b px-3 h-[45px] gap-2">
         <SidebarTrigger />
         {isPending ? (
-          <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-32 bg-muted rounded-sm animate-pulse" />
         ) : (
           <div className="flex flex-col min-w-0 max-w-[calc(100vw-400px)]">
             <div className="h-6 flex items-center overflow-x-auto overflow-y-hidden document-title-scroll">

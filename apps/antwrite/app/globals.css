@@ -148,7 +148,7 @@
         background: hsl(var(--primary) / 0.1);
         color: hsl(var(--primary));
         border: 1px solid hsl(var(--primary) / 0.2);
-        border-radius: 0.15rem;
+        border-radius: 4px;
         padding: 0.0015rem 0.20rem;
         margin: 0 0.005rem;
         font-size: 0.875em;

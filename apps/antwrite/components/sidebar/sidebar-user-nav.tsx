@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Paywall } from '@/components/paywall';
+import { WelcomeModal } from '@/components/welcome-modal';
 
 type Subscription = {
   id: string;
@@ -58,6 +59,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
   const [isSignOutLoading, setIsSignOutLoading] = useState(false);
   const [isBillingLoading, setIsBillingLoading] = useState(false);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const [hoveredTheme, setHoveredTheme] = useState(false);
   const [hoveredSignOut, setHoveredSignOut] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -304,6 +306,21 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                 Open-source
               </DropdownMenuItem>
 
+              <DropdownMenuItem
+                className="cursor-pointer w-full"
+                onSelect={() => setIsWelcomeModalOpen(true)}
+                disabled={isLoading}
+              >
+                <LottieIcon
+                  animationData={animations.star}
+                  size={19}
+                  loop={false}
+                  autoplay={false}
+                  initialFrame={0}
+                />
+                About us
+              </DropdownMenuItem>
+
               {!isStripeEnabled && <DropdownMenuSeparator />}
 
               <DropdownMenuItem
@@ -337,6 +354,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
         </SidebarMenuItem>
       </SidebarMenu>
       <Paywall isOpen={isPaywallOpen} onOpenChange={setIsPaywallOpen} />
+      <WelcomeModal open={isWelcomeModalOpen} onOpenChange={setIsWelcomeModalOpen} />
     </>
   );
 }
