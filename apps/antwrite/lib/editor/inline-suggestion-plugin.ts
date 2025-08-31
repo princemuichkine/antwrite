@@ -226,17 +226,7 @@ export function inlineSuggestionPlugin(options: {
 
               const suggestionSpan = document.createElement('span');
               suggestionSpan.className = 'suggestion-decoration-inline';
-              const raw = suggestionText;
-              const trimmed = raw.trimStart();
-              const first = trimmed.charAt(0);
-              const isAlphaNum = /^[A-Za-z0-9]/.test(first);
-              const prevChar =
-                suggestionPos > 0
-                  ? state.doc.textBetween(suggestionPos - 1, suggestionPos)
-                  : '';
-              const needsSpace = isAlphaNum && prevChar && !/\s/.test(prevChar);
-              const displayText = needsSpace ? ` ${trimmed}` : trimmed;
-              suggestionSpan.setAttribute('data-suggestion', displayText);
+              suggestionSpan.setAttribute('data-suggestion', suggestionText);
               wrapper.appendChild(suggestionSpan);
 
               const kbd = document.createElement('kbd');
@@ -264,19 +254,7 @@ export function inlineSuggestionPlugin(options: {
             pluginState.suggestionPos !== null
           ) {
             event.preventDefault();
-            const raw = pluginState.suggestionText;
-            const trimmed = raw.trimStart();
-            const first = trimmed.charAt(0);
-            const isAlphaNum = /^[A-Za-z0-9]/.test(first);
-            const prev =
-              pluginState.suggestionPos > 0
-                ? view.state.doc.textBetween(
-                    pluginState.suggestionPos - 1,
-                    pluginState.suggestionPos,
-                  )
-                : '';
-            const needsSpace = isAlphaNum && prev && !/\s/.test(prev);
-            const text = needsSpace ? ` ${trimmed}` : trimmed;
+            const text = pluginState.suggestionText;
             let tr = view.state.tr.insertText(text, pluginState.suggestionPos);
             tr = tr.setMeta(CLEAR_SUGGESTION, true);
             tr = tr.scrollIntoView();

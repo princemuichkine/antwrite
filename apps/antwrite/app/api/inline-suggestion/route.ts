@@ -215,14 +215,16 @@ function buildPrompt({
   const wordLimitMap = { short: 5, medium: 10, long: 15 } as const;
   const maxWords = wordLimitMap[suggestionLength] ?? 10;
 
-  const prompt = `You are an expert autocomplete assistant.
+  const prompt = `You are an expert autocomplete assistant. You are completing the user's text.
+The user's cursor is at the '▮' character.
+Your response will be inserted directly at the cursor position.
 
 Rules:
-1. Return ONLY the continuation (no quotes, no line breaks, no thinking or commentary).
-2. Use ${maxWords} words.
+1. Return ONLY the continuation (no quotes, no thinking or commentary).
+2. Aim for a suggestion of about ${maxWords} words.
 3. No lowercase letters after sentence ending punctuation.
-3. Take the user's writing style and custom instructions into account.
-4. DO NOT generate mid-word continuations, only generate continuations at the end of a word - i.e. don't generate continuations in the middle of a word.
+4. Take the user's writing style and custom instructions into account.
+5. IMPORTANT: Your response must correctly handle spacing. If the word before the cursor needs a space after it, you must provide it. if it doesnt need it for word completions, you must not add a leading space. If it's after the end of a sentence, you must add a space.
 
 ${customInstructions ? `Extra instruction: ${customInstructions}\n\n` : ''}${applyStyle && writingStyleSummary ? `: ${writingStyleSummary}\n\n` : ''}Context:
 ${beforeSnippet}▮${afterSnippet}`;

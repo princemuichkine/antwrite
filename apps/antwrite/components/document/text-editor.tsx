@@ -2,7 +2,7 @@
 
 import { EditorState, type Transaction, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import React, { memo, useEffect, useRef, useCallback, useState } from 'react';
+import React, { memo, useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import {
   buildContentFromDocument,
   buildDocumentFromContent,
@@ -17,6 +17,10 @@ import {
 } from '@/lib/editor/save-plugin';
 import { createEditorPlugins } from '@/lib/editor/editor-plugins';
 import type { FormatState } from '@/lib/editor/format-plugin';
+import {
+  inlineSuggestionPluginKey,
+  createInlineSuggestionCallback,
+} from '@/lib/editor/inline-suggestion-plugin';
 
 type EditorProps = {
   content: string;
@@ -96,97 +100,25 @@ function PureEditor({
     [currentDocumentIdRef],
   );
 
-  const requestInlineSuggestionCallback = useCallback(
-    async (
-      state: any,
-      abortControllerRef: React.MutableRefObject<AbortController | null>,
-      editorRef: React.MutableRefObject<any | null>,
-    ) => {
-      const editor = editorRef.current;
-      if (!editor) return;
-
-      abortControllerRef.current?.abort();
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
-      try {
-        const { selection } = state;
-        const { head } = selection;
-
-        const $head = state.doc.resolve(head);
-        const startOfNode = $head.start();
-        const contextBefore = state.doc.textBetween(startOfNode, head, '\n');
-        const endOfNode = $head.end();
-        const contextAfter = state.doc.textBetween(head, endOfNode, '\n');
-        const fullContent = state.doc.textContent;
-
-        const response = await fetch('/api/inline-suggestion', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            documentId,
-            contextBefore,
-            contextAfter,
-            fullContent,
-          }),
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch inline suggestion');
-        }
-
-        const reader = response.body?.getReader();
-        if (!reader) {
-          throw new Error('Response body is not readable');
-        }
-
-        const decoder = new TextDecoder();
-        let suggestion = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.type === 'suggestion-delta') {
-                  suggestion += data.content;
-                }
-              } catch (e) {
-                console.error('Error parsing SSE data:', e);
-              }
-            }
-          }
-        }
-
-        return suggestion;
-      } catch (error) {
-        if ((error as any).name === 'AbortError') {
-          console.log('Inline suggestion request aborted');
-        } else {
-          console.error('Error fetching inline suggestion:', error);
-        }
-        return null;
-      }
-    },
+  const requestInlineSuggestion = useMemo(
+    () => createInlineSuggestionCallback(documentId),
     [documentId],
   );
 
   useEffect(() => {
     let view: EditorView | null = null;
     if (containerRef.current && !editorRef.current) {
+      console.log('[Text Editor] Creating editor plugins');
       const plugins = createEditorPlugins({
         documentId,
         initialLastSaved,
         performSave,
-        requestInlineSuggestion: (state) =>
-          requestInlineSuggestionCallback(state, abortControllerRef, editorRef),
+        requestInlineSuggestion: (state) => {
+          console.log(
+            '[Text Editor] Plugin requesting suggestion, calling callback',
+          );
+          requestInlineSuggestion(state, abortControllerRef, editorRef);
+        },
         setActiveFormats,
       });
 
@@ -290,12 +222,12 @@ function PureEditor({
           documentId,
           initialLastSaved,
           performSave,
-          requestInlineSuggestion: (state) =>
-            requestInlineSuggestionCallback(
-              state,
-              abortControllerRef,
-              editorRef,
-            ),
+          requestInlineSuggestion: (state) => {
+            console.log(
+              '[Text Editor] Plugin requesting suggestion (document change), calling callback',
+            );
+            requestInlineSuggestion(state, abortControllerRef, editorRef);
+          },
           setActiveFormats,
         });
 
@@ -352,7 +284,7 @@ function PureEditor({
     performSave,
     onStatusChange,
     onCreateDocumentRequest,
-    requestInlineSuggestionCallback,
+    requestInlineSuggestion,
   ]);
 
   useEffect(() => {

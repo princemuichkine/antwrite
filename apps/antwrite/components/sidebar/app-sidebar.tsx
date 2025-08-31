@@ -119,7 +119,12 @@ export function AppSidebar({
         if (hoverTimeoutRef.current) {
           clearTimeout(hoverTimeoutRef.current);
         }
-        setShowFloatingSidebar(true);
+        // Only start the timeout if the sidebar is not already visible
+        if (!showFloatingSidebar) {
+          hoverTimeoutRef.current = setTimeout(() => {
+            setShowFloatingSidebar(true);
+          }, 1000); // 1 second delay
+        }
       } else {
         if (hoverTimeoutRef.current) {
           clearTimeout(hoverTimeoutRef.current);
