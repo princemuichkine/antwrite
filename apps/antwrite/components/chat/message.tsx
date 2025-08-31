@@ -99,11 +99,11 @@ const PurePreviewMessage = ({
           {message.role === 'assistant' && (
             <div className="size-8 flex items-center justify-center rounded-sm ring-1 shrink-0 ring-border bg-background overflow-hidden relative">
               <Image
-                src="/images/leopardprintbw.svg"
+                src="/brand/logo/antwrite-b.webp"
                 alt="Antwrite"
                 fill
-                className="object-cover dark:invert"
-                style={{ transform: 'scale(2.5)' }}
+                className="object-contain dark:invert"
+                style={{ transform: 'scale(1)' }}
               />
             </div>
           )}
@@ -292,11 +292,11 @@ export const ThinkingMessage = () => {
       >
         <div className="size-8 flex items-center justify-center rounded-sm ring-1 shrink-0 ring-border overflow-hidden relative">
           <Image
-            src="/images/leopardprintbw.svg"
+            src="/brand/logo/antwrite-b.webp"
             alt="Antwrite"
             fill
-            className="object-cover dark:invert"
-            style={{ transform: 'scale(2.5)' }}
+            className="object-contain dark:invert"
+            style={{ transform: 'scale(1.2)' }}
           />
         </div>
 

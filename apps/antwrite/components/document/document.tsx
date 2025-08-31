@@ -1,6 +1,5 @@
 import { memo, useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-
 import type { ArtifactKind } from '@/components/artifact';
 import {
   FileIcon,

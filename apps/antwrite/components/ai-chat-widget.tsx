@@ -206,9 +206,11 @@ export default function AIChatWidget({
                         {message.role === 'assistant' && (
                           <div className="size-8 flex items-center justify-center rounded-sm ring-1 shrink-0 ring-border bg-background overflow-hidden relative">
                             <Image
-                              src="/images/leopardprintbw.svg"
+                              src="/brand/logo/antwrite-b.webp"
                               alt="Antwrite"
-                              className="object-cover dark:invert"
+                              fill
+                              className="object-contain dark:invert"
+                              style={{ transform: 'scale(1)' }}
                             />
                           </div>
                         )}

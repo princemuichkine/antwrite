@@ -1061,6 +1061,7 @@ export function SidebarDocuments({
           '[SidebarDocuments] Navigating to:',
           `/documents/${documentId}`,
         );
+
         router.push(`/documents/${documentId}`);
 
         setOpenMobile(false);
