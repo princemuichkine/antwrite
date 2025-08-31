@@ -3,15 +3,14 @@
 import React, { useState } from 'react';
 import { CardHeader, Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, X, Check } from 'lucide-react';
-import Image from 'next/image';
+import { GripVertical } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
 import { Switch } from '@/components/ui/switch';
-import Link from 'next/link';
 import { Crimson_Text } from 'next/font/google';
 import {
     Dialog,
-    DialogContent
+    DialogContent,
+    DialogTitle
 } from '@/components/ui/dialog';
 
 const crimson = Crimson_Text({
@@ -65,6 +64,7 @@ export const WelcomeModal = ({ open, onOpenChange }: WelcomeModalProps) => {
                 data-welcome-modal
                 showCloseButton={true}
             >
+                <DialogTitle className="sr-only">Welcome to Antwrite</DialogTitle>
                 <div className="relative min-h-screen overflow-hidden bg-background text-foreground p-0">
                     {/* Features Section with animations */}
                     <FeaturesSection />

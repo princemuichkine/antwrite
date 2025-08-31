@@ -30,6 +30,8 @@ import type { User } from '@/lib/auth';
 import { PublishSettingsMenu } from '@/components/publish-settings-menu';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getActiveEditorView } from '@/lib/editor/editor-state';
+import { TextSelection } from 'prosemirror-state';
 
 const Editor = dynamic(
   () => import('@/components/document/text-editor').then((mod) => mod.Editor),
@@ -189,6 +191,92 @@ export function AlwaysVisibleArtifact({
         handleDocumentRenamed as EventListener,
       );
   }, [artifact.documentId, editingTitle, newTitle, setArtifact]);
+
+  // Focus editor when document changes or component mounts
+  useEffect(() => {
+    console.log('AlwaysVisibleArtifact: Document changed, attempting to focus editor', {
+      documentId: artifact.documentId,
+      title: artifact.title,
+      contentLength: artifact.content?.length || 0,
+    });
+
+    let focusTimeout: NodeJS.Timeout | undefined;
+    let retryCount = 0;
+    const maxRetries = 10;
+
+    const focusEditor = () => {
+      const editorView = getActiveEditorView();
+
+      if (!editorView && retryCount < maxRetries) {
+        console.log(`AlwaysVisibleArtifact: No editor view found, retrying (${retryCount + 1}/${maxRetries})`);
+        retryCount++;
+        focusTimeout = setTimeout(focusEditor, 100);
+        return;
+      }
+
+      if (!editorView) {
+        console.warn('AlwaysVisibleArtifact: Failed to find editor view after maximum retries');
+        return;
+      }
+
+      try {
+        // Check if this is a new/empty document that needs cursor positioning
+        const isEmptyDocument = !artifact.content || artifact.content.trim() === '';
+        const isNewDocument = artifact.documentId !== 'init' && (!latestDocument || isEmptyDocument);
+
+        console.log('AlwaysVisibleArtifact: Focus analysis', {
+          isEmptyDocument,
+          isNewDocument,
+          documentId: artifact.documentId,
+          contentLength: artifact.content?.length || 0,
+        });
+
+        if (isNewDocument || isEmptyDocument) {
+          // Position cursor at start for new/empty documents
+          const resolvedPos = editorView.state.doc.resolve(0);
+          const selection = TextSelection.near(resolvedPos);
+          const tr = editorView.state.tr.setSelection(selection);
+
+          editorView.focus();
+          editorView.dispatch(tr);
+          console.log('AlwaysVisibleArtifact: Focused editor and positioned cursor at start');
+        } else {
+          // Position cursor at end for existing documents with content
+          const endPos = editorView.state.doc.content.size;
+          const resolvedPos = editorView.state.doc.resolve(endPos);
+          const selection = TextSelection.near(resolvedPos);
+          const tr = editorView.state.tr.setSelection(selection);
+
+          editorView.focus();
+          editorView.dispatch(tr);
+          console.log('AlwaysVisibleArtifact: Focused editor and positioned cursor at end');
+        }
+      } catch (error) {
+        console.warn('AlwaysVisibleArtifact: Error focusing editor', error);
+        // Fallback: just try to focus without cursor positioning
+        try {
+          editorView.focus();
+        } catch (fallbackError) {
+          console.warn('AlwaysVisibleArtifact: Even focus fallback failed', fallbackError);
+        }
+      }
+    };
+
+    // Clear any existing timeout and start fresh
+    if (focusTimeout) {
+      clearTimeout(focusTimeout);
+    }
+
+    // Single attempt to focus after a short delay to ensure editor is ready
+    focusTimeout = setTimeout(focusEditor, 150);
+
+    // Cleanup function to clear timeout when effect re-runs
+    return () => {
+      if (focusTimeout) {
+        clearTimeout(focusTimeout);
+      }
+    };
+  }, [artifact.documentId, artifact.content, artifact.title, latestDocument]);
 
   const handleDocumentUpdate = (updatedFields: Partial<Document>) => {
     setDocuments((prevDocs) =>

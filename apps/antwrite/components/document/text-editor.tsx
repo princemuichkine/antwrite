@@ -1,6 +1,6 @@
 'use client';
 
-import { EditorState, type Transaction } from 'prosemirror-state';
+import { EditorState, type Transaction, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import React, { memo, useEffect, useRef, useCallback, useState } from 'react';
 import {
@@ -203,6 +203,48 @@ function PureEditor({
             return false;
           },
           blur: () => false,
+          mousedown: (view, event) => {
+            // Handle clicks in empty areas of the editor
+            const target = event.target as HTMLElement;
+            const editorElement = view.dom;
+            const proseMirrorElement = editorElement.querySelector('.ProseMirror');
+
+            console.log('MouseDown event:', {
+              target: target.tagName,
+              targetClass: target.className,
+              editorElement: editorElement.tagName,
+              proseMirrorElement: proseMirrorElement?.tagName,
+              isProseMirrorChild: proseMirrorElement?.contains(target),
+              eventPhase: event.eventPhase,
+              rect: editorElement.getBoundingClientRect(),
+              clickY: event.clientY,
+            });
+
+            // Check if clicking in empty space (below content or in padding)
+            const rect = editorElement.getBoundingClientRect();
+            const clickY = event.clientY;
+            const contentHeight = proseMirrorElement?.scrollHeight || 0;
+            const isClickingInEmptySpace = clickY > rect.top + contentHeight + 20; // 20px buffer
+
+            // If clicking on the editor container itself, in empty space, or outside ProseMirror content
+            if (target === editorElement ||
+              isClickingInEmptySpace ||
+              (proseMirrorElement && !proseMirrorElement.contains(target))) {
+              console.log('Clicking in empty area, positioning at end', {
+                isClickingInEmptySpace,
+                contentHeight,
+                clickY: clickY - rect.top,
+              });
+              const endPos = view.state.doc.content.size;
+              const resolvedPos = view.state.doc.resolve(endPos);
+              const textSelection = TextSelection.near(resolvedPos);
+              const tr = view.state.tr.setSelection(textSelection);
+              view.dispatch(tr);
+              view.focus();
+              return true; // Prevent default ProseMirror behavior
+            }
+            return false;
+          },
         },
         dispatchTransaction: (transaction: Transaction) => {
           if (!editorRef.current) return;
@@ -384,8 +426,9 @@ function PureEditor({
         />
       )}
       <div
-        className="editor-area bg-background text-foreground dark:bg-black dark:text-white prose prose-slate dark:prose-invert pt-4"
+        className="editor-area bg-background text-foreground dark:bg-black dark:text-white prose prose-slate dark:prose-invert pt-4 min-h-[400px] cursor-text"
         ref={containerRef}
+
       />
       <style jsx global>{`
         .suggestion-decoration-inline::after {
@@ -475,6 +518,31 @@ function PureEditor({
         .editor-area, .toolbar {
           max-width: 720px;
           margin: 0 auto;
+        }
+
+        .editor-area {
+          min-height: 400px;
+          position: relative;
+          cursor: text;
+        }
+
+        .editor-area .ProseMirror {
+          min-height: inherit;
+          outline: none;
+        }
+
+        /* Ensure empty space is clickable */
+        .editor-area::after {
+          content: '';
+          display: block;
+          min-height: 400px;
+          pointer-events: auto;
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: -1;
         }
 
         @media (min-width: 1024px) {

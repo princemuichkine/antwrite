@@ -48,7 +48,7 @@ export function GuestSidebarFooter() {
           data-welcome-toggle
         >
           <LottieIcon
-            animationData={animations.info}
+            animationData={animations.star}
             size={19}
             loop={false}
             autoplay={false}

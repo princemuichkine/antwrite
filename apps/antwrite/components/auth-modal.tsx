@@ -85,7 +85,7 @@ export const AuthModal = ({
           name,
         },
         {
-          onRequest: () => {},
+          onRequest: () => { },
           onSuccess: (ctx: any) => {
             setIsEmailLoading(false);
             if (emailVerificationEnabled) {
@@ -99,7 +99,7 @@ export const AuthModal = ({
               setIsSuccessful(true);
               toast({
                 type: 'success',
-                description: 'Account created! Welcome to Antwrite!',
+                description: 'Account created! Welcome to antwrite!',
               });
               // Clear inputs on successful auth
               setEmail('');
