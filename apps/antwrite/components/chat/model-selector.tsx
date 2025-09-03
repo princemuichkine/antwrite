@@ -89,8 +89,8 @@ export function ModelSelector({
             variant="outline"
             disabled={disabled}
             className={cn(
-              "flex items-center gap-1.5 px-1.5 h-6 rounded-sm text-xs text-accent-foreground bg-background/30 hover:bg-accent/30 transition-colors duration-200 border border-border/30 opacity-60 hover:opacity-100",
-              disabled && "opacity-30 cursor-not-allowed"
+              'flex items-center gap-1.5 px-1.5 h-6 rounded-sm text-xs text-accent-foreground bg-background/30 hover:bg-accent/30 transition-colors duration-200 border border-border/30 opacity-60 hover:opacity-100',
+              disabled && 'opacity-30 cursor-not-allowed',
             )}
           >
             <span className="truncate">{selectedChatModel?.name}</span>
@@ -124,8 +124,8 @@ export function ModelSelector({
                       className={cn(
                         'group relative flex w-full items-center gap-1.5 px-1.5 py-1 cursor-pointer rounded-sm hover:bg-accent/30 transition-colors duration-200 h-6',
                         id === selectedModelId &&
-                        !isLocked &&
-                        'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800',
+                          !isLocked &&
+                          'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800',
                       )}
                     >
                       <div className="flex items-center justify-between w-full">

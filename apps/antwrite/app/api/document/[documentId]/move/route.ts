@@ -3,7 +3,7 @@ import { moveDocumentToFolder } from '@/lib/db/queries';
 
 export async function POST(
   req: Request,
-  { params }: { params: { documentId: string } },
+  { params }: { params: Promise<{ documentId: string }> },
 ) {
   const session = await getSession();
   if (!session?.user?.id) {
@@ -11,7 +11,7 @@ export async function POST(
   }
 
   try {
-    const { documentId } = params;
+    const { documentId } = await params;
     const { folderId } = await req.json();
 
     await moveDocumentToFolder({

@@ -43,7 +43,8 @@ export const AuthGuardProvider = ({
   // Check if welcome modal has been shown before
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const hasSeenWelcome = localStorage.getItem('antwrite-welcome-shown') === 'true';
+      const hasSeenWelcome =
+        localStorage.getItem('antwrite-welcome-shown') === 'true';
       setWelcomeShown(hasSeenWelcome);
     }
   }, []);

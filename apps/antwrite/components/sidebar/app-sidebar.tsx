@@ -123,7 +123,7 @@ export function AppSidebar({
         if (!showFloatingSidebar) {
           hoverTimeoutRef.current = setTimeout(() => {
             setShowFloatingSidebar(true);
-          }, 1000); // 1 second delay
+          }, 600); // 600ms delay
         }
       } else {
         if (hoverTimeoutRef.current) {

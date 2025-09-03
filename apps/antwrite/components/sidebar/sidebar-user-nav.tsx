@@ -354,7 +354,10 @@ export function SidebarUserNav({ user }: { user: User | null }) {
         </SidebarMenuItem>
       </SidebarMenu>
       <Paywall isOpen={isPaywallOpen} onOpenChange={setIsPaywallOpen} />
-      <WelcomeModal open={isWelcomeModalOpen} onOpenChange={setIsWelcomeModalOpen} />
+      <WelcomeModal
+        open={isWelcomeModalOpen}
+        onOpenChange={setIsWelcomeModalOpen}
+      />
     </>
   );
 }

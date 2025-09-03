@@ -3,20 +3,21 @@ import { deleteFolder, renameFolder } from '@/lib/db/queries';
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { folderId: string } },
+  { params }: { params: Promise<{ folderId: string }> },
 ) {
   const session = await getSession();
   if (!session?.user?.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
+  const { folderId } = await params;
+
   try {
-    const { folderId } = params;
     await deleteFolder({ folderId, userId: session.user.id });
     return new Response(null, { status: 204 });
   } catch (error) {
     console.error(
-      `[API - DELETE /api/folder/${params.folderId}] Error deleting folder:`,
+      `[API - DELETE /api/folder/${folderId}] Error deleting folder:`,
       error,
     );
     return new Response('Internal Server Error', { status: 500 });
@@ -25,15 +26,16 @@ export async function DELETE(
 
 export async function PUT(
   req: Request,
-  { params }: { params: { folderId: string } },
+  { params }: { params: Promise<{ folderId: string }> },
 ) {
   const session = await getSession();
   if (!session?.user?.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
+  const { folderId } = await params;
+
   try {
-    const { folderId } = params;
     const { newName } = await req.json();
 
     if (!newName) {
@@ -44,7 +46,7 @@ export async function PUT(
     return new Response(null, { status: 204 });
   } catch (error) {
     console.error(
-      `[API - PUT /api/folder/${params.folderId}] Error renaming folder:`,
+      `[API - PUT /api/folder/${folderId}] Error renaming folder:`,
       error,
     );
     return new Response('Internal Server Error', { status: 500 });

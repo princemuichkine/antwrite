@@ -30,7 +30,7 @@ export function ChatModeSelector({
       className={cn(
         'flex items-center px-2 h-6 rounded-sm text-xs text-accent-foreground bg-background/30 hover:bg-accent/30 transition-colors duration-200 border border-border/30 opacity-60 hover:opacity-100',
         selectedMode === 'agent' &&
-        'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hover:text-cyan-800 dark:hover:text-cyan-200 border border-cyan-200 dark:border-cyan-800',
+          'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hover:text-cyan-800 dark:hover:text-cyan-200 border border-cyan-200 dark:border-cyan-800',
         disabled && 'opacity-30 cursor-not-allowed',
         className,
       )}

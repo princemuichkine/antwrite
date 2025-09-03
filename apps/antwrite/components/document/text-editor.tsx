@@ -1,8 +1,19 @@
 'use client';
 
-import { EditorState, type Transaction, TextSelection } from 'prosemirror-state';
+import {
+  EditorState,
+  type Transaction,
+  TextSelection,
+} from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import React, { memo, useEffect, useRef, useCallback, useState, useMemo } from 'react';
+import React, {
+  memo,
+  useEffect,
+  useRef,
+  useCallback,
+  useState,
+  useMemo,
+} from 'react';
 import {
   buildContentFromDocument,
   buildDocumentFromContent,
@@ -139,7 +150,8 @@ function PureEditor({
             // Handle clicks in empty areas of the editor
             const target = event.target as HTMLElement;
             const editorElement = view.dom;
-            const proseMirrorElement = editorElement.querySelector('.ProseMirror');
+            const proseMirrorElement =
+              editorElement.querySelector('.ProseMirror');
 
             console.log('MouseDown event:', {
               target: target.tagName,
@@ -156,12 +168,15 @@ function PureEditor({
             const rect = editorElement.getBoundingClientRect();
             const clickY = event.clientY;
             const contentHeight = proseMirrorElement?.scrollHeight || 0;
-            const isClickingInEmptySpace = clickY > rect.top + contentHeight + 20; // 20px buffer
+            const isClickingInEmptySpace =
+              clickY > rect.top + contentHeight + 20; // 20px buffer
 
             // If clicking on the editor container itself, in empty space, or outside ProseMirror content
-            if (target === editorElement ||
+            if (
+              target === editorElement ||
               isClickingInEmptySpace ||
-              (proseMirrorElement && !proseMirrorElement.contains(target))) {
+              (proseMirrorElement && !proseMirrorElement.contains(target))
+            ) {
               console.log('Clicking in empty area, positioning at end', {
                 isClickingInEmptySpace,
                 contentHeight,
@@ -360,7 +375,6 @@ function PureEditor({
       <div
         className="editor-area bg-background text-foreground dark:bg-black dark:text-white prose prose-slate dark:prose-invert pt-4 min-h-[400px] cursor-text"
         ref={containerRef}
-
       />
       <style jsx global>{`
         .suggestion-decoration-inline::after {

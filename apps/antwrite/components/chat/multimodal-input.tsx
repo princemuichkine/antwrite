@@ -676,7 +676,11 @@ function PureMultimodalInput({
                 // Call the original handleKeyDown for other keys like Enter, Escape
                 handleKeyDown(e);
               }}
-              placeholder={isGuest ? "Sign up to start chatting..." : "Ask, learn, write anything..."}
+              placeholder={
+                isGuest
+                  ? 'Sign up to start chatting...'
+                  : 'Ask, learn, write anything...'
+              }
               className={cn(
                 'flex min-h-[60px] h-60px max-h-[350px] w-full bg-transparent p-0 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-auto relative z-10 mention-textarea text-transparent caret-black dark:caret-white',
                 className,
@@ -857,7 +861,8 @@ function PureSendButton({
   uploadQueue: Array<string>;
   isGuest: boolean;
 }) {
-  const isDisabled = input.trim().length === 0 || uploadQueue.length > 0 || isGuest;
+  const isDisabled =
+    input.trim().length === 0 || uploadQueue.length > 0 || isGuest;
 
   return (
     <Button

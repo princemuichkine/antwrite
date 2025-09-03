@@ -85,7 +85,7 @@ export const AuthModal = ({
           name,
         },
         {
-          onRequest: () => { },
+          onRequest: () => {},
           onSuccess: (ctx: any) => {
             setIsEmailLoading(false);
             if (emailVerificationEnabled) {

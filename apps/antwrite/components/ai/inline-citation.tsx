@@ -5,7 +5,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  type CarouselApi,
 } from '@/components/ui/carousel';
 import {
   HoverCard,
@@ -14,14 +13,7 @@ import {
 } from '@/components/ui/hover-card';
 import { cn } from '@/lib/utils';
 import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-react';
-import {
-  type ComponentProps,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import type { ComponentProps } from 'react';
 
 export type InlineCitationProps = ComponentProps<'span'>;
 
@@ -89,13 +81,6 @@ export const InlineCitationCardBody = ({
   <HoverCardContent className={cn('relative w-80 p-0', className)} {...props} />
 );
 
-const CarouselApiContext = createContext<CarouselApi | undefined>(undefined);
-
-const useCarouselApi = () => {
-  const context = useContext(CarouselApiContext);
-  return context;
-};
-
 export type InlineCitationCarouselProps = ComponentProps<typeof Carousel>;
 
 export const InlineCitationCarousel = ({
@@ -103,21 +88,17 @@ export const InlineCitationCarousel = ({
   children,
   ...props
 }: InlineCitationCarouselProps) => {
-  const [api, setApi] = useState<CarouselApi>();
-
   return (
-    <CarouselApiContext.Provider value={api}>
-      <Carousel className={cn('w-full', className)} setApi={setApi} {...props}>
-        {children}
-      </Carousel>
-    </CarouselApiContext.Provider>
+    <Carousel className={cn('w-full', className)} {...props}>
+      {children}
+    </Carousel>
   );
 };
 
 export type InlineCitationCarouselContentProps = ComponentProps<'div'>;
 
 export const InlineCitationCarouselContent = (
-  props: InlineCitationCarouselContentProps
+  props: InlineCitationCarouselContentProps,
 ) => <CarouselContent {...props} />;
 
 export type InlineCitationCarouselItemProps = ComponentProps<'div'>;
@@ -141,7 +122,7 @@ export const InlineCitationCarouselHeader = ({
   <div
     className={cn(
       'flex items-center justify-between gap-2 rounded-t-sm bg-secondary p-2',
-      className
+      className,
     )}
     {...props}
   />
@@ -154,32 +135,16 @@ export const InlineCitationCarouselIndex = ({
   className,
   ...props
 }: InlineCitationCarouselIndexProps) => {
-  const api = useCarouselApi();
-  const [current, setCurrent] = useState(0);
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!api) {
-      return;
-    }
-
-    setCount(api.scrollSnapList().length);
-    setCurrent(api.selectedScrollSnap() + 1);
-
-    api.on('select', () => {
-      setCurrent(api.selectedScrollSnap() + 1);
-    });
-  }, [api]);
-
+  // Simplified version without API functionality
   return (
     <div
       className={cn(
         'flex flex-1 items-center justify-end px-3 py-1 text-muted-foreground text-xs',
-        className
+        className,
       )}
       {...props}
     >
-      {children ?? `${current}/${count}`}
+      {children}
     </div>
   );
 };
@@ -188,21 +153,13 @@ export type InlineCitationCarouselPrevProps = ComponentProps<'button'>;
 
 export const InlineCitationCarouselPrev = ({
   className,
+  onClick,
   ...props
 }: InlineCitationCarouselPrevProps) => {
-  const api = useCarouselApi();
-
-  const handleClick = useCallback(() => {
-    if (api) {
-      api.scrollPrev();
-    }
-  }, [api]);
-
   return (
     <button
       aria-label="Previous"
       className={cn('shrink-0', className)}
-      onClick={handleClick}
       type="button"
       {...props}
     >
@@ -215,21 +172,13 @@ export type InlineCitationCarouselNextProps = ComponentProps<'button'>;
 
 export const InlineCitationCarouselNext = ({
   className,
+  onClick,
   ...props
 }: InlineCitationCarouselNextProps) => {
-  const api = useCarouselApi();
-
-  const handleClick = useCallback(() => {
-    if (api) {
-      api.scrollNext();
-    }
-  }, [api]);
-
   return (
     <button
       aria-label="Next"
       className={cn('shrink-0', className)}
-      onClick={handleClick}
       type="button"
       {...props}
     >
@@ -278,7 +227,7 @@ export const InlineCitationQuote = ({
   <blockquote
     className={cn(
       'border-muted border-l-2 pl-3 text-muted-foreground text-sm italic',
-      className
+      className,
     )}
     {...props}
   >

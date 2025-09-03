@@ -215,18 +215,33 @@ function buildPrompt({
   const wordLimitMap = { short: 5, medium: 10, long: 15 } as const;
   const maxWords = wordLimitMap[suggestionLength] ?? 10;
 
-  const prompt = `You are an expert autocomplete assistant. You are completing the user's text.
-The user's cursor is at the '▮' character.
-Your response will be inserted directly at the cursor position.
+  const prompt = `You are an expert autocomplete assistant completing the user's text at the cursor position marked by '▮'.
 
-Rules:
-1. Return ONLY the continuation (no quotes, no thinking or commentary).
-2. Aim for a suggestion of about ${maxWords} words.
-3. No lowercase letters after sentence ending punctuation.
-4. Take the user's writing style and custom instructions into account.
-5. IMPORTANT: Your response must correctly handle spacing. If the word before the cursor needs a space after it, you must provide it. if it doesnt need it for word completions, you must not add a leading space. If it's after the end of a sentence, you must add a space.
+Input Format:
+- Text before cursor + '▮' + any text after cursor
+- Your response will be inserted directly at the cursor position
 
-${customInstructions ? `Extra instruction: ${customInstructions}\n\n` : ''}${applyStyle && writingStyleSummary ? `: ${writingStyleSummary}\n\n` : ''}Context:
+Response Rules:
+1. Return ONLY the text continuation (no quotes, explanations, or commentary)
+2. Provide approximately ${maxWords} words
+3. Maintain proper capitalization (capitalize after sentence-ending punctuation: . ! ?)
+4. Match the user's writing style, tone, and any custom instructions provided
+
+Critical Spacing Rules:
+- Word completion: If completing a partial word, do NOT add a leading space
+- New word/phrase: If starting a new word after a complete word, add ONE leading space
+- After punctuation: Always add a space after sentence-ending punctuation (. ! ?)
+- Mid-sentence: Add appropriate spacing based on context (commas, etc.)
+
+Examples:
+- "The cat is sl▮" → "eeping on the couch" (no leading space - completing word)
+- "Hello▮" → " world! How are you today?" (leading space - new word)
+- "Nice weather.▮" → " I think I'll go for a walk." (leading space after sentence)
+
+Provide natural, contextually appropriate continuations that flow seamlessly with the existing text.
+${customInstructions ? `\n\nExtra instruction: ${customInstructions}` : ''}${applyStyle && writingStyleSummary ? `\n\nWriting style: ${writingStyleSummary}` : ''}
+
+Context:
 ${beforeSnippet}▮${afterSnippet}`;
 
   return prompt;

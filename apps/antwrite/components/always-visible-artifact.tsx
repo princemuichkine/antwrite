@@ -194,11 +194,14 @@ export function AlwaysVisibleArtifact({
 
   // Focus editor when document changes or component mounts
   useEffect(() => {
-    console.log('AlwaysVisibleArtifact: Document changed, attempting to focus editor', {
-      documentId: artifact.documentId,
-      title: artifact.title,
-      contentLength: artifact.content?.length || 0,
-    });
+    console.log(
+      'AlwaysVisibleArtifact: Document changed, attempting to focus editor',
+      {
+        documentId: artifact.documentId,
+        title: artifact.title,
+        contentLength: artifact.content?.length || 0,
+      },
+    );
 
     let focusTimeout: NodeJS.Timeout | undefined;
     let retryCount = 0;
@@ -208,21 +211,28 @@ export function AlwaysVisibleArtifact({
       const editorView = getActiveEditorView();
 
       if (!editorView && retryCount < maxRetries) {
-        console.log(`AlwaysVisibleArtifact: No editor view found, retrying (${retryCount + 1}/${maxRetries})`);
+        console.log(
+          `AlwaysVisibleArtifact: No editor view found, retrying (${retryCount + 1}/${maxRetries})`,
+        );
         retryCount++;
         focusTimeout = setTimeout(focusEditor, 100);
         return;
       }
 
       if (!editorView) {
-        console.warn('AlwaysVisibleArtifact: Failed to find editor view after maximum retries');
+        console.warn(
+          'AlwaysVisibleArtifact: Failed to find editor view after maximum retries',
+        );
         return;
       }
 
       try {
         // Check if this is a new/empty document that needs cursor positioning
-        const isEmptyDocument = !artifact.content || artifact.content.trim() === '';
-        const isNewDocument = artifact.documentId !== 'init' && (!latestDocument || isEmptyDocument);
+        const isEmptyDocument =
+          !artifact.content || artifact.content.trim() === '';
+        const isNewDocument =
+          artifact.documentId !== 'init' &&
+          (!latestDocument || isEmptyDocument);
 
         console.log('AlwaysVisibleArtifact: Focus analysis', {
           isEmptyDocument,
@@ -239,7 +249,9 @@ export function AlwaysVisibleArtifact({
 
           editorView.focus();
           editorView.dispatch(tr);
-          console.log('AlwaysVisibleArtifact: Focused editor and positioned cursor at start');
+          console.log(
+            'AlwaysVisibleArtifact: Focused editor and positioned cursor at start',
+          );
         } else {
           // Position cursor at end for existing documents with content
           const endPos = editorView.state.doc.content.size;
@@ -249,7 +261,9 @@ export function AlwaysVisibleArtifact({
 
           editorView.focus();
           editorView.dispatch(tr);
-          console.log('AlwaysVisibleArtifact: Focused editor and positioned cursor at end');
+          console.log(
+            'AlwaysVisibleArtifact: Focused editor and positioned cursor at end',
+          );
         }
       } catch (error) {
         console.warn('AlwaysVisibleArtifact: Error focusing editor', error);
@@ -257,7 +271,10 @@ export function AlwaysVisibleArtifact({
         try {
           editorView.focus();
         } catch (fallbackError) {
-          console.warn('AlwaysVisibleArtifact: Even focus fallback failed', fallbackError);
+          console.warn(
+            'AlwaysVisibleArtifact: Even focus fallback failed',
+            fallbackError,
+          );
         }
       }
     };
@@ -608,7 +625,7 @@ export function AlwaysVisibleArtifact({
                 initialLastSaved={
                   latestDocument ? new Date(latestDocument.updatedAt) : null
                 }
-                onStatusChange={(newSaveState: SaveState) => { }}
+                onStatusChange={(newSaveState: SaveState) => {}}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
               />
             </Suspense>

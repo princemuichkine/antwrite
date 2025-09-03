@@ -4,15 +4,16 @@ import { NextResponse } from 'next/server';
 
 export async function POST(
   req: Request,
-  { params }: { params: { folderId: string } },
+  { params }: { params: Promise<{ folderId: string }> },
 ) {
   const session = await getSession();
   if (!session?.user?.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
+  const { folderId } = await params;
+
   try {
-    const { folderId } = params;
     const { newFolderName } = await req.json();
     const newFolder = await cloneFolder({
       folderId,
@@ -22,7 +23,7 @@ export async function POST(
     return NextResponse.json(newFolder);
   } catch (error) {
     console.error(
-      `[API - POST /api/folder/${params.folderId}/clone] Error cloning folder:`,
+      `[API - POST /api/folder/${folderId}/clone] Error cloning folder:`,
       error,
     );
     return new Response('Internal Server Error', { status: 500 });
