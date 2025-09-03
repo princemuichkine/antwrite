@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"created_at" timestamp NOT NULL,
 	"updated_at" timestamp NOT NULL,
 	"stripe_customer_id" text,
+	"is_anonymous" boolean DEFAULT false NOT NULL,
 	CONSTRAINT "user_email_unique" UNIQUE("email"),
 	CONSTRAINT "user_username_unique" UNIQUE("username")
 );
@@ -196,7 +197,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "Document_userId_slug_unique" ON "Document" US
 -- Speed up user lookup by email during OAuth flow
 CREATE INDEX IF NOT EXISTS "idx_user_email_auth" ON "user" USING btree ("email");
 --> statement-breakpoint
--- Speed up session token validation (happens on every auth request) 
+-- Speed up session token validation (happens on every auth request)
 CREATE INDEX IF NOT EXISTS "idx_session_token_auth" ON "session" USING btree ("token");
 --> statement-breakpoint
 -- Speed up active session checks for user

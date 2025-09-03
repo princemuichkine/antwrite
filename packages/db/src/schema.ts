@@ -27,6 +27,7 @@ export const user = pgTable('user', {
   createdAt: timestamp('created_at').notNull(),
   updatedAt: timestamp('updated_at').notNull(),
   stripeCustomerId: text('stripe_customer_id'),
+  isAnonymous: boolean('is_anonymous').default(false).notNull(),
 });
 
 export const session = pgTable('session', {

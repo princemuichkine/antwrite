@@ -85,7 +85,7 @@ export const AuthModal = ({
           name,
         },
         {
-          onRequest: () => {},
+          onRequest: () => { },
           onSuccess: (ctx: any) => {
             setIsEmailLoading(false);
             if (emailVerificationEnabled) {
@@ -199,6 +199,8 @@ export const AuthModal = ({
     // Immediate execution for better perceived performance
     await performSocialLogin();
   };
+
+
 
   const toggleMode = () => {
     const newMode = mode === 'login' ? 'signup' : 'login';
@@ -478,6 +480,8 @@ export const AuthModal = ({
                   )}
                 </Button>
               </form>
+
+
 
               {/* Social Login Section */}
               {hasSocialProviders && (
