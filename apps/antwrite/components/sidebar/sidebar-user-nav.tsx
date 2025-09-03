@@ -284,7 +284,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                 </>
               )}
               <DropdownMenuItem
-                className="cursor-pointer w-full"
+                className="cursor-pointer w-full mb-0.5"
                 onSelect={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 onMouseEnter={() => setHoveredTheme(true)}
                 onMouseLeave={() => setHoveredTheme(false)}
@@ -306,7 +306,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
-                className="cursor-pointer w-full"
+                className="cursor-pointer w-full mb-0.5"
                 onSelect={() =>
                   window.open(
                     'https://github.com/princemuichkine/antwrite',
@@ -326,7 +326,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                className="cursor-pointer w-full"
+                className="cursor-pointer w-full mb-0.5"
                 onSelect={() => setIsWelcomeModalOpen(true)}
                 disabled={isLoading}
               >
@@ -340,13 +340,11 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                 About us
               </DropdownMenuItem>
 
-              {!isStripeEnabled && <DropdownMenuSeparator />}
-
               {isAnonymous && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    className="cursor-pointer w-full"
+                    className="cursor-pointer w-full mb-0.5"
                     onSelect={handleUpgradeAccount}
                     onMouseEnter={() => setHoveredUpgrade(true)}
                     onMouseLeave={() => setHoveredUpgrade(false)}
@@ -359,11 +357,14 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                       autoplay={false}
                       initialFrame={0}
                       isHovered={hoveredUpgrade}
+                      customColor={[0.133, 0.773, 0.369]} // Lighter green color for create account
                     />
                     Create an account
                   </DropdownMenuItem>
                 </>
               )}
+
+              {!isStripeEnabled && !isAnonymous && <DropdownMenuSeparator />}
 
               <DropdownMenuItem
                 className="cursor-pointer w-full"
@@ -386,6 +387,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                       autoplay={false}
                       initialFrame={0}
                       isHovered={hoveredSignOut}
+                      customColor={[0.745, 0.071, 0.235]} // Pink color for sign out
                     />
                     {isAnonymous ? 'Exit' : 'Sign out'}
                   </>
