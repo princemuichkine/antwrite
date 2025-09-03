@@ -549,7 +549,10 @@ function PureMultimodalInput({
               className={cn(
                 'add-context-button flex items-center gap-1 text-xs text-accent-foreground bg-background/30 hover:bg-accent/30 transition-colors rounded-sm border border-border/30 opacity-60 hover:opacity-100 h-6',
                 confirmedMentions.length > 0 ? 'px-1.5' : 'px-2',
-                (isGuest && !isAnonymous && !isAnonymousLoading) && 'opacity-30 cursor-not-allowed',
+                isGuest &&
+                  !isAnonymous &&
+                  !isAnonymousLoading &&
+                  'opacity-30 cursor-not-allowed',
               )}
             >
               <span className="text-base leading-none">@</span>
@@ -869,7 +872,9 @@ function PureSendButton({
   isAnonymousLoading: boolean;
 }) {
   const isDisabled =
-    input.trim().length === 0 || uploadQueue.length > 0 || (isGuest && !isAnonymous && !isAnonymousLoading);
+    input.trim().length === 0 ||
+    uploadQueue.length > 0 ||
+    (isGuest && !isAnonymous && !isAnonymousLoading);
 
   return (
     <Button
@@ -895,6 +900,7 @@ const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.input !== nextProps.input) return false;
   if (prevProps.isGuest !== nextProps.isGuest) return false;
   if (prevProps.isAnonymous !== nextProps.isAnonymous) return false;
-  if (prevProps.isAnonymousLoading !== nextProps.isAnonymousLoading) return false;
+  if (prevProps.isAnonymousLoading !== nextProps.isAnonymousLoading)
+    return false;
   return true;
 });

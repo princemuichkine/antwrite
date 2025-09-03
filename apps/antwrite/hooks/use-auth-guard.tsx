@@ -115,7 +115,9 @@ export const AuthGuardProvider = ({
         target.contentEditable === 'true' ||
         target.closest('[contenteditable="true"]') ||
         // Allow document management buttons
-        target.closest('button')?.textContent?.includes('Save') ||
+        target
+          .closest('button')
+          ?.textContent?.includes('Save') ||
         target.closest('button')?.textContent?.includes('Rename') ||
         target.closest('button')?.textContent?.includes('Edit') ||
         target.closest('button')?.textContent?.includes('Delete') ||

@@ -196,7 +196,9 @@ authPlugins.push(
           .set({ userId: newUser.user.id })
           .where(eq(Document.userId, anonymousUser.user.id));
 
-        console.log('Transferred documents from anonymous user to authenticated account');
+        console.log(
+          'Transferred documents from anonymous user to authenticated account',
+        );
 
         // Transfer chats from anonymous user to new user
         await db
@@ -204,7 +206,9 @@ authPlugins.push(
           .set({ userId: newUser.user.id })
           .where(eq(Chat.userId, anonymousUser.user.id));
 
-        console.log('Transferred chats from anonymous user to authenticated account');
+        console.log(
+          'Transferred chats from anonymous user to authenticated account',
+        );
 
         // Transfer folders from anonymous user to new user
         await db
@@ -212,9 +216,13 @@ authPlugins.push(
           .set({ userId: newUser.user.id })
           .where(eq(Folder.userId, anonymousUser.user.id));
 
-        console.log('Transferred folders from anonymous user to authenticated account');
+        console.log(
+          'Transferred folders from anonymous user to authenticated account',
+        );
 
-        console.log('Successfully migrated anonymous user data to authenticated account');
+        console.log(
+          'Successfully migrated anonymous user data to authenticated account',
+        );
       } catch (error) {
         console.error('Error during anonymous user data migration:', error);
         throw new Error('Failed to migrate anonymous user data');

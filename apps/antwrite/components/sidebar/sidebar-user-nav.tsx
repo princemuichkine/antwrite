@@ -182,7 +182,8 @@ export function SidebarUserNav({ user }: { user: User | null }) {
     setIsAuthModalOpen(false);
     toast({
       type: 'success',
-      description: 'Account upgraded successfully! All your data has been transferred.',
+      description:
+        'Account upgraded successfully! All your data has been transferred.',
     });
   };
 
@@ -373,7 +374,8 @@ export function SidebarUserNav({ user }: { user: User | null }) {
               >
                 {isSignOutLoading ? (
                   <>
-                    <Loader2 className="mr-2 size-4 animate-spin" /> {isAnonymous ? 'Exiting' : 'Signing'} out...
+                    <Loader2 className="mr-2 size-4 animate-spin" />{' '}
+                    {isAnonymous ? 'Exiting' : 'Signing'} out...
                   </>
                 ) : (
                   <>

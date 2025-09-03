@@ -44,7 +44,9 @@ export function useDocumentUtils() {
       }
 
       // Sign in anonymously
-      console.log('[useDocumentUtils] Creating anonymous user for document creation');
+      console.log(
+        '[useDocumentUtils] Creating anonymous user for document creation',
+      );
       await authClient.signIn.anonymous();
 
       // Verify anonymous sign-in was successful
@@ -56,7 +58,10 @@ export function useDocumentUtils() {
 
       return false;
     } catch (error) {
-      console.error('[useDocumentUtils] Failed to create anonymous user:', error);
+      console.error(
+        '[useDocumentUtils] Failed to create anonymous user:',
+        error,
+      );
       return false;
     }
   };
