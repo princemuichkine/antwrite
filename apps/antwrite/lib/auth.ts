@@ -2,8 +2,9 @@ import 'server-only';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
-import { emailOTP } from 'better-auth/plugins';
-import { db } from '@antwrite/db';
+import { emailOTP, anonymous } from 'better-auth/plugins';
+import { db, Document, Chat, Folder } from '@antwrite/db';
+import { eq } from 'drizzle-orm';
 import Stripe from 'stripe';
 import { stripe } from '@better-auth/stripe';
 import { Resend } from 'resend';
@@ -169,6 +170,58 @@ type HookUser = {
 };
 
 const authPlugins: any[] = [];
+
+// Add anonymous plugin
+authPlugins.push(
+  anonymous({
+    emailDomainName: process.env.BETTER_AUTH_URL
+      ? new URL(process.env.BETTER_AUTH_URL).hostname
+      : 'antwrite.com',
+    generateName: () => {
+      // Generate a short, readable anonymous name
+      const randomString = Math.random().toString(36).substring(2, 8);
+      return `anon-${randomString}`;
+    },
+    onLinkAccount: async ({ anonymousUser, newUser }) => {
+      // Handle data migration from anonymous user to new authenticated user
+      console.log('Linking anonymous user to authenticated account:', {
+        anonymousUserId: anonymousUser.user.id,
+        newUserId: newUser.user.id,
+      });
+
+      try {
+        // Transfer documents from anonymous user to new user
+        await db
+          .update(Document)
+          .set({ userId: newUser.user.id })
+          .where(eq(Document.userId, anonymousUser.user.id));
+
+        console.log('Transferred documents from anonymous user to authenticated account');
+
+        // Transfer chats from anonymous user to new user
+        await db
+          .update(Chat)
+          .set({ userId: newUser.user.id })
+          .where(eq(Chat.userId, anonymousUser.user.id));
+
+        console.log('Transferred chats from anonymous user to authenticated account');
+
+        // Transfer folders from anonymous user to new user
+        await db
+          .update(Folder)
+          .set({ userId: newUser.user.id })
+          .where(eq(Folder.userId, anonymousUser.user.id));
+
+        console.log('Transferred folders from anonymous user to authenticated account');
+
+        console.log('Successfully migrated anonymous user data to authenticated account');
+      } catch (error) {
+        console.error('Error during anonymous user data migration:', error);
+        throw new Error('Failed to migrate anonymous user data');
+      }
+    },
+  }),
+);
 
 if (stripeEnabled && stripeClient) {
   const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

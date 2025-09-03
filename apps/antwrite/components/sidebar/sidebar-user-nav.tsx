@@ -23,7 +23,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Paywall } from '@/components/paywall';
 import { WelcomeModal } from '@/components/welcome-modal';
-import { useDocumentUtils } from '@/hooks/use-document-utils';
 import { AuthModal } from '@/components/auth-modal';
 
 type Subscription = {
@@ -57,7 +56,6 @@ function formatPlanName(planName: string | undefined | null): string {
 export function SidebarUserNav({ user }: { user: User | null }) {
   const { setTheme, theme } = useTheme();
   const router = useRouter();
-  const { createNewDocument } = useDocumentUtils();
 
   const [isSignOutLoading, setIsSignOutLoading] = useState(false);
   const [isBillingLoading, setIsBillingLoading] = useState(false);
@@ -66,7 +64,6 @@ export function SidebarUserNav({ user }: { user: User | null }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [hoveredTheme, setHoveredTheme] = useState(false);
   const [hoveredSignOut, setHoveredSignOut] = useState(false);
-  const [hoveredCreate, setHoveredCreate] = useState(false);
   const [hoveredUpgrade, setHoveredUpgrade] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -174,22 +171,6 @@ export function SidebarUserNav({ user }: { user: User | null }) {
         description: err.message || 'Could not open billing portal.',
       });
       setIsBillingLoading(false);
-    }
-  };
-
-  const handleCreateDocument = async () => {
-    try {
-      await createNewDocument();
-      toast({
-        type: 'success',
-        description: 'Document created successfully!',
-      });
-    } catch (error: any) {
-      console.error('Error creating document:', error);
-      toast({
-        type: 'error',
-        description: error.message || 'Failed to create document.',
-      });
     }
   };
 
@@ -321,46 +302,6 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                 {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
               </DropdownMenuItem>
 
-              {isAnonymous && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="cursor-pointer w-full"
-                    onSelect={handleCreateDocument}
-                    onMouseEnter={() => setHoveredCreate(true)}
-                    onMouseLeave={() => setHoveredCreate(false)}
-                    disabled={isLoading}
-                  >
-                    <LottieIcon
-                      animationData={animations.fileplus}
-                      size={19}
-                      loop={false}
-                      autoplay={false}
-                      initialFrame={0}
-                      isHovered={hoveredCreate}
-                    />
-                    Create new document
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer w-full"
-                    onSelect={handleUpgradeAccount}
-                    onMouseEnter={() => setHoveredUpgrade(true)}
-                    onMouseLeave={() => setHoveredUpgrade(false)}
-                    disabled={isLoading}
-                  >
-                    <LottieIcon
-                      animationData={animations.upgrade}
-                      size={19}
-                      loop={false}
-                      autoplay={false}
-                      initialFrame={0}
-                      isHovered={hoveredUpgrade}
-                    />
-                    Upgrade to real account
-                  </DropdownMenuItem>
-                </>
-              )}
-
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
@@ -400,6 +341,29 @@ export function SidebarUserNav({ user }: { user: User | null }) {
 
               {!isStripeEnabled && <DropdownMenuSeparator />}
 
+              {isAnonymous && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="cursor-pointer w-full"
+                    onSelect={handleUpgradeAccount}
+                    onMouseEnter={() => setHoveredUpgrade(true)}
+                    onMouseLeave={() => setHoveredUpgrade(false)}
+                    disabled={isLoading}
+                  >
+                    <LottieIcon
+                      animationData={animations.upgrade}
+                      size={19}
+                      loop={false}
+                      autoplay={false}
+                      initialFrame={0}
+                      isHovered={hoveredUpgrade}
+                    />
+                    Create an account
+                  </DropdownMenuItem>
+                </>
+              )}
+
               <DropdownMenuItem
                 className="cursor-pointer w-full"
                 onSelect={handleSignOut}
@@ -409,8 +373,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
               >
                 {isSignOutLoading ? (
                   <>
-                    <Loader2 className="mr-2 size-4 animate-spin" /> Signing
-                    out...
+                    <Loader2 className="mr-2 size-4 animate-spin" /> {isAnonymous ? 'Exiting' : 'Signing'} out...
                   </>
                 ) : (
                   <>
@@ -422,7 +385,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                       initialFrame={0}
                       isHovered={hoveredSignOut}
                     />
-                    Sign out
+                    {isAnonymous ? 'Exit' : 'Sign out'}
                   </>
                 )}
               </DropdownMenuItem>

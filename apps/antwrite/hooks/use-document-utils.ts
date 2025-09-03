@@ -7,6 +7,7 @@ import { toast } from '@/components/toast';
 import { generateUUID } from '@/lib/utils';
 import { useSidebar } from '@/components/ui/sidebar';
 import type { ArtifactKind } from '@/components/artifact';
+import { authClient } from '@/lib/auth-client';
 
 interface CreateDocumentParams {
   title: string;
@@ -33,6 +34,32 @@ export function useDocumentUtils() {
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [isCreatingDocument, setIsCreatingDocument] = useState(false);
   const [isRenamingDocument, setIsRenamingDocument] = useState(false);
+
+  const ensureAnonymousAuth = async () => {
+    try {
+      // Check if user is already authenticated
+      const session = await authClient.getSession();
+      if (session.data?.user) {
+        return true; // Already authenticated
+      }
+
+      // Sign in anonymously
+      console.log('[useDocumentUtils] Creating anonymous user for document creation');
+      await authClient.signIn.anonymous();
+
+      // Verify anonymous sign-in was successful
+      const newSession = await authClient.getSession();
+      if (newSession.data?.user) {
+        console.log('[useDocumentUtils] Anonymous user created successfully');
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('[useDocumentUtils] Failed to create anonymous user:', error);
+      return false;
+    }
+  };
 
   const handleResetChat = () => {
     console.log('[useDocumentUtils] Resetting chat state');
@@ -74,9 +101,16 @@ export function useDocumentUtils() {
     if (isCreatingDocument) return;
 
     setIsCreatingDocument(true);
-    const newDocId = generateUUID();
 
     try {
+      // Ensure user is authenticated (create anonymous user if needed)
+      const isAuthenticated = await ensureAnonymousAuth();
+      if (!isAuthenticated) {
+        throw new Error('Failed to authenticate user');
+      }
+
+      const newDocId = generateUUID();
+
       console.log('[Document] Creating new document:', {
         documentId: newDocId,
       });
@@ -209,6 +243,12 @@ export function useDocumentUtils() {
     setIsCreatingDocument(true);
 
     try {
+      // Ensure user is authenticated (create anonymous user if needed)
+      const isAuthenticated = await ensureAnonymousAuth();
+      if (!isAuthenticated) {
+        throw new Error('Failed to authenticate user');
+      }
+
       const documentId = params.providedId || generateUUID();
 
       const response = await fetch('/api/document', {

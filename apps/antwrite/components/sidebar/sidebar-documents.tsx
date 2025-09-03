@@ -298,8 +298,8 @@ const PureDocumentItem = ({
           />
         )}
         <SidebarMenuButton
-          {...listeners}
-          {...attributes}
+          {...(isDragDisabled ? {} : listeners)}
+          {...(isDragDisabled ? {} : attributes)}
           asChild
           isActive={isActive}
           className={cn('flex-1', isSelectionMode && 'pr-1')}

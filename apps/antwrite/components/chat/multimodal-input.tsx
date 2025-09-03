@@ -22,7 +22,7 @@ import { SuggestedActions } from '../suggested-actions';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { useDocumentContext } from '@/hooks/use-document-context';
-import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { useAuthGuard, useIsAnonymous } from '@/hooks/use-auth-guard';
 
 import { Badge } from '../ui/badge';
 import { ContextSelector, type ContextItem } from '../context-selector';
@@ -85,6 +85,7 @@ function PureMultimodalInput({
   const { documentId: activeDocumentId, documentTitle: activeDocumentTitle } =
     useDocumentContext();
   const { isGuest } = useAuthGuard();
+  const { isAnonymous, isLoading: isAnonymousLoading } = useIsAnonymous();
   const badgesContainerRef = useRef<HTMLDivElement>(null);
   const atButtonContainerRef = useRef<HTMLDivElement>(null);
   const measurementRef = useRef<HTMLDivElement>(null);
@@ -204,8 +205,8 @@ function PureMultimodalInput({
       : 0;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // Prevent guest users from typing anything
-    if (isGuest) {
+    // Prevent guest users from typing anything (but allow anonymous users)
+    if (isGuest && !isAnonymous && !isAnonymousLoading) {
       return;
     }
 
@@ -387,7 +388,7 @@ function PureMultimodalInput({
 
   // Handle Add Context button click
   const handleAddContextClick = () => {
-    if (isGuest) return;
+    if (isGuest && !isAnonymous && !isAnonymousLoading) return;
 
     setMentionStartPosition(input.length);
     setShowAddContextSelector(true);
@@ -466,8 +467,8 @@ function PureMultimodalInput({
   );
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Prevent guest users from any keyboard input
-    if (isGuest) {
+    // Prevent guest users from any keyboard input (but allow anonymous users)
+    if (isGuest && !isAnonymous && !isAnonymousLoading) {
       return;
     }
 
@@ -544,11 +545,11 @@ function PureMultimodalInput({
             <button
               type="button"
               onClick={handleAddContextClick}
-              disabled={isGuest}
+              disabled={isGuest && !isAnonymous && !isAnonymousLoading}
               className={cn(
                 'add-context-button flex items-center gap-1 text-xs text-accent-foreground bg-background/30 hover:bg-accent/30 transition-colors rounded-sm border border-border/30 opacity-60 hover:opacity-100 h-6',
                 confirmedMentions.length > 0 ? 'px-1.5' : 'px-2',
-                isGuest && 'opacity-30 cursor-not-allowed',
+                (isGuest && !isAnonymous && !isAnonymousLoading) && 'opacity-30 cursor-not-allowed',
               )}
             >
               <span className="text-base leading-none">@</span>
@@ -625,7 +626,7 @@ function PureMultimodalInput({
               ref={textareaRef}
               value={input}
               onChange={handleInputChange}
-              disabled={isGuest}
+              disabled={isGuest && !isAnonymous && !isAnonymousLoading}
               onKeyDown={(e) => {
                 // Handle backspace for @mentions
                 if (e.key === 'Backspace') {
@@ -754,7 +755,7 @@ function PureMultimodalInput({
             <ChatModeSelector
               selectedMode={chatMode}
               onModeChange={onChatModeChange}
-              disabled={isGuest}
+              disabled={isGuest && !isAnonymous && !isAnonymousLoading}
             />
             <ModelSelector
               selectedModelId={selectedModelId}
@@ -762,7 +763,7 @@ function PureMultimodalInput({
               minimal={true}
               open={isModelSelectorOpen}
               onOpenChange={handleModelSelectorOpenChange}
-              disabled={isGuest}
+              disabled={isGuest && !isAnonymous && !isAnonymousLoading}
             />
           </div>
           <div>
@@ -773,7 +774,9 @@ function PureMultimodalInput({
                 input={input}
                 submitForm={submitForm}
                 uploadQueue={uploadQueue}
-                isGuest={isGuest}
+                isGuest={isGuest && !isAnonymous && !isAnonymousLoading}
+                isAnonymous={isAnonymous}
+                isAnonymousLoading={isAnonymousLoading}
               />
             )}
           </div>
@@ -855,14 +858,18 @@ function PureSendButton({
   input,
   uploadQueue,
   isGuest,
+  isAnonymous,
+  isAnonymousLoading,
 }: {
   submitForm: () => void;
   input: string;
   uploadQueue: Array<string>;
   isGuest: boolean;
+  isAnonymous: boolean;
+  isAnonymousLoading: boolean;
 }) {
   const isDisabled =
-    input.trim().length === 0 || uploadQueue.length > 0 || isGuest;
+    input.trim().length === 0 || uploadQueue.length > 0 || (isGuest && !isAnonymous && !isAnonymousLoading);
 
   return (
     <Button
@@ -887,5 +894,7 @@ const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
     return false;
   if (prevProps.input !== nextProps.input) return false;
   if (prevProps.isGuest !== nextProps.isGuest) return false;
+  if (prevProps.isAnonymous !== nextProps.isAnonymous) return false;
+  if (prevProps.isAnonymousLoading !== nextProps.isAnonymousLoading) return false;
   return true;
 });

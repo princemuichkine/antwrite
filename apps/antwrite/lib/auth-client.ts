@@ -1,6 +1,6 @@
 import { createAuthClient } from 'better-auth/react';
 import { stripeClient } from '@better-auth/stripe/client';
-import { emailOTPClient } from 'better-auth/client/plugins';
+import { emailOTPClient, anonymousClient } from 'better-auth/client/plugins';
 
 export const authClient = createAuthClient({
   plugins: [
@@ -8,6 +8,7 @@ export const authClient = createAuthClient({
       subscription: true,
     }),
     emailOTPClient(),
+    anonymousClient(),
   ],
 });
 

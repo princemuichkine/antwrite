@@ -10,6 +10,7 @@ import {
 import { AuthModal } from '@/components/auth-modal';
 import { WelcomeModal } from '@/components/welcome-modal';
 import { useRouter } from 'next/navigation';
+import { authClient } from '@/lib/auth-client';
 
 type AuthGuardContextType = {
   isGuest: boolean;
@@ -23,6 +24,37 @@ export const useAuthGuard = () => {
     throw new Error('useAuthGuard must be used within an AuthGuardProvider');
   }
   return context;
+};
+
+// Hook to check if current user is anonymous
+export const useIsAnonymous = () => {
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAnonymousStatus = async () => {
+      try {
+        const session = await authClient.getSession();
+        if (session.data?.user) {
+          // User is authenticated, check if they're anonymous
+          setIsAnonymous(false); // For now, we'll assume authenticated users are not anonymous
+          // In the future, we could check session.data.user.isAnonymous if available
+        } else {
+          // User is not authenticated
+          setIsAnonymous(false);
+        }
+      } catch (error) {
+        console.error('Error checking anonymous status:', error);
+        setIsAnonymous(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAnonymousStatus();
+  }, []);
+
+  return { isAnonymous, isLoading };
 };
 
 export const AuthGuardProvider = ({
@@ -49,7 +81,7 @@ export const AuthGuardProvider = ({
     }
   }, []);
 
-  // Simple: if guest clicks anywhere, show modal
+  // For guests: allow most interactions but block AI chat and certain sensitive areas
   useEffect(() => {
     if (!isGuest) return;
 
@@ -66,25 +98,131 @@ export const AuthGuardProvider = ({
       )
         return;
 
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Show welcome modal first if not shown before, otherwise show auth modal
-      if (!welcomeShown) {
-        setShowWelcomeModal(true);
-      } else {
-        setShowAuthModal(true);
+      // Allow ALL document-related interactions (text editor, document creation, editing, etc.)
+      if (
+        target.closest('.editor-area') ||
+        target.closest('.ProseMirror') ||
+        target.closest('[data-create-document]') ||
+        target.closest('[data-document-editor]') ||
+        target.closest('button')?.textContent?.includes('Create') ||
+        target.closest('button')?.textContent?.includes('New') ||
+        target.closest('button')?.querySelector('svg') || // buttons with icons (like file plus)
+        target.closest('[role="textbox"]') ||
+        target.closest('input') ||
+        target.closest('textarea') ||
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.contentEditable === 'true' ||
+        target.closest('[contenteditable="true"]') ||
+        // Allow document management buttons
+        target.closest('button')?.textContent?.includes('Save') ||
+        target.closest('button')?.textContent?.includes('Rename') ||
+        target.closest('button')?.textContent?.includes('Edit') ||
+        target.closest('button')?.textContent?.includes('Delete') ||
+        // Allow toolbar interactions
+        target.closest('[data-toolbar]') ||
+        target.closest('.toolbar')
+      ) {
+        // Let all document editing and creation proceed - anonymous auth will handle it
+        return;
       }
+
+      // BLOCK AI chat interactions for guests
+      if (
+        target.closest('[data-chat-input]') ||
+        target.closest('[data-multimodal-input]') ||
+        target.closest('.chat-input') ||
+        target.closest('[data-chat]') ||
+        target.closest('button')?.textContent?.includes('Send') ||
+        target.closest('button')?.textContent?.includes('Chat') ||
+        target.closest('button')?.textContent?.includes('Ask') ||
+        target.closest('[data-ai-chat]') ||
+        target.closest('[data-ai-widget]') ||
+        target.closest('[data-chat-widget]')
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Show auth modal for AI features
+        if (!welcomeShown) {
+          setShowWelcomeModal(true);
+        } else {
+          setShowAuthModal(true);
+        }
+        return;
+      }
+
+      // Allow other non-sensitive interactions (theme toggle, sidebar navigation, etc.)
+      // Only block truly sensitive operations that need authentication
+      if (
+        target.closest('button')?.textContent?.includes('Upgrade') ||
+        target.closest('button')?.textContent?.includes('Account') ||
+        target.closest('[data-account]') ||
+        target.closest('[data-billing]') ||
+        target.closest('[data-settings]')
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!welcomeShown) {
+          setShowWelcomeModal(true);
+        } else {
+          setShowAuthModal(true);
+        }
+        return;
+      }
+
+      // Let everything else proceed (navigation, UI interactions, etc.)
+      return;
+    };
+
+    // Allow all keyboard input in document areas
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Allow all keyboard input in document editing areas
+      if (
+        target.closest('.editor-area') ||
+        target.closest('.ProseMirror') ||
+        target.closest('[data-document-editor]') ||
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.contentEditable === 'true' ||
+        target.closest('[contenteditable="true"]') ||
+        target.closest('[role="textbox"]')
+      ) {
+        // Let document editing proceed freely
+        return;
+      }
+
+      // Block AI chat keyboard interactions
+      if (
+        target.closest('[data-chat-input]') ||
+        target.closest('[data-multimodal-input]') ||
+        target.closest('.chat-input') ||
+        target.closest('[data-chat]')
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!welcomeShown) {
+          setShowWelcomeModal(true);
+        } else {
+          setShowAuthModal(true);
+        }
+        return;
+      }
+
+      // Allow other keyboard interactions (navigation, shortcuts, etc.)
+      return;
     };
 
     document.addEventListener('click', handleClick, true);
-    document.addEventListener('keydown', handleClick, true);
-    document.addEventListener('input', handleClick, true);
+    document.addEventListener('keydown', handleKeyDown, true);
 
     return () => {
       document.removeEventListener('click', handleClick, true);
-      document.removeEventListener('keydown', handleClick, true);
-      document.removeEventListener('input', handleClick, true);
+      document.removeEventListener('keydown', handleKeyDown, true);
     };
   }, [isGuest, modalJustClosed, welcomeShown]);
 
