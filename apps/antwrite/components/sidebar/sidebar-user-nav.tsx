@@ -23,6 +23,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Paywall } from '@/components/paywall';
 import { WelcomeModal } from '@/components/welcome-modal';
+import { useDocumentUtils } from '@/hooks/use-document-utils';
+import { AuthModal } from '@/components/auth-modal';
 
 type Subscription = {
   id: string;
@@ -55,13 +57,17 @@ function formatPlanName(planName: string | undefined | null): string {
 export function SidebarUserNav({ user }: { user: User | null }) {
   const { setTheme, theme } = useTheme();
   const router = useRouter();
+  const { createNewDocument } = useDocumentUtils();
 
   const [isSignOutLoading, setIsSignOutLoading] = useState(false);
   const [isBillingLoading, setIsBillingLoading] = useState(false);
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [hoveredTheme, setHoveredTheme] = useState(false);
   const [hoveredSignOut, setHoveredSignOut] = useState(false);
+  const [hoveredCreate, setHoveredCreate] = useState(false);
+  const [hoveredUpgrade, setHoveredUpgrade] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -171,9 +177,40 @@ export function SidebarUserNav({ user }: { user: User | null }) {
     }
   };
 
+  const handleCreateDocument = async () => {
+    try {
+      await createNewDocument();
+      toast({
+        type: 'success',
+        description: 'Document created successfully!',
+      });
+    } catch (error: any) {
+      console.error('Error creating document:', error);
+      toast({
+        type: 'error',
+        description: error.message || 'Failed to create document.',
+      });
+    }
+  };
+
+  const handleUpgradeAccount = () => {
+    setIsAuthModalOpen(true);
+  };
+
+  const handleAuthSuccess = () => {
+    setIsAuthModalOpen(false);
+    toast({
+      type: 'success',
+      description: 'Account upgraded successfully! All your data has been transferred.',
+    });
+  };
+
   if (!user) {
     return null;
   }
+
+  // Check if user is anonymous (starts with 'anon-')
+  const isAnonymous = user.name?.startsWith('anon-') || false;
 
   let statusText = 'No active plan';
   let planName = 'Free';
@@ -182,8 +219,8 @@ export function SidebarUserNav({ user }: { user: User | null }) {
   let ctaLoading = isSubscriptionLoading;
 
   if (isSubscriptionLoading) {
-    statusText = 'Loading...';
-    planName = 'Checking';
+    statusText = '';
+    planName = '';
   } else if (subscriptionError) {
     statusText = 'Error loading status';
     planName = 'Error';
@@ -284,6 +321,46 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                 {`Toggle ${theme === 'light' ? 'dark' : 'light'} mode`}
               </DropdownMenuItem>
 
+              {isAnonymous && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="cursor-pointer w-full"
+                    onSelect={handleCreateDocument}
+                    onMouseEnter={() => setHoveredCreate(true)}
+                    onMouseLeave={() => setHoveredCreate(false)}
+                    disabled={isLoading}
+                  >
+                    <LottieIcon
+                      animationData={animations.fileplus}
+                      size={19}
+                      loop={false}
+                      autoplay={false}
+                      initialFrame={0}
+                      isHovered={hoveredCreate}
+                    />
+                    Create new document
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer w-full"
+                    onSelect={handleUpgradeAccount}
+                    onMouseEnter={() => setHoveredUpgrade(true)}
+                    onMouseLeave={() => setHoveredUpgrade(false)}
+                    disabled={isLoading}
+                  >
+                    <LottieIcon
+                      animationData={animations.upgrade}
+                      size={19}
+                      loop={false}
+                      autoplay={false}
+                      initialFrame={0}
+                      isHovered={hoveredUpgrade}
+                    />
+                    Upgrade to real account
+                  </DropdownMenuItem>
+                </>
+              )}
+
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
@@ -357,6 +434,12 @@ export function SidebarUserNav({ user }: { user: User | null }) {
       <WelcomeModal
         open={isWelcomeModalOpen}
         onOpenChange={setIsWelcomeModalOpen}
+      />
+      <AuthModal
+        open={isAuthModalOpen}
+        onOpenChange={setIsAuthModalOpen}
+        mode="signup"
+        onAuthSuccess={handleAuthSuccess}
       />
     </>
   );

@@ -30,7 +30,7 @@ const DocumentContext = createContext<DocumentContextType>({
   documentContent: '',
   documentKind: 'text',
   isLoading: false,
-  updateDocument: () => {},
+  updateDocument: () => { },
 });
 
 export function DocumentProvider({ children }: { children: ReactNode }) {
@@ -51,7 +51,7 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
     if (isValidId(docIdFromParams)) {
       if (docIdFromParams !== documentId) {
         setDocumentId(docIdFromParams);
-        setDocumentTitle('Loading...');
+        setDocumentTitle('');
         setDocumentContent('');
         setDocumentKind('text');
         setIsLoading(true);
@@ -93,7 +93,7 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
           .catch((error) => {
             console.error('[DocumentContext] Error fetching document:', error);
             setDocumentId('init');
-            setDocumentTitle('Error Loading');
+            setDocumentTitle('');
             setDocumentContent('');
             setDocumentKind('text');
           })
