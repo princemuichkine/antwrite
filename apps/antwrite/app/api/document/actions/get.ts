@@ -5,6 +5,7 @@ import {
   getDocumentsById,
   getCurrentDocumentsByUserId,
   getPaginatedDocumentsByUserId,
+  getAllDocumentVersions,
 } from '@/lib/db/queries'; // Import Drizzle queries
 
 /**
@@ -32,11 +33,6 @@ export async function getDocuments(request: NextRequest) {
     const limitParam = searchParams.get('limit');
     const endingBefore = searchParams.get('ending_before');
 
-    console.log(`[Document API - GET] Fetch request for user ${userId}:`, {
-      id,
-      limit: limitParam,
-      endingBefore,
-    });
 
     // --- Fetch by specific document ID ---
     if (id) {
@@ -47,16 +43,20 @@ export async function getDocuments(request: NextRequest) {
         return NextResponse.json([]);
       }
 
-      // Fetch using Drizzle query (already checks user ID)
-      const documents = await getDocumentsById({ ids: [id], userId: userId });
-      return NextResponse.json(documents || []); // Ensure array is returned
+      const includeVersions = searchParams.get('includeVersions') === 'true';
+
+      if (includeVersions) {
+        const allVersions = await getAllDocumentVersions({ documentId: id, userId: userId });
+        return NextResponse.json(allVersions || []);
+      } else {
+        // Fetch using Drizzle query (already checks user ID)
+        const documents = await getDocumentsById({ ids: [id], userId: userId });
+        return NextResponse.json(documents || []); // Ensure array is returned
+      }
     }
 
     // --- Handle pagination ---
     if (limitParam) {
-      console.log(
-        `[Document API - GET] Fetching paginated documents for user: ${userId}`,
-      );
       try {
         const limit = Number.parseInt(limitParam, 10);
         if (Number.isNaN(limit) || limit <= 0) {
@@ -85,9 +85,6 @@ export async function getDocuments(request: NextRequest) {
 
     // --- Fetch all *current* documents for the user (legacy) ---
     else {
-      console.log(
-        `[Document API - GET] Fetching all *current* documents for user (legacy): ${userId}`,
-      );
       try {
         // Fetch using the new Drizzle query
         const documents = await getCurrentDocumentsByUserId({ userId: userId });

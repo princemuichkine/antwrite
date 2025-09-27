@@ -113,9 +113,9 @@
   "devDependencies": {
     "@types/diff-match-patch": "^1.0.36",
     "@types/node": "^20",
-    "@types/react": "^18",
+    "@types/react": "^18.3.24",
     "@types/react-color": "^3.0.13",
-    "@types/react-dom": "^18",
+    "@types/react-dom": "^18.3.7",
     "drizzle-orm": "^0.34.1",
     "eslint": "^8",
     "typescript": "^5"

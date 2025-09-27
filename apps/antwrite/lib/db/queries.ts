@@ -3,6 +3,7 @@ import { db } from '@antwrite/db';
 import * as schema from '@antwrite/db';
 import { eq, desc, asc, inArray, gt, and, sql, lt } from 'drizzle-orm'; // Import Drizzle operators and
 import type { ArtifactKind } from '@/components/artifact';
+import type { DocumentVersionData } from '@/types/document-version';
 
 type Chat = typeof schema.Chat.$inferSelect;
 type Message = typeof schema.Message.$inferSelect;
@@ -104,10 +105,6 @@ export async function saveMessages({
         finalContent = JSON.stringify(msg.content);
         finalContent = JSON.stringify(msg.content);
       } else {
-        console.warn(
-          `[DB Query - saveMessages] Unexpected message content type for msg ID (if exists) ${msg.id}:`,
-          typeof msg.content,
-        );
         finalContent = JSON.stringify([]);
       }
 
@@ -119,10 +116,6 @@ export async function saveMessages({
 
     if (formattedMessages.length > 0) {
       await db.insert(schema.Message).values(formattedMessages);
-    } else {
-      console.log(
-        '[DB Query - saveMessages] No messages to save, skipping db insert',
-      );
     }
   } catch (error) {
     console.error('Error saving messages:', error);
@@ -218,39 +211,47 @@ export async function saveDocument({
 }): Promise<typeof schema.Document.$inferSelect> {
   try {
     const now = new Date();
-    const newVersionData = {
+    const newDocumentData = {
       id,
       title,
       kind: kind as (typeof schema.artifactKindEnum.enumValues)[number],
       content,
       userId,
       chatId: chatId || null,
-      is_current: true,
       createdAt: now,
       updatedAt: now,
     };
 
-    const inserted = await db
+    const [insertedDocument] = await db
       .insert(schema.Document)
-      .values(newVersionData)
+      .values(newDocumentData)
       .returning();
 
-    console.log(
-      `[DB Query - saveDocument] Saved new version for doc ${id}, user ${userId}`,
-    );
-    if (!inserted || inserted.length === 0) {
-      throw new Error(
-        'Failed to insert new document version or retrieve the inserted data.',
-      );
+    if (!insertedDocument) {
+      throw new Error('Failed to insert new document.');
     }
-    return inserted[0];
+
+    // Also create the first historical version.
+    await db.insert(schema.DocumentVersion).values({
+      documentId: id,
+      content: content || '',
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    console.log(
+      `[DB Query - saveDocument] Saved new document ${id} and first version for user ${userId}`,
+    );
+
+    return insertedDocument;
   } catch (error) {
     console.error(
-      `[DB Query - saveDocument] Error saving new version for doc ${id}, user ${userId}:`,
+      `[DB Query - saveDocument] Error saving new document ${id}, user ${userId}:`,
       error,
     );
     throw new Error(
-      `Failed to save document version: ${error instanceof Error ? error.message : String(error)}`,
+      `Failed to save document: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -277,6 +278,190 @@ export async function getDocumentsById({
   } catch (error) {
     console.error('Error fetching documents by IDs:', error);
     return [];
+  }
+}
+
+export async function createDocumentVersion({
+  documentId,
+  content,
+  previousContent,
+}: {
+  documentId: string;
+  content: string;
+  previousContent?: string;
+}): Promise<typeof schema.DocumentVersion.$inferSelect> {
+  try {
+    const data = await db
+      .select()
+      .from(schema.DocumentVersion)
+      .where(eq(schema.DocumentVersion.documentId, documentId))
+      .orderBy(desc(schema.DocumentVersion.createdAt))
+      .limit(1);
+
+    const latestVersion = data.length > 0 ? data[0].version : 0;
+    const previousVersionId = data.length > 0 ? data[0].id : null;
+
+    // Calculate diff content if previous content is provided
+    const diffContent = previousContent
+      ? calculateDiff(previousContent, content)
+      : null;
+
+    const newVersion = {
+      documentId: documentId,
+      content: content,
+      diffContent: diffContent,
+      previousVersionId: previousVersionId,
+      version: latestVersion + 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const [inserted] = await db
+      .insert(schema.DocumentVersion)
+      .values(newVersion)
+      .returning();
+    return inserted;
+  } catch (error) {
+    console.error(
+      `[DB Query - createDocumentVersion] Error creating document version for doc ${documentId}:`,
+      error,
+    );
+    throw new Error(
+      `Failed to create document version: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+// Helper function to calculate diff between two content strings
+function calculateDiff(oldContent: string, newContent: string): string {
+  // Simple diff calculation - you can enhance this with more sophisticated diff algorithms
+  if (oldContent === newContent) return '';
+
+  // For now, return a simple diff representation
+  // In a real implementation, you might want to use a proper diff library
+  return JSON.stringify({
+    type: 'content_change',
+    oldLength: oldContent.length,
+    newLength: newContent.length,
+    timestamp: new Date().toISOString()
+  });
+}
+
+export async function getLatestDocumentVersionById({ id }: { id: string }): Promise<(typeof schema.DocumentVersion.$inferSelect)[] | null> {
+  try {
+    const data = await db.select().from(schema.DocumentVersion).where(eq(schema.DocumentVersion.documentId, id)).orderBy(desc(schema.DocumentVersion.createdAt)).limit(1);
+    return data;
+  } catch (error) {
+    console.error(`[DB Query - getLatestDocumentVersionById] Error fetching latest document version for doc ${id}:`, error);
+    throw new Error(`Failed to fetch latest document version: ${error instanceof Error ? error.message : String(error)}`);
+
+  }
+}
+
+export async function getAllDocumentVersions({
+  documentId,
+  userId
+}: {
+  documentId: string;
+  userId: string;
+}): Promise<DocumentVersionData[]> {
+  try {
+    // Get the current document
+    const [currentDocument] = await getDocumentsById({
+      ids: [documentId],
+      userId,
+    });
+
+    if (!currentDocument) {
+      return [];
+    }
+
+    // Get all historical versions
+    const historicalVersions = await db
+      .select()
+      .from(schema.DocumentVersion)
+      .where(eq(schema.DocumentVersion.documentId, documentId))
+      .orderBy(asc(schema.DocumentVersion.createdAt));
+
+    const allVersions: DocumentVersionData[] = historicalVersions.map((version) => ({
+      id: version.id,
+      content: version.content,
+      title: currentDocument.title, // Use current document title for all versions
+      createdAt: version.createdAt,
+      updatedAt: version.updatedAt,
+      version: version.version,
+      diffContent: version.diffContent,
+    }));
+
+    // Add the current version to the end of the list
+    allVersions.push({
+      id: currentDocument.id,
+      content: currentDocument.content || null,
+      title: currentDocument.title,
+      createdAt: currentDocument.createdAt,
+      updatedAt: currentDocument.updatedAt,
+      version: historicalVersions.length + 1, // Placeholder, might need adjustment
+      diffContent: undefined,
+    });
+
+    return allVersions;
+  } catch (error) {
+    console.error(
+      `[DB Query - getAllDocumentVersions] Error fetching all versions for doc ${documentId}:`,
+      error,
+    );
+    return [];
+  }
+}
+
+/**
+ * Creates a new document version after debounce period
+ * This function is called when user stops typing for 5 seconds
+ */
+export async function createDebouncedDocumentVersion({
+  documentId,
+  content,
+  userId
+}: {
+  documentId: string;
+  content: string;
+  userId: string;
+}): Promise<typeof schema.DocumentVersion.$inferSelect | null> {
+  try {
+    const latestVersion = await getLatestDocumentVersionById({ id: documentId });
+
+    // This might happen for a new document. The first version is created with the document itself.
+    if (!latestVersion || latestVersion.length === 0) {
+      console.log(
+        `[DB Query - createDebouncedDocumentVersion] No previous version found for doc ${documentId}, skipping version creation`,
+      );
+      return null;
+    }
+
+    const previousVersion = latestVersion[0];
+
+    if (previousVersion.content === content) {
+      console.log(
+        `[DB Query - createDebouncedDocumentVersion] Content unchanged for doc ${documentId}, skipping version creation`,
+      );
+      return null;
+    }
+
+    const newVersion = await createDocumentVersion({
+      documentId,
+      content,
+      previousContent: previousVersion.content,
+    });
+
+    console.log(
+      `[DB Query - createDebouncedDocumentVersion] Created new version ${newVersion.version} for doc ${documentId}`,
+    );
+    return newVersion;
+  } catch (error) {
+    console.error(
+      `[DB Query - createDebouncedDocumentVersion] Error creating debounced version for doc ${documentId}:`,
+      error,
+    );
+    return null;
   }
 }
 
@@ -431,7 +616,6 @@ export async function getCurrentDocumentsByUserId({
       .where(
         and(
           eq(schema.Document.userId, userId),
-          eq(schema.Document.is_current, true),
         ),
       )
       .orderBy(desc(schema.Document.createdAt));
@@ -473,15 +657,8 @@ export async function getPaginatedDocumentsByUserId({
         .from(schema.Document)
         .where(
           whereCondition
-            ? and(
-                whereCondition,
-                eq(schema.Document.userId, userId),
-                eq(schema.Document.is_current, true),
-              )
-            : and(
-                eq(schema.Document.userId, userId),
-                eq(schema.Document.is_current, true),
-              ),
+            ? and(whereCondition, eq(schema.Document.userId, userId))
+            : eq(schema.Document.userId, userId),
         )
         .orderBy(desc(schema.Document.createdAt))
         .limit(extendedLimit);
@@ -543,7 +720,6 @@ export async function searchDocumentsByQuery({
       .where(
         and(
           eq(schema.Document.userId, userId),
-          eq(schema.Document.is_current, true),
           sql`(${schema.Document.title} ilike ${`%${query}%`} or ${schema.Document.content} ilike ${`%${query}%`})`,
         ),
       )
@@ -598,7 +774,6 @@ export async function getCurrentDocumentByTitle({
       .where(
         and(
           eq(schema.Document.userId, userId),
-          eq(schema.Document.is_current, true),
           sql`${schema.Document.title} ilike ${title}`,
         ),
       )
@@ -674,37 +849,6 @@ export async function deleteDocumentByIdAndUserId({
   }
 }
 
-export async function setOlderVersionsNotCurrent({
-  userId,
-  documentId,
-}: {
-  userId: string;
-  documentId: string;
-}): Promise<void> {
-  try {
-    await db
-      .update(schema.Document)
-      .set({ is_current: false })
-      .where(
-        and(
-          eq(schema.Document.id, documentId),
-          eq(schema.Document.userId, userId),
-        ),
-      );
-    console.log(
-      `[DB Query - setOlderVersionsNotCurrent] Marked older versions of doc ${documentId} for user ${userId} as not current.`,
-    );
-  } catch (error) {
-    console.error(
-      `[DB Query - setOlderVersionsNotCurrent] Error marking older versions for doc ${documentId}, user ${userId}:`,
-      error,
-    );
-    throw new Error(
-      `Failed to mark older document versions as not current: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-}
-
 export async function renameDocumentTitle({
   userId,
   documentId,
@@ -741,39 +885,7 @@ export async function renameDocumentTitle({
   }
 }
 
-export async function getCurrentDocumentVersion({
-  userId,
-  documentId,
-}: {
-  userId: string;
-  documentId: string;
-}): Promise<typeof schema.Document.$inferSelect | null> {
-  try {
-    const results = await db
-      .select()
-      .from(schema.Document)
-      .where(
-        and(
-          eq(schema.Document.id, documentId),
-          eq(schema.Document.userId, userId),
-          eq(schema.Document.is_current, true),
-        ),
-      )
-      .limit(1);
-
-    return results[0] || null;
-  } catch (error) {
-    console.error(
-      `[DB Query - getCurrentDocumentVersion] Error fetching current version for doc ${documentId}, user ${userId}:`,
-      error,
-    );
-    throw new Error(
-      `Failed to fetch current document version: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-}
-
-export async function updateCurrentDocumentVersion({
+export async function updateDocumentContent({
   userId,
   documentId,
   content,
@@ -793,14 +905,13 @@ export async function updateCurrentDocumentVersion({
         and(
           eq(schema.Document.id, documentId),
           eq(schema.Document.userId, userId),
-          eq(schema.Document.is_current, true),
         ),
       )
       .returning();
 
     if (updatedDocs.length === 0) {
       console.warn(
-        `[DB Query - updateCurrentDocumentVersion] No current document found to update for doc ${documentId}, user ${userId}.`,
+        `[DB Query - updateDocumentContent] No document found to update for doc ${documentId}, user ${userId}.`,
       );
       const anyVersionExists = await db
         .select({ id: schema.Document.id })
@@ -816,18 +927,18 @@ export async function updateCurrentDocumentVersion({
         throw new Error('Document not found or unauthorized.');
       } else {
         throw new Error(
-          'Failed to update the current document version. It might have been changed or deleted.',
+          'Failed to update the document. It might have been changed or deleted.',
         );
       }
     }
 
     console.log(
-      `[DB Query - updateCurrentDocumentVersion] Updated content for current version of doc ${documentId}, user ${userId}`,
+      `[DB Query - updateDocumentContent] Updated content for doc ${documentId}, user ${userId}`,
     );
     return updatedDocs[0];
   } catch (error) {
     console.error(
-      `[DB Query - updateCurrentDocumentVersion] Error updating current version for doc ${documentId}, user ${userId}:`,
+      `[DB Query - updateDocumentContent] Error updating document for doc ${documentId}, user ${userId}:`,
       error,
     );
     if (
@@ -838,7 +949,7 @@ export async function updateCurrentDocumentVersion({
       throw error;
     }
     throw new Error(
-      `Failed to update current document version: ${error instanceof Error ? error.message : String(error)}`,
+      `Failed to update document: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -888,60 +999,23 @@ export async function createNewDocumentVersion({
   chatId?: string | null;
 }): Promise<typeof schema.Document.$inferSelect> {
   try {
-    // Wrap operations in a transaction
-    const newDocument = await db.transaction(async (tx) => {
-      // 1. Set older versions to not current using the transaction client (tx)
-      await tx
-        .update(schema.Document)
-        .set({ is_current: false })
-        .where(
-          and(eq(schema.Document.id, id), eq(schema.Document.userId, userId)),
-        );
-      console.log(
-        `[DB Query - TX] Marked older versions of doc ${id} for user ${userId} as not current.`,
-      );
-
-      // 2. Prepare and insert the new version using the transaction client (tx)
-      const now = new Date();
-      const newVersionData = {
-        id,
-        title,
-        kind: kind as (typeof schema.artifactKindEnum.enumValues)[number],
-        content,
-        userId,
-        chatId: chatId || null,
-        is_current: true,
-        createdAt: now,
-        updatedAt: now,
-      };
-      const inserted = await tx
-        .insert(schema.Document)
-        .values(newVersionData)
-        .returning();
-
-      console.log(
-        `[DB Query - TX] Saved new version for doc ${id}, user ${userId}`,
-      );
-      if (!inserted || inserted.length === 0) {
-        throw new Error(
-          'Failed to insert new document version or retrieve the inserted data within transaction.',
-        );
-      }
-
-      // Return the newly inserted document from the transaction
-      return inserted[0];
+    const newDocument = await saveDocument({
+      id,
+      title,
+      kind,
+      content,
+      userId,
+      chatId,
     });
-
     console.log(
-      `[DB Query - createNewDocumentVersion] Successfully created new version for doc ${id}, user ${userId} (Transaction committed)`,
+      `[DB Query - createNewDocumentVersion] Successfully created new document ${id}, user ${userId}`,
     );
     return newDocument;
   } catch (error) {
     console.error(
-      `[DB Query - createNewDocumentVersion] Error creating new version for doc ${id}, user ${userId}:`,
+      `[DB Query - createNewDocumentVersion] Error creating new document ${id}, user ${userId}:`,
       error,
     );
-    // Log if it's a transaction rollback? Drizzle might do this automatically.
     throw new Error(
       `Failed to create new document version: ${error instanceof Error ? error.message : String(error)}`,
     );
@@ -1089,18 +1163,6 @@ export async function updateDocumentPublishSettings({
         throw new Error('A document with this name is already published');
     }
 
-    // clear slug on old versions to satisfy unique index
-    await tx
-      .update(schema.Document)
-      .set({ slug: null })
-      .where(
-        and(
-          eq(schema.Document.id, documentId),
-          eq(schema.Document.userId, userId),
-          eq(schema.Document.is_current, false),
-        ),
-      );
-
     const [result] = await tx
       .update(schema.Document)
       .set({ visibility, author, style, slug })
@@ -1108,7 +1170,6 @@ export async function updateDocumentPublishSettings({
         and(
           eq(schema.Document.id, documentId),
           eq(schema.Document.userId, userId),
-          eq(schema.Document.is_current, true),
         ),
       )
       .returning();
@@ -1239,7 +1300,6 @@ export async function getStarredDocumentsByUserId({
       .where(
         and(
           eq(schema.Document.userId, userId),
-          eq(schema.Document.is_current, true),
           eq(schema.Document.is_starred, true),
         ),
       )
@@ -1265,12 +1325,11 @@ export async function cloneDocument({
 }): Promise<typeof schema.Document.$inferSelect> {
   try {
     // First, get the original document
-    const originalDoc = await getCurrentDocumentVersion({
-      userId,
-      documentId: originalDocumentId,
+    const originalDoc = await getDocumentById({
+      id: originalDocumentId,
     });
 
-    if (!originalDoc) {
+    if (!originalDoc || originalDoc.userId !== userId) {
       throw new Error('Original document not found or unauthorized');
     }
 
@@ -1451,9 +1510,7 @@ export async function cloneFolder({
         eq(schema.Folder.userId, userId),
       ),
       with: {
-        documents: {
-          where: eq(schema.Document.is_current, true),
-        },
+        documents: true,
       },
     });
 

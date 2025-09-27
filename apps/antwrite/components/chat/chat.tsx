@@ -56,12 +56,10 @@ export function Chat({
   // Callback function to update the model state
   const handleModelChange = (newModelId: string) => {
     setSelectedChatModel(newModelId);
-    console.log('[Chat] Model changed to:', newModelId);
   };
 
   const handleModeChange = (newMode: ChatMode) => {
     setChatMode(newMode);
-    console.log('[Chat] Mode changed to:', newMode);
   };
 
   const [confirmedMentions, setConfirmedMentions] = useState<

@@ -9,14 +9,8 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// --- Start Debug Logging ---
-console.log(`[DB Connection] NODE_ENV: ${process.env.NODE_ENV}`);
 const isProduction = process.env.NODE_ENV === 'production';
 const sslSetting = isProduction ? ('require' as const) : undefined;
-console.log(
-  `[DB Connection] SSL Setting: ${sslSetting === undefined ? 'undefined (disabled)' : sslSetting}`,
-);
-// --- End Debug Logging ---
 
 const connectionOptions: postgres.Options<
   Record<string, postgres.PostgresType>
@@ -30,10 +24,6 @@ const connectionOptions: postgres.Options<
   ssl: sslSetting,
 };
 
-// Log the URL being used (without credentials for safety)
-const urlLog =
-  process.env.DATABASE_URL?.split('@')?.[1] ?? 'URL not set or invalid';
-console.log(`Attempting to connect DB client to: ${urlLog}`);
 
 // Create the connection pool
 // Use process.env.DATABASE_URL or a default dummy URL if not set
@@ -45,8 +35,8 @@ const queryClient = postgres(
 // Create the Drizzle instance
 export const db = drizzle(queryClient, {
   schema,
-  logger: process.env.NODE_ENV === 'development',
-}); // Enable logger in dev
+  logger: false, // Disable logger to reduce console noise
+});
 
 // Re-export the schema for easy imports in the app
 export * from './schema';

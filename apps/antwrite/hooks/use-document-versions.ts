@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { versionCache } from '@/lib/utils';
-import type { Document } from '@antwrite/db';
+import type { DocumentVersionData } from '@/types/document-version';
 
 /**
  * Hook to get and mutate the full version history for a document.
@@ -9,14 +9,14 @@ import type { Document } from '@antwrite/db';
  * but does not depend on SWR.
  */
 export function useDocumentVersions(documentId: string | null, userId?: string | null) {
-  const [versions, setVersions] = useState<Document[]>([]);
+  const [versions, setVersions] = useState<DocumentVersionData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const abortRef = useRef<AbortController | null>(null);
 
   /**
    */
   const fetchVersions = useCallback(async () => {
-    if (!documentId) return [] as Document[];
+    if (!documentId || documentId === 'init') return [] as DocumentVersionData[];
     setIsLoading(true);
     try {
       abortRef.current?.abort();
@@ -27,7 +27,7 @@ export function useDocumentVersions(documentId: string | null, userId?: string |
         { signal: controller.signal }
       );
       if (!res.ok) throw new Error('Failed to fetch versions');
-      const data = (await res.json()) as Document[];
+      const data = (await res.json()) as DocumentVersionData[];
 
       if (userId) {
         await versionCache.setVersions(documentId, data, userId).catch(() => {});
@@ -39,18 +39,18 @@ export function useDocumentVersions(documentId: string | null, userId?: string |
       if (err?.name !== 'AbortError') {
         console.warn('[useDocumentVersions] fetch failed', err);
       }
-      return versions;
+      return [];
     } finally {
       setIsLoading(false);
       abortRef.current = null;
     }
-  }, [documentId, userId, versions]);
+  }, [documentId, userId]);
 
   /**
    * Attempt to load versions from the IndexedDB cache first.
    */
   const loadFromCache = useCallback(async () => {
-    if (!documentId || !userId) return;
+    if (!documentId || !userId || documentId === 'init') return;
     try {
       const cached = await versionCache.getVersions(documentId, userId);
       if (cached) setVersions(cached);
@@ -61,10 +61,14 @@ export function useDocumentVersions(documentId: string | null, userId?: string |
 
   // initial load
   useEffect(() => {
+    if (!documentId || documentId === 'init') {
+      setVersions([]);
+      return () => abortRef.current?.abort();
+    }
     loadFromCache();
     fetchVersions();
     return () => abortRef.current?.abort();
-  }, [loadFromCache, fetchVersions]);
+  }, [documentId, loadFromCache, fetchVersions]);
 
   /**
    * A mutate helper that mirrors the SWR API we previously used so the rest of
@@ -73,7 +77,7 @@ export function useDocumentVersions(documentId: string | null, userId?: string |
    */
   const mutate = useCallback(
     async (
-      data?: Document[] | undefined,
+      data?: DocumentVersionData[] | undefined,
       options?: { revalidate?: boolean }
     ) => {
       if (data) {

@@ -4,16 +4,15 @@ import { headers } from 'next/headers'; // Import headers
 import {
   saveDocument,
   checkDocumentOwnership,
-  setOlderVersionsNotCurrent,
   getDocumentById,
 } from '@/lib/db/queries';
 import { generateUUID } from '@/lib/utils';
 import type { ArtifactKind } from '@/components/artifact';
 
 /**
- * Handles document creation (POST)
- * Creates a new version of a document. If an ID is provided and exists for the user,
- * older versions will be marked as not current.
+ * Handles document creation/update (POST)
+ * Creates or updates a document. If the document ID already exists for the user,
+ * it will be updated. Otherwise, a new document will be created.
  */
 export async function createDocument(request: NextRequest, body: any) {
   try {
@@ -61,26 +60,24 @@ export async function createDocument(request: NextRequest, body: any) {
       `[Document API - CREATE] User ${userId} creating/updating document: ${documentId}`,
     );
 
-    // --- Versioning Logic ---
-    // Check if any version of this document already exists for the user
-    const ownsExistingVersion = await checkDocumentOwnership({
+    // --- Check Ownership ---
+    // Verify the user has permission to create/update this document
+    const ownsDocument = await checkDocumentOwnership({
       userId,
       documentId,
     });
 
-    if (ownsExistingVersion) {
+    if (ownsDocument) {
       console.log(
-        `[Document API - CREATE] Document ${documentId} exists for user ${userId}. Setting older versions to not current.`,
+        `[Document API - CREATE] User ${userId} owns document ${documentId}, proceeding with update.`,
       );
-      await setOlderVersionsNotCurrent({ userId, documentId });
     } else {
       console.log(
-        `[Document API - CREATE] Document ${documentId} is new for user ${userId}.`,
+        `[Document API - CREATE] Creating new document ${documentId} for user ${userId}.`,
       );
     }
 
-    // --- Save New Document Version ---
-    // is_current defaults to true in saveDocument
+    // --- Save New Document ---
     await saveDocument({
       id: documentId,
       title: title,

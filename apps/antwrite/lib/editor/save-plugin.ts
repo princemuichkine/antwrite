@@ -123,9 +123,6 @@ export function savePlugin({
           return newPluginState;
         }
 
-        if (shouldTriggerSave) {
-          console.log('[SavePlugin] Explicit save triggered via meta.');
-        }
 
         const wasEmpty = oldState.doc.content.size <= 2;
         if (
@@ -134,9 +131,6 @@ export function savePlugin({
           wasEmpty &&
           newState.doc.textContent.trim().length > 0
         ) {
-          console.log(
-            '[SavePlugin] Initial input detected for "init" document. Triggering creation.',
-          );
           return {
             ...newPluginState,
             status: 'idle',
@@ -154,9 +148,6 @@ export function savePlugin({
         let newStatus: SaveStatus = 'debouncing';
 
         if (newPluginState.status === 'saving' && inflightRequest) {
-          console.log(
-            '[SavePlugin] Doc changed/triggered while saving, keeping saving status.',
-          );
           newStatus = 'saving';
         } else {
           newPluginState = { ...newPluginState, errorMessage: null };
@@ -166,29 +157,18 @@ export function savePlugin({
 
         debounceTimeout = setTimeout(() => {
           if (!editorViewInstance) {
-            console.warn(
-              '[SavePlugin] Debounce fired, but editor view is not available.',
-            );
             return;
           }
           const view = editorViewInstance;
           const currentState = savePluginKey.getState(view.state);
 
           if (!currentState || currentState.status !== 'debouncing') {
-            console.log(
-              `[SavePlugin] Debounce fired, but state is invalid or status is not debouncing (${currentState?.status}). Skipping save.`,
-            );
             return;
           }
 
           if (inflightRequest) {
-            console.warn(
-              '[SavePlugin] Debounce fired, but another save is already in progress.',
-            );
             return;
           }
-
-          console.log('[SavePlugin] Debounce finished, triggering save.');
 
           setSaveStatus(view, { status: 'saving', isDirty: false });
 
@@ -197,7 +177,6 @@ export function savePlugin({
           inflightRequest = saveFunction(contentToSave)
             .then((result) => {
               inflightRequest = null;
-              console.log('[SavePlugin] Save successful.');
               setSaveStatus(view, {
                 status: 'saved',
                 lastSaved: result?.updatedAt
@@ -228,7 +207,6 @@ export function savePlugin({
     },
     view(editorView) {
       editorViewInstance = editorView;
-      console.log(`[SavePlugin] View created for documentId: ${documentId}`);
       return {
         destroy() {
           editorViewInstance = null;
@@ -281,9 +259,6 @@ export function createForceSaveHandler(
       }
 
       const data = await response.json();
-      console.log(
-        `[Save Plugin] Force-save successful for ${currentEditorPropId}`,
-      );
 
       return {
         status: 'saved' as const,

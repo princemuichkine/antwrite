@@ -119,15 +119,11 @@ function PureEditor({
   useEffect(() => {
     let view: EditorView | null = null;
     if (containerRef.current && !editorRef.current) {
-      console.log('[Text Editor] Creating editor plugins');
       const plugins = createEditorPlugins({
         documentId,
         initialLastSaved,
         performSave,
         requestInlineSuggestion: (state) => {
-          console.log(
-            '[Text Editor] Plugin requesting suggestion, calling callback',
-          );
           requestInlineSuggestion(state, abortControllerRef, editorRef);
         },
         setActiveFormats,
@@ -153,16 +149,6 @@ function PureEditor({
             const proseMirrorElement =
               editorElement.querySelector('.ProseMirror');
 
-            console.log('MouseDown event:', {
-              target: target.tagName,
-              targetClass: target.className,
-              editorElement: editorElement.tagName,
-              proseMirrorElement: proseMirrorElement?.tagName,
-              isProseMirrorChild: proseMirrorElement?.contains(target),
-              eventPhase: event.eventPhase,
-              rect: editorElement.getBoundingClientRect(),
-              clickY: event.clientY,
-            });
 
             // Check if clicking in empty space (below content or in padding)
             const rect = editorElement.getBoundingClientRect();
@@ -177,11 +163,6 @@ function PureEditor({
               isClickingInEmptySpace ||
               (proseMirrorElement && !proseMirrorElement.contains(target))
             ) {
-              console.log('Clicking in empty area, positioning at end', {
-                isClickingInEmptySpace,
-                contentHeight,
-                clickY: clickY - rect.top,
-              });
               const endPos = view.state.doc.content.size;
               const resolvedPos = view.state.doc.resolve(endPos);
               const textSelection = TextSelection.near(resolvedPos);

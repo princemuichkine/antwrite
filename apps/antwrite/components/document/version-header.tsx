@@ -12,7 +12,7 @@ import {
 } from 'date-fns';
 import { toast } from '@/components/toast';
 
-import type { Document } from '@antwrite/db';
+import type { DocumentVersionData } from '@/types/document-version';
 import { getDocumentTimestampByIndex } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
@@ -26,13 +26,13 @@ import {
 
 interface VersionHeaderProps {
   handleVersionChange: (type: 'next' | 'prev' | 'toggle' | 'latest') => void;
-  documents: Array<Document> | undefined;
+  versions: Array<DocumentVersionData> | undefined;
   currentVersionIndex: number;
 }
 
 export const VersionHeader = ({
   handleVersionChange,
-  documents,
+  versions,
   currentVersionIndex,
 }: VersionHeaderProps) => {
   const { artifact, setArtifact } = useArtifact();
@@ -41,9 +41,9 @@ export const VersionHeader = ({
 
   const handleRestoreVersion = useCallback(async () => {
     if (
-      !documents ||
+      !versions ||
       currentVersionIndex < 0 ||
-      currentVersionIndex >= documents.length
+      currentVersionIndex >= versions.length
     ) {
       toast({
         type: 'error',
@@ -54,11 +54,7 @@ export const VersionHeader = ({
 
     setIsMutating(true);
     try {
-      const versionToRestore = documents[currentVersionIndex];
-      const timestamp = getDocumentTimestampByIndex(
-        documents,
-        currentVersionIndex,
-      );
+      const versionToRestore = versions[currentVersionIndex];
 
       const response = await fetch(`/api/document`, {
         method: 'POST',
@@ -69,7 +65,6 @@ export const VersionHeader = ({
           id: artifact.documentId,
           content: versionToRestore.content,
           title: versionToRestore.title,
-          restoreFromTimestamp: timestamp,
         }),
       });
 
@@ -104,7 +99,7 @@ export const VersionHeader = ({
       setIsMutating(false);
     }
   }, [
-    documents,
+    versions,
     currentVersionIndex,
     artifact.documentId,
     setArtifact,
@@ -112,7 +107,7 @@ export const VersionHeader = ({
     mutate,
   ]);
 
-  if (!documents || documents.length === 0) return null;
+  if (!versions || versions.length === 0) return null;
 
   const formatVersionLabel = (date: Date) => {
     if (isToday(date)) return 'Today';
@@ -129,7 +124,7 @@ export const VersionHeader = ({
   };
 
   // Use currentVersionIndex directly instead of activeIndex
-  const currentDoc = documents[currentVersionIndex];
+  const currentDoc = versions[currentVersionIndex];
 
   if (!currentDoc) return null; // Handle case where currentDoc might be undefined
 

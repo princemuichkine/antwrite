@@ -6,16 +6,10 @@ import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as ReToolti
 import { diff_match_patch, DIFF_INSERT, DIFF_DELETE } from 'diff-match-patch';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '../ui/button';
-
-interface VersionData {
-    id: string;
-    content: string | null;
-    createdAt: Date | string;
-    version?: number;
-}
+import type { DocumentVersionData } from '@/types/document-version';
 
 interface VersionRailProps {
-    versions: VersionData[];
+    versions: DocumentVersionData[];
     currentIndex: number;
     onIndexChange: (index: number) => void;
     baseDocumentId: string;
@@ -77,7 +71,7 @@ export function VersionRail({ versions, currentIndex, onIndexChange, baseDocumen
     }, [currentIndex, versions.length]);
 
     const isViewingHistory = selectedIndex !== null && selectedIndex < versions.length - 1;
-    if (isLoading || versions.length <= 1) {
+    if (isLoading || versions.length === 0) {
         return <div className="w-full border-b bg-background h-1 group-hover:h-12 transition-all duration-200" />;
     }
 

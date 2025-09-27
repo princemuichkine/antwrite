@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS "Chat" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "Document" (
-	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp with time zone NOT NULL,
 	"updatedAt" timestamp with time zone NOT NULL,
 	"title" text NOT NULL,
@@ -34,14 +34,23 @@ CREATE TABLE IF NOT EXISTS "Document" (
 	"kind" "artifact_kind" DEFAULT 'text' NOT NULL,
 	"userId" text NOT NULL,
 	"chatId" uuid,
-	"is_current" boolean NOT NULL,
 	"is_starred" boolean DEFAULT false NOT NULL,
 	"visibility" text DEFAULT 'private' NOT NULL,
 	"style" jsonb,
 	"author" text,
 	"slug" text,
-	"folderId" uuid,
-	CONSTRAINT "Document_id_createdAt_pk" PRIMARY KEY("id","createdAt")
+	"folderId" uuid
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "DocumentVersion" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"documentId" uuid NOT NULL,
+	"version" integer DEFAULT 1 NOT NULL,
+	"content" text NOT NULL,
+	"diff_content" text,
+	"previous_version_id" uuid,
+	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "Folder" (
@@ -191,6 +200,18 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "DocumentVersion" ADD CONSTRAINT "DocumentVersion_documentId_Document_id_fk" FOREIGN KEY ("documentId") REFERENCES "public"."Document"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "DocumentVersion" ADD CONSTRAINT "DocumentVersion_previous_version_id_DocumentVersion_id_fk" FOREIGN KEY ("previous_version_id") REFERENCES "public"."DocumentVersion"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "Document_userId_slug_unique" ON "Document" USING btree ("userId","slug");
 --> statement-breakpoint
 -- Performance indexes for Better Auth GitHub OAuth
@@ -210,4 +231,4 @@ CREATE INDEX IF NOT EXISTS "idx_account_provider_lookup" ON "account" USING btre
 CREATE INDEX IF NOT EXISTS "idx_account_user_provider" ON "account" USING btree ("user_id", "provider_id");
 --> statement-breakpoint
 -- Create index for better query performance on starred documents
-CREATE INDEX IF NOT EXISTS "idx_document_starred_user" ON "Document" ("userId", "is_starred", "is_current") WHERE "is_starred" = true AND "is_current" = true;
+CREATE INDEX IF NOT EXISTS "idx_document_starred_user" ON "Document" ("userId", "is_starred") WHERE "is_starred" = true;

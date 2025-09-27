@@ -15,7 +15,7 @@ import { Loader2 } from 'lucide-react';
 import type { Document } from '@antwrite/db';
 import { generateUUID } from '@/lib/utils';
 import { useArtifact } from '@/hooks/use-artifact';
-import { ArtifactActions } from '@/components/artifact-actions';
+// import { ArtifactActions } from '@/components/artifact-actions';
 import { VersionHeader } from '@/components/document/version-header';
 import { useDocumentUtils } from '@/hooks/use-document-utils';
 import { Button } from '@/components/ui/button';
@@ -102,10 +102,49 @@ export function AlwaysVisibleArtifact({
   const [saveStatus, setSaveStatus] = useState<'saving' | 'idle'>('idle');
 
   const { versions, isLoading: versionsLoading, mutate: mutateVersions, refresh: refreshVersions } = useDocumentVersions(initialDocumentId, user?.id);
+
   const [documents, setDocuments] = useState<Document[]>(initialDocuments);
-  const [currentVersionIndex, setCurrentVersionIndex] = useState<number>(
-    initialDocuments.length > 0 ? initialDocuments.length - 1 : -1,
-  );
+  const [currentVersionIndex, setCurrentVersionIndex] = useState<number>(-1);
+
+  // When the component mounts or the document ID changes, sync the artifact context.
+  useEffect(() => {
+    if (initialDocumentId && initialDocumentId !== 'init' && initialDocumentId !== artifact.documentId) {
+      const doc = initialDocuments.find(d => d.id === initialDocumentId);
+      setArtifact(prev => ({
+        ...prev,
+        documentId: initialDocumentId,
+        title: doc?.title || '',
+        content: doc?.content || '',
+        kind: (doc?.kind as ArtifactKind) || 'text',
+      }));
+    }
+  }, [initialDocumentId, initialDocuments, artifact.documentId, setArtifact]);
+
+  // Update documents state when versions are loaded
+  useEffect(() => {
+    if (versions && versions.length > 0) {
+      // Map version data to document format for compatibility
+      const mappedVersions: Document[] = versions.map((version) => ({
+        id: version.id,
+        title: version.title,
+        content: version.content,
+        createdAt: version.createdAt,
+        updatedAt: version.updatedAt,
+        // Use default values for missing Document properties
+        kind: 'text' as const,
+        userId: user?.id || '',
+        chatId: null,
+        is_starred: false,
+        visibility: 'private' as const,
+        style: null,
+        author: null,
+        slug: null,
+        folderId: null,
+      }));
+      setDocuments(mappedVersions);
+      setCurrentVersionIndex(versions.length - 1);
+    }
+  }, [versions, user?.id]);
 
   const currentDocument = useMemo(() => {
     if (currentVersionIndex >= 0 && currentVersionIndex < documents.length) {
@@ -122,52 +161,18 @@ export function AlwaysVisibleArtifact({
   }, [documents]);
 
   useEffect(() => {
-    const wasAtLatest =
-      currentVersionIndex === -1 || currentVersionIndex === documents.length - 1;
-
-    if (versions.length === 0) {
-      if (documents.length > 0) {
-        setDocuments([]);
-        setCurrentVersionIndex(-1);
-      }
-      return;
-    }
-
-    const prevLast = documents[documents.length - 1];
-    const nextLast = versions[versions.length - 1];
-    const prevTs = prevLast?.updatedAt ?? prevLast?.createdAt;
-    const nextTs = nextLast?.updatedAt ?? nextLast?.createdAt;
-
-    const shouldReplace = !prevTs || !nextTs || new Date(nextTs) > new Date(prevTs);
-    if (!shouldReplace) return;
-
-    setDocuments(versions);
-    if (wasAtLatest || currentVersionIndex >= versions.length) {
-      setCurrentVersionIndex(versions.length - 1);
-    }
-  }, [versions, documents, currentVersionIndex]);
-
-  useEffect(() => {
     startTransition(() => {
-      const docs = initialDocuments || [];
-      setDocuments(docs);
-      const initialIndex = docs.length > 0 ? docs.length - 1 : -1;
-      setCurrentVersionIndex(initialIndex);
-      setMode('edit');
-
-      const docToUse = docs[initialIndex];
-
+      const docToUse = documents[currentVersionIndex];
       if (docToUse) {
-        const artifactData: SettableArtifact = {
-          ...defaultArtifactProps,
+        setArtifact((prev) => ({
+          ...prev,
           documentId: docToUse.id,
           title: docToUse.title,
           content: docToUse.content ?? '',
-          kind: (docToUse.kind as ArtifactKind) || 'text',
+          kind: 'text' as ArtifactKind, // Version data doesn't include kind, default to text
           status: 'idle',
-        };
-        setArtifact(artifactData as any);
-        setNewTitle(artifactData.title);
+        }));
+        setNewTitle(docToUse.title);
       } else if (initialDocumentId === 'init' || showCreateDocumentForId) {
         const initData: SettableArtifact = {
           ...defaultArtifactProps,
@@ -183,10 +188,11 @@ export function AlwaysVisibleArtifact({
     });
   }, [
     initialDocumentId,
-    initialDocuments,
     setArtifact,
     startTransition,
     showCreateDocumentForId,
+    documents,
+    currentVersionIndex,
   ]);
 
   useEffect(() => {
@@ -216,7 +222,6 @@ export function AlwaysVisibleArtifact({
 
       if (originalDocumentId !== artifact.documentId) return;
 
-      console.log('[DocumentWorkspace] Handling version fork from index', versionIndex, 'timestamp', forkFromTimestamp);
 
       try {
         // Get the current document title for naming the fork
@@ -241,7 +246,6 @@ export function AlwaysVisibleArtifact({
         }
 
         const forkResult = await response.json();
-        console.log('[DocumentWorkspace] Fork successful:', forkResult);
 
         // Navigate to the new forked document
         toast({
@@ -276,15 +280,6 @@ export function AlwaysVisibleArtifact({
 
   // Focus editor when document changes or component mounts
   useEffect(() => {
-    console.log(
-      'AlwaysVisibleArtifact: Document changed, attempting to focus editor',
-      {
-        documentId: artifact.documentId,
-        title: artifact.title,
-        contentLength: artifact.content?.length || 0,
-      },
-    );
-
     let focusTimeout: NodeJS.Timeout | undefined;
     let retryCount = 0;
     const maxRetries = 10;
@@ -293,9 +288,6 @@ export function AlwaysVisibleArtifact({
       const editorView = getActiveEditorView();
 
       if (!editorView && retryCount < maxRetries) {
-        console.log(
-          `AlwaysVisibleArtifact: No editor view found, retrying (${retryCount + 1}/${maxRetries})`,
-        );
         retryCount++;
         focusTimeout = setTimeout(focusEditor, 100);
         return;
@@ -316,13 +308,6 @@ export function AlwaysVisibleArtifact({
           artifact.documentId !== 'init' &&
           (!latestDocument || isEmptyDocument);
 
-        console.log('AlwaysVisibleArtifact: Focus analysis', {
-          isEmptyDocument,
-          isNewDocument,
-          documentId: artifact.documentId,
-          contentLength: artifact.content?.length || 0,
-        });
-
         if (isNewDocument || isEmptyDocument) {
           // Position cursor at start for new/empty documents
           const resolvedPos = editorView.state.doc.resolve(0);
@@ -331,9 +316,6 @@ export function AlwaysVisibleArtifact({
 
           editorView.focus();
           editorView.dispatch(tr);
-          console.log(
-            'AlwaysVisibleArtifact: Focused editor and positioned cursor at start',
-          );
         } else {
           // Position cursor at end for existing documents with content
           const endPos = editorView.state.doc.content.size;
@@ -343,9 +325,6 @@ export function AlwaysVisibleArtifact({
 
           editorView.focus();
           editorView.dispatch(tr);
-          console.log(
-            'AlwaysVisibleArtifact: Focused editor and positioned cursor at end',
-          );
         }
       } catch (error) {
         console.warn('AlwaysVisibleArtifact: Error focusing editor', error);
@@ -378,14 +357,21 @@ export function AlwaysVisibleArtifact({
   }, [artifact.documentId, artifact.content, artifact.title, latestDocument]);
 
   const handleDocumentUpdate = (updatedFields: Partial<Document>) => {
-    setDocuments((prevDocs) =>
-      prevDocs.map((doc) => {
-        if (doc.id === updatedFields.id) {
-          return { ...doc, ...updatedFields };
-        }
-        return doc;
-      }),
-    );
+    // Only update if we have version data loaded
+    if (documents.length > 0) {
+      setDocuments((prevDocs) =>
+        prevDocs.map((doc) => {
+          if (doc.id === updatedFields.id) {
+            return {
+              ...doc,
+              title: updatedFields.title ?? doc.title,
+              content: updatedFields.content !== undefined ? updatedFields.content : doc.content,
+            };
+          }
+          return doc;
+        }),
+      );
+    }
     if (artifact.documentId === updatedFields.id) {
       const { kind, ...otherUpdatedFields } = updatedFields;
       setArtifact((current) => ({
@@ -687,20 +673,20 @@ export function AlwaysVisibleArtifact({
         </div>
       </div>
 
-      <div className="bg-background text-foreground dark:bg-black dark:text-white h-full overflow-y-auto !max-w-full items-center relative">
+      <div className="bg-background text-foreground dark:bg-black dark:text-white h-full overflow-y-auto !max-w-full items-center relative group">
         <VersionRail
-          versions={documents}
+          versions={versions}
           currentIndex={currentVersionIndex}
           onIndexChange={handleVersionChangeByIndex}
           baseDocumentId={editorDocumentId}
           isLoading={versionsLoading}
           refreshVersions={refreshVersions}
         />
-        {!isCurrentVersion && documents && documents.length > 1 && (
+        {!isCurrentVersion && versions && versions.length > 1 && (
           <VersionHeader
             key={`${currentDocument?.id}-${currentVersionIndex}`}
             currentVersionIndex={currentVersionIndex}
-            documents={documents}
+            versions={versions}
             handleVersionChange={handleVersionChange}
           />
         )}

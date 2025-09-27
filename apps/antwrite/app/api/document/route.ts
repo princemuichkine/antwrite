@@ -4,6 +4,7 @@ import { updateDocument } from './actions/update';
 import { deleteDocument } from './actions/delete';
 import { getDocuments } from './actions/get';
 import { renameDocument } from './actions/rename';
+import { forkDocument } from './actions/fork';
 
 // All document related actions are handled here
 export async function GET(request: NextRequest) {
@@ -18,7 +19,12 @@ export async function PUT(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const body = await request.json();
 
-  if (body.id && body.title && !body.content && !body.kind && !body.chatId) {
+  if (body.action === 'fork') {
+    console.log('[Document API] Detected fork operation');
+    return forkDocument(request, body);
+  }
+
+  if (body.id && body.title && body.content === undefined && !body.kind && !body.chatId) {
     console.log('[Document API] Detected rename operation');
     return renameDocument(request, body);
   }

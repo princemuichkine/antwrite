@@ -110,7 +110,7 @@ export const documentVisibilityEnum = pgEnum('document_visibility', [
 export const Document = pgTable(
   'Document',
   {
-    id: uuid('id').notNull().defaultRandom(),
+    id: uuid('id').primaryKey().defaultRandom(),
     createdAt: timestamp('createdAt', {
       withTimezone: true,
       mode: 'date',
@@ -125,7 +125,6 @@ export const Document = pgTable(
       .notNull()
       .references(() => user.id),
     chatId: uuid('chatId').references(() => Chat.id),
-    is_current: boolean('is_current').notNull(),
     is_starred: boolean('is_starred').notNull().default(false),
     visibility: text('visibility', { enum: ['public', 'private'] })
       .notNull()
@@ -137,7 +136,6 @@ export const Document = pgTable(
   },
   (table) => {
     return {
-      pk: primaryKey({ columns: [table.id, table.createdAt] }),
       userSlugUnique: uniqueIndex('Document_userId_slug_unique').on(
         table.userId,
         table.slug,
@@ -147,6 +145,23 @@ export const Document = pgTable(
 );
 
 export type Document = InferSelectModel<typeof Document>;
+
+export const DocumentVersion = pgTable('DocumentVersion', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  documentId: uuid('documentId')
+    .notNull()
+    .references(() => Document.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull().default(1),
+  content: text('content').notNull(),
+  diffContent: text('diff_content'),
+  previousVersionId: uuid('previous_version_id').references((): AnyPgColumn => DocumentVersion.id),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
+    .notNull()
+    .$onUpdate(() => new Date()),
+});
+
+export type DocumentVersion = InferSelectModel<typeof DocumentVersion>;
 
 export const Folder = pgTable('Folder', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -246,6 +261,14 @@ export const documentRelations = relations(Document, ({ one, many }) => ({
   folder: one(Folder, {
     fields: [Document.folderId],
     references: [Folder.id],
+  }),
+  versions: many(DocumentVersion),
+}));
+
+export const documentVersionRelations = relations(DocumentVersion, ({ one }) => ({
+  document: one(Document, {
+    fields: [DocumentVersion.documentId],
+    references: [Document.id],
   }),
 }));
 

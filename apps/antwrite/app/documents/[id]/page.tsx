@@ -11,7 +11,7 @@ type DocumentPageProps = {
 };
 
 export default async function DocumentPage({ params }: DocumentPageProps) {
-  const documentId = params.id;
+  const { id: documentId } = await params;
 
   const user = await getUser();
   if (!user) {
