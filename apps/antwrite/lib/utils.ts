@@ -3,6 +3,8 @@ import type {
   CoreToolMessage,
   Message,
   ToolInvocation,
+  ToolCall,
+  ToolResult,
 } from 'ai';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -97,34 +99,23 @@ export function convertToUIMessages(
   for (const message of messages) {
     if (message.role === 'tool') {
       // Process tool results and update the corresponding assistant message's invocation
-      const toolResults = Array.isArray(message.content)
-        ? message.content
-        : [message.content];
+      const toolResults = Array.isArray(message.content) ? message.content : [message.content];
 
       for (const toolResultContent of toolResults) {
         if (toolResultContent?.type === 'tool_result') {
-          const toolCallId =
-            toolResultContent.toolCallId ||
-            toolResultContent.content?.toolCallId;
-          const resultData =
-            toolResultContent.result || toolResultContent.content?.result;
+          const toolCallId = toolResultContent.toolCallId || toolResultContent.content?.toolCallId;
+          const resultData = toolResultContent.result || toolResultContent.content?.result;
 
           if (toolCallId) {
             // Find the assistant message with the matching tool call ID
             for (let i = processedMessages.length - 1; i >= 0; i--) {
               const assistantMessage = processedMessages[i];
-              if (
-                assistantMessage.role === 'assistant' &&
-                assistantMessage.toolInvocations
-              ) {
-                const invocationIndex =
-                  assistantMessage.toolInvocations.findIndex(
-                    (inv) => inv.toolCallId === toolCallId,
-                  );
+              if (assistantMessage.role === 'assistant' && assistantMessage.toolInvocations) {
+                const invocationIndex = assistantMessage.toolInvocations.findIndex(
+                  (inv) => inv.toolCallId === toolCallId
+                );
                 if (invocationIndex !== -1) {
-                  const invocationToUpdate = assistantMessage.toolInvocations[
-                    invocationIndex
-                  ] as ExtendedToolInvocation;
+                  const invocationToUpdate = assistantMessage.toolInvocations[invocationIndex] as ExtendedToolInvocation;
                   invocationToUpdate.state = 'result';
                   invocationToUpdate.result = resultData;
                   break;
@@ -158,20 +149,14 @@ export function convertToUIMessages(
         } else if (content.type === 'tool_result') {
           // Find matching tool invocation and update it
           const existingInvocation = toolInvocations.find(
-            (inv) =>
-              inv.toolCallId ===
-              (content.toolCallId || content.content?.toolCallId),
+            inv => inv.toolCallId === (content.toolCallId || content.content?.toolCallId)
           );
           if (existingInvocation) {
             existingInvocation.state = 'result';
-            existingInvocation.result =
-              content.result || content.content?.result;
+            existingInvocation.result = content.result || content.content?.result;
           } else {
             // If no matching invocation found, create a new one
-            console.warn(
-              '[convertToUIMessages] Tool result found without matching call:',
-              content,
-            );
+            console.warn('[convertToUIMessages] Tool result found without matching call:', content);
             toolInvocations.push({
               state: 'result',
               toolCallId: content.toolCallId || content.content?.toolCallId,
@@ -311,14 +296,10 @@ export function parseMessageContent(content: any): MessageContent[] {
       if (Array.isArray(parsed)) {
         return parsed.map((item, index) => {
           // Normalize type names
-          const type = (
-            item.type === 'tool-call'
-              ? 'tool_call'
-              : item.type === 'tool-result'
-                ? 'tool_result'
-                : item.type || 'text'
-          ) as MessageContent['type'];
-
+          const type = (item.type === 'tool-call' ? 'tool_call' : 
+                       item.type === 'tool-result' ? 'tool_result' : 
+                       item.type || 'text') as MessageContent['type'];
+          
           // For tool results, ensure proper structure
           if (type === 'tool_result') {
             return {
@@ -327,12 +308,12 @@ export function parseMessageContent(content: any): MessageContent[] {
                 type: 'tool_result',
                 toolCallId: item.toolCallId || item.content?.toolCallId,
                 toolName: item.toolName || item.content?.toolName,
-                result: item.result || item.content?.result,
+                result: item.result || item.content?.result
               },
-              order: index,
+              order: index
             };
           }
-
+          
           // For tool calls, ensure proper structure
           if (type === 'tool_call') {
             return {
@@ -341,51 +322,43 @@ export function parseMessageContent(content: any): MessageContent[] {
                 type: 'tool_call',
                 toolCallId: item.toolCallId || item.content?.toolCallId,
                 toolName: item.toolName || item.content?.toolName,
-                args: item.args || item.content?.args,
+                args: item.args || item.content?.args
               },
-              order: index,
+              order: index
             };
           }
-
+          
           // For text content
           return {
             type,
             content: item.text || item.content || item,
-            order: index,
+            order: index
           };
         });
       }
       // If parsed but not an array, treat as single text content
-      return [
-        {
-          type: 'text',
-          content: parsed,
-          order: 0,
-        },
-      ];
+      return [{
+        type: 'text',
+        content: parsed,
+        order: 0,
+      }];
     } catch {
       // If not valid JSON, treat as plain text
-      return [
-        {
-          type: 'text',
-          content: content,
-          order: 0,
-        },
-      ];
+      return [{
+        type: 'text',
+        content: content,
+        order: 0,
+      }];
     }
   }
 
   if (Array.isArray(content)) {
     return content.map((item, index) => {
       // Normalize type names
-      const type = (
-        item.type === 'tool-call'
-          ? 'tool_call'
-          : item.type === 'tool-result'
-            ? 'tool_result'
-            : item.type || 'text'
-      ) as MessageContent['type'];
-
+      const type = (item.type === 'tool-call' ? 'tool_call' : 
+                   item.type === 'tool-result' ? 'tool_result' : 
+                   item.type || 'text') as MessageContent['type'];
+      
       // For tool results, ensure proper structure
       if (type === 'tool_result') {
         return {
@@ -394,12 +367,12 @@ export function parseMessageContent(content: any): MessageContent[] {
             type: 'tool_result',
             toolCallId: item.toolCallId || item.content?.toolCallId,
             toolName: item.toolName || item.content?.toolName,
-            result: item.result || item.content?.result,
+            result: item.result || item.content?.result
           },
-          order: index,
+          order: index
         };
       }
-
+      
       // For tool calls, ensure proper structure
       if (type === 'tool_call') {
         return {
@@ -408,27 +381,131 @@ export function parseMessageContent(content: any): MessageContent[] {
             type: 'tool_call',
             toolCallId: item.toolCallId || item.content?.toolCallId,
             toolName: item.toolName || item.content?.toolName,
-            args: item.args || item.content?.args,
+            args: item.args || item.content?.args
           },
-          order: index,
+          order: index
         };
       }
-
+      
       // For text content
       return {
         type,
         content: item.text || item.content || item,
-        order: index,
+        order: index
       };
     });
   }
 
   // If object or other type, wrap in array
-  return [
-    {
-      type: 'text',
-      content: content,
-      order: 0,
-    },
-  ];
+  return [{
+    type: 'text',
+    content: content,
+    order: 0,
+  }];
 }
+
+// IndexedDB utilities for caching document versions
+const DB_NAME = 'antwrite-cache';
+const DB_VERSION = 1;
+const VERSIONS_STORE = 'document-versions';
+
+interface CachedVersion {
+  documentId: string;
+  versions: any[];
+  timestamp: number;
+  userId: string;
+}
+
+class VersionCache {
+  private db: IDBDatabase | null = null;
+
+  async init(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve();
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains(VERSIONS_STORE)) {
+          db.createObjectStore(VERSIONS_STORE, { keyPath: 'documentId' });
+        }
+      };
+    });
+  }
+
+  async getVersions(documentId: string, userId: string): Promise<any[] | null> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([VERSIONS_STORE], 'readonly');
+      const store = transaction.objectStore(VERSIONS_STORE);
+      const request = store.get(documentId);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const cached: CachedVersion | undefined = request.result;
+        if (cached && cached.userId === userId) {
+          // Check if cache is still valid (5 minutes)
+          const isExpired = Date.now() - cached.timestamp > 5 * 60 * 1000;
+          if (!isExpired) {
+            resolve(cached.versions);
+            return;
+          }
+        }
+        resolve(null);
+      };
+    });
+  }
+
+  async setVersions(documentId: string, versions: any[], userId: string): Promise<void> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([VERSIONS_STORE], 'readwrite');
+      const store = transaction.objectStore(VERSIONS_STORE);
+      const request = store.put({
+        documentId,
+        versions,
+        timestamp: Date.now(),
+        userId
+      });
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async invalidateVersions(documentId: string): Promise<void> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([VERSIONS_STORE], 'readwrite');
+      const store = transaction.objectStore(VERSIONS_STORE);
+      const request = store.delete(documentId);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async clearAll(): Promise<void> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([VERSIONS_STORE], 'readwrite');
+      const store = transaction.objectStore(VERSIONS_STORE);
+      const request = store.clear();
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+}
+
+// Export singleton instance
+export const versionCache = new VersionCache();

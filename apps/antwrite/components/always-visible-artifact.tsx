@@ -32,6 +32,9 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getActiveEditorView } from '@/lib/editor/editor-state';
 import { TextSelection } from 'prosemirror-state';
+import { useDocumentVersions } from '@/hooks/use-document-versions';
+import { VersionRail } from '@/components/document/version-rail';
+import { DocumentActions } from './document/actions';
 
 const Editor = dynamic(
   () => import('@/components/document/text-editor').then((mod) => mod.Editor),
@@ -96,7 +99,9 @@ export function AlwaysVisibleArtifact({
   const [newTitle, setNewTitle] = useState('');
   const titleInputRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<'edit' | 'diff'>('edit');
+  const [saveStatus, setSaveStatus] = useState<'saving' | 'idle'>('idle');
 
+  const { versions, isLoading: versionsLoading, mutate: mutateVersions, refresh: refreshVersions } = useDocumentVersions(initialDocumentId, user?.id);
   const [documents, setDocuments] = useState<Document[]>(initialDocuments);
   const [currentVersionIndex, setCurrentVersionIndex] = useState<number>(
     initialDocuments.length > 0 ? initialDocuments.length - 1 : -1,
@@ -115,6 +120,32 @@ export function AlwaysVisibleArtifact({
     }
     return null;
   }, [documents]);
+
+  useEffect(() => {
+    const wasAtLatest =
+      currentVersionIndex === -1 || currentVersionIndex === documents.length - 1;
+
+    if (versions.length === 0) {
+      if (documents.length > 0) {
+        setDocuments([]);
+        setCurrentVersionIndex(-1);
+      }
+      return;
+    }
+
+    const prevLast = documents[documents.length - 1];
+    const nextLast = versions[versions.length - 1];
+    const prevTs = prevLast?.updatedAt ?? prevLast?.createdAt;
+    const nextTs = nextLast?.updatedAt ?? nextLast?.createdAt;
+
+    const shouldReplace = !prevTs || !nextTs || new Date(nextTs) > new Date(prevTs);
+    if (!shouldReplace) return;
+
+    setDocuments(versions);
+    if (wasAtLatest || currentVersionIndex >= versions.length) {
+      setCurrentVersionIndex(versions.length - 1);
+    }
+  }, [versions, documents, currentVersionIndex]);
 
   useEffect(() => {
     startTransition(() => {
@@ -155,7 +186,6 @@ export function AlwaysVisibleArtifact({
     initialDocuments,
     setArtifact,
     startTransition,
-    artifact.documentId,
     showCreateDocumentForId,
   ]);
 
@@ -181,16 +211,68 @@ export function AlwaysVisibleArtifact({
       }
     };
 
+    const handleVersionFork = async (event: CustomEvent) => {
+      const { originalDocumentId, versionIndex, forkFromTimestamp } = event.detail;
+
+      if (originalDocumentId !== artifact.documentId) return;
+
+      console.log('[DocumentWorkspace] Handling version fork from index', versionIndex, 'timestamp', forkFromTimestamp);
+
+      try {
+        // Get the current document title for naming the fork
+        const currentDoc = documents[documents.length - 1];
+        const forkTitle = `${currentDoc?.title || 'Document'} (Fork)`;
+
+        const response = await fetch('/api/document', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'fork',
+            originalDocumentId,
+            forkFromTimestamp,
+            versionIndex,
+            newTitle: forkTitle,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(`Fork failed: ${errorData.error || response.statusText}`);
+        }
+
+        const forkResult = await response.json();
+        console.log('[DocumentWorkspace] Fork successful:', forkResult);
+
+        // Navigate to the new forked document
+        toast({
+          description: `Forked to new document: ${forkTitle}`
+        });
+        const newId = forkResult.newDocumentId ?? forkResult.documentId ?? forkResult.id;
+        router.push(`/documents/${newId}`);
+
+      } catch (error: any) {
+        console.error('[DocumentWorkspace] Version fork failed:', error);
+        toast({
+          type: 'error',
+          description: `Failed to fork document: ${error.message}`
+        });
+      }
+    };
+
     window.addEventListener(
       'document-renamed',
       handleDocumentRenamed as EventListener,
     );
-    return () =>
+    window.addEventListener('version-fork', handleVersionFork as unknown as EventListener);
+
+    return () => {
       window.removeEventListener(
         'document-renamed',
         handleDocumentRenamed as EventListener,
       );
-  }, [artifact.documentId, editingTitle, newTitle, setArtifact]);
+      window.removeEventListener('version-fork', handleVersionFork as unknown as EventListener);
+    }
+  }, [artifact.documentId, editingTitle, newTitle, setArtifact, documents, router]);
 
   // Focus editor when document changes or component mounts
   useEffect(() => {
@@ -364,6 +446,12 @@ export function AlwaysVisibleArtifact({
     setNewTitle(latestDocument.title);
   }, [latestDocument]);
 
+  const handleVersionChangeByIndex = useCallback((index: number) => {
+    if (index < 0 || index >= documents.length) return;
+    setCurrentVersionIndex(index);
+    setMode(index === documents.length - 1 ? 'edit' : 'diff');
+  }, [documents.length]);
+
   const handleVersionChange = useCallback(
     (type: 'next' | 'prev' | 'toggle' | 'latest') => {
       if (
@@ -455,6 +543,10 @@ export function AlwaysVisibleArtifact({
     },
     [isCreatingDocument, initialDocumentId, createDocument],
   );
+
+  const handleStatusChange = useCallback((newSaveState: SaveState) => {
+    setSaveStatus(newSaveState.status === 'saving' ? 'saving' : 'idle');
+  }, []);
 
   const isCurrentVersion = useMemo(
     () => currentVersionIndex === documents.length - 1,
@@ -578,14 +670,9 @@ export function AlwaysVisibleArtifact({
         )}
         <div className="flex items-center gap-1">
           {documents && documents.length > 0 && (
-            <ArtifactActions
-              artifact={artifact}
-              currentVersionIndex={currentVersionIndex}
-              handleVersionChange={handleVersionChange}
-              isCurrentVersion={isCurrentVersion}
-              mode={mode}
-              metadata={metadata}
-              setMetadata={setMetadata}
+            <DocumentActions
+              content={editorContent}
+              saveStatus={saveStatus}
             />
           )}
           {latestDocument && (
@@ -601,6 +688,14 @@ export function AlwaysVisibleArtifact({
       </div>
 
       <div className="bg-background text-foreground dark:bg-black dark:text-white h-full overflow-y-auto !max-w-full items-center relative">
+        <VersionRail
+          versions={documents}
+          currentIndex={currentVersionIndex}
+          onIndexChange={handleVersionChangeByIndex}
+          baseDocumentId={editorDocumentId}
+          isLoading={versionsLoading}
+          refreshVersions={refreshVersions}
+        />
         {!isCurrentVersion && documents && documents.length > 1 && (
           <VersionHeader
             key={`${currentDocument?.id}-${currentVersionIndex}`}
@@ -625,7 +720,7 @@ export function AlwaysVisibleArtifact({
                 initialLastSaved={
                   latestDocument ? new Date(latestDocument.updatedAt) : null
                 }
-                onStatusChange={(newSaveState: SaveState) => {}}
+                onStatusChange={handleStatusChange}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
               />
             </Suspense>
