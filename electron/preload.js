@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFile: () => ipcRenderer.invoke('dialog-open-file'),
   saveFile: (content, defaultPath) =>
     ipcRenderer.invoke('dialog-save-file', content, defaultPath),
+  readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
+  getFileInfo: (filePath) => ipcRenderer.invoke('get-file-info', filePath),
 
   // App info
   getVersion: () => ipcRenderer.invoke('get-version'),
@@ -23,6 +25,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // IPC listeners for menu actions
   onNewDocument: (callback) => ipcRenderer.on('new-document', callback),
   onOpenFile: (callback) => ipcRenderer.on('open-file', callback),
+  onOpenWordFile: (callback) => ipcRenderer.on('open-word-file', callback),
 
   // Remove listeners
   removeAllListeners: (event) => ipcRenderer.removeAllListeners(event),

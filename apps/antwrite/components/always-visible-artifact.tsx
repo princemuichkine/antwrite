@@ -20,8 +20,15 @@ import { VersionHeader } from '@/components/document/version-header';
 import { useDocumentUtils } from '@/hooks/use-document-utils';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/toast';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Input } from './ui/input';
 import { useDocumentContext } from '@/hooks/use-document-context';
+import { LottieIcon } from '@/components/ui/lottie-icon';
+import { animations } from '@/lib/utils/lottie-animations';
 import type { ArtifactKind } from '@/components/artifact';
 import { AiSettingsMenu } from './ai-settings-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -43,6 +50,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ZOOM_LEVELS } from '@/lib/utils/zoom';
+
+// Electron API types
+declare global {
+  interface Window {
+    electronAPI?: {
+      readFile: (filePath: string) => Promise<ArrayBuffer>;
+      getFileInfo: (filePath: string) => Promise<{ name: string; size: number; path: string }>;
+      onOpenWordFile: (callback: (event: any, filePath: string) => void) => void;
+      removeAllListeners: (event: string) => void;
+    };
+  }
+}
 
 const Editor = dynamic(
   () => import('@/components/document/text-editor').then((mod) => mod.Editor),
@@ -109,6 +128,7 @@ export function AlwaysVisibleArtifact({
   const [mode, setMode] = useState<'edit' | 'diff'>('edit');
   const [saveStatus, setSaveStatus] = useState<'saving' | 'idle'>('idle');
   const [zoom, setZoom] = useState('1');
+  const [isUploadHovered, setIsUploadHovered] = useState(false);
 
   const { versions, isLoading: versionsLoading, mutate: mutateVersions, refresh: refreshVersions } = useDocumentVersions(initialDocumentId, user?.id);
 
@@ -365,6 +385,7 @@ export function AlwaysVisibleArtifact({
     };
   }, [artifact.documentId, artifact.content, artifact.title, latestDocument]);
 
+
   const handleDocumentUpdate = (updatedFields: Partial<Document>) => {
     // Only update if we have version data loaded
     if (documents.length > 0) {
@@ -547,6 +568,176 @@ export function AlwaysVisibleArtifact({
     setZoom(value);
   }, []);
 
+  const handleImportWordDocument = useCallback(async (file: File) => {
+    if (!file) return;
+
+    // Validate file type
+    const isValidFile = file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc');
+    if (!isValidFile) {
+      toast({
+        type: 'error',
+        description: 'Please select a Word document (.docx or .doc file)',
+      });
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        type: 'error',
+        description: 'File too large. Max 10MB allowed.',
+      });
+      return;
+    }
+
+    try {
+      toast({
+        description: 'Converting document...',
+      });
+
+      // Dynamically import the conversion libraries
+      const [{ default: mammoth }, { default: TurndownService }] = await Promise.all([
+        import('mammoth'),
+        import('turndown'),
+      ]);
+
+      // Read file as array buffer
+      const arrayBuffer = await file.arrayBuffer();
+
+      // Convert .docx to HTML
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+      let htmlContent = result.value;
+
+      // Clean up HTML to remove problematic elements
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+
+      // Remove images with empty or invalid src attributes
+      const images = tempDiv.querySelectorAll('img');
+      images.forEach(img => {
+        const src = img.getAttribute('src');
+        if (!src || src.trim() === '') {
+          img.remove();
+        }
+      });
+
+      // Get cleaned HTML
+      htmlContent = tempDiv.innerHTML;
+
+      // Convert HTML to Markdown
+      const turndownService = new TurndownService({
+        headingStyle: 'atx',
+        codeBlockStyle: 'fenced',
+      });
+
+      // Custom rule to handle images - skip images without src
+      turndownService.addRule('images', {
+        filter: 'img',
+        replacement: function (content, node) {
+          const img = node as HTMLImageElement;
+          const src = img.getAttribute('src');
+          const alt = img.getAttribute('alt') || '';
+          if (src && src.trim() !== '') {
+            return `![${alt}](${src})`;
+          }
+          return ''; // Skip images without valid src
+        }
+      });
+
+      let markdownContent = turndownService.turndown(htmlContent);
+
+      // Clean up any remaining empty image references
+      markdownContent = markdownContent.replace(/!\[\]\([^)]*\)/g, '').replace(/\n{3,}/g, '\n\n');
+
+      // Create document title from filename (remove extension)
+      const title = file.name.replace(/\.docx?$/i, '') || 'Imported Document';
+
+      // Create new document
+      await createDocument({
+        title,
+        content: markdownContent,
+        kind: 'text',
+        chatId: null,
+        navigateAfterCreate: true,
+      });
+
+      toast({
+        type: 'success',
+        description: 'Document imported successfully',
+      });
+    } catch (error: any) {
+      console.error('Error importing document:', error);
+      toast({
+        type: 'error',
+        description: `Failed to import document: ${error.message}`,
+      });
+    }
+  }, [createDocument]);
+
+  const handleElectronWordFile = useCallback(async (filePath: string) => {
+    try {
+      toast({
+        description: 'Opening Word document...',
+      });
+
+      // Check if we're in Electron environment
+      const electronAPI = (window as any).electronAPI;
+      if (typeof window === 'undefined' || !electronAPI) {
+        toast({
+          type: 'error',
+          description: 'Electron API not available',
+        });
+        return;
+      }
+
+      // Get file info and read content
+      const fileInfo = await electronAPI.getFileInfo(filePath);
+      const fileBuffer = await electronAPI.readFile(filePath);
+
+      // Convert buffer to File-like object for processing
+      const isDocx = fileInfo.name.toLowerCase().endsWith('.docx');
+      const file = new File([fileBuffer], fileInfo.name, {
+        type: isDocx
+          ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          : 'application/msword',
+      });
+
+      // Process the file
+      await handleImportWordDocument(file);
+    } catch (error: any) {
+      console.error('Error handling Electron Word file:', error);
+      toast({
+        type: 'error',
+        description: `Failed to open Word document: ${error.message}`,
+      });
+    }
+  }, [handleImportWordDocument]);
+
+  // Handle Electron Word document opening
+  useEffect(() => {
+    const electronAPI = (window as any).electronAPI;
+    if (typeof window === 'undefined' || !electronAPI) return;
+
+    const handleElectronWordFileEvent = (_event: any, filePath: string) => {
+      handleElectronWordFile(filePath);
+    };
+
+    electronAPI.onOpenWordFile(handleElectronWordFileEvent);
+
+    return () => {
+      electronAPI.removeAllListeners('open-word-file');
+    };
+  }, [handleElectronWordFile]);
+
+  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleImportWordDocument(file);
+    }
+    // Reset input value so the same file can be selected again
+    event.target.value = '';
+  }, [handleImportWordDocument]);
+
   const isCurrentVersion = useMemo(
     () => currentVersionIndex === documents.length - 1,
     [currentVersionIndex, documents],
@@ -633,7 +824,7 @@ export function AlwaysVisibleArtifact({
   }
 
   return (
-    <div className="flex flex-col h-dvh bg-background">
+    <div className="flex flex-col h-dvh bg-background relative">
       <div className="grid grid-cols-[auto_1fr_auto] items-center border-b px-3 h-[45px] gap-2">
         <SidebarTrigger />
         {isPending ? (
@@ -668,6 +859,36 @@ export function AlwaysVisibleArtifact({
           </div>
         )}
         <div className="flex items-center gap-1">
+          <div className="relative">
+            <input
+              type="file"
+              accept=".docx,.doc"
+              onChange={handleFileSelect}
+              className="absolute inset-0 size-full opacity-0 pointer-events-none"
+              id="word-import-input"
+            />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="size-8 p-0 flex items-center justify-center transition-colors"
+                  onMouseEnter={() => setIsUploadHovered(true)}
+                  onMouseLeave={() => setIsUploadHovered(false)}
+                  onClick={() => document.getElementById('word-import-input')?.click()}
+                >
+                  <LottieIcon
+                    animationData={animations.fileplus}
+                    size={19}
+                    loop={false}
+                    autoplay={false}
+                    initialFrame={0}
+                    isHovered={isUploadHovered}
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Import document</TooltipContent>
+            </Tooltip>
+          </div>
           {documents && documents.length > 0 && (
             <DocumentActions
               content={editorContent}
@@ -729,7 +950,10 @@ export function AlwaysVisibleArtifact({
             </Suspense>
           )}
         </div>
-        <div className="fixed bottom-4 right-4 z-10">
+      </div>
+      {/* Only show zoom button when we have documents loaded and not in create mode */}
+      {documents && documents.length > 0 && !showCreateDocumentForId && (
+        <div className="absolute bottom-4 right-4 z-10">
           <Select onValueChange={handleZoomChange} value={zoom}>
             <SelectTrigger className="w-[100px]">
               <SelectValue placeholder="Zoom" />
@@ -743,7 +967,7 @@ export function AlwaysVisibleArtifact({
             </SelectContent>
           </Select>
         </div>
-      </div>
+      )}
     </div>
   );
 }

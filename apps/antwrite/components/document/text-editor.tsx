@@ -509,9 +509,9 @@ function PureEditor({
         transformOrigin: 'top center',
       }}
     >
-      <div className="w-[816px] mx-auto relative">
+      <div className="max-w-[816px] w-full mx-auto relative px-4 min-w-[400px]">
         <div
-          className="absolute top-0 inset-x-0 pointer-events-none"
+          className="absolute top-0 inset-x-4 pointer-events-none"
           aria-hidden="true"
         >
           {Array.from({ length: pages }).map((_, i) => (

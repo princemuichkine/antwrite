@@ -29,11 +29,7 @@ export function DocumentActions({ content, saveStatus }: DocumentActionsProps) {
                 </div>
             );
         }
-        return (
-            <div className="flex items-center gap-1 text-green-600">
-                <Check className="size-4" />
-            </div>
-        );
+        return null;
     })();
 
     return (

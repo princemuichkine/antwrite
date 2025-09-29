@@ -127,7 +127,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
   );
 
   return (
-    <div className="toolbar sticky top-4 z-20 w-full h-[45px] flex items-center gap-2 px-3 py-0 overflow-x-auto whitespace-nowrap rounded-sm bg-background border border-border">
+    <div className="toolbar sticky top-4 z-20 w-full h-[45px] flex items-center gap-2 px-3 py-0 overflow-x-auto whitespace-nowrap rounded-xs bg-background border-[0.5px] border-border">
       {/* Toolbar left side */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -169,8 +169,6 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <Separator orientation="vertical" className="mx-2 h-6" />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -279,8 +277,6 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
         </PopoverContent>
       </Popover>
 
-      <Separator orientation="vertical" className="mx-2 h-6" />
-
       <ButtonWithTooltip
         label="Insert image"
         onClick={() => {
@@ -340,6 +336,28 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
       <Separator orientation="vertical" className="mx-2 h-6" />
 
       <ButtonWithTooltip
+        label="Bold"
+        formatKey="bold"
+        onClick={() => runCommand(toggleMark(marks.strong))}
+      >
+        <Bold className="size-5 text-foreground" />
+      </ButtonWithTooltip>
+      <ButtonWithTooltip
+        label="Underline"
+        formatKey="underline"
+        onClick={() => runCommand(toggleMark(marks.underline))}
+      >
+        <Underline className="size-5 text-foreground" />
+      </ButtonWithTooltip>
+      <ButtonWithTooltip
+        label="Italic"
+        formatKey="italic"
+        onClick={() => runCommand(toggleMark(marks.em))}
+      >
+        <Italic className="size-5 text-foreground" />
+      </ButtonWithTooltip>
+
+      <ButtonWithTooltip
         label="Bullet list"
         formatKey="bulletList"
         onClick={() =>
@@ -360,30 +378,6 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
         }
       >
         <ListOrdered className="size-5 text-foreground" />
-      </ButtonWithTooltip>
-
-      <Separator orientation="vertical" className="mx-2 h-6" />
-
-      <ButtonWithTooltip
-        label="Bold"
-        formatKey="bold"
-        onClick={() => runCommand(toggleMark(marks.strong))}
-      >
-        <Bold className="size-5 text-foreground" />
-      </ButtonWithTooltip>
-      <ButtonWithTooltip
-        label="Underline"
-        formatKey="underline"
-        onClick={() => runCommand(toggleMark(marks.underline))}
-      >
-        <Underline className="size-5 text-foreground" />
-      </ButtonWithTooltip>
-      <ButtonWithTooltip
-        label="Italic"
-        formatKey="italic"
-        onClick={() => runCommand(toggleMark(marks.em))}
-      >
-        <Italic className="size-5 text-foreground" />
       </ButtonWithTooltip>
 
       <Separator orientation="vertical" className="mx-2 h-6" />

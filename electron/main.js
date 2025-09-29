@@ -46,16 +46,16 @@ function createWindow() {
             ...details.responseHeaders,
             'Content-Security-Policy': [
               "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; " +
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-                "style-src 'self' 'unsafe-inline' data:; " +
-                "img-src 'self' data: blob: https: http:; " +
-                "font-src 'self' data: https: http:; " +
-                "connect-src 'self' https: http: wss: ws: data: blob:; " +
-                "media-src 'self' data: blob: https: http:; " +
-                "object-src 'none'; " +
-                "frame-src 'self' https: http:; " +
-                "base-uri 'self'; " +
-                "form-action 'self' https: http:;",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+              "style-src 'self' 'unsafe-inline' data:; " +
+              "img-src 'self' data: blob: https: http:; " +
+              "font-src 'self' data: https: http:; " +
+              "connect-src 'self' https: http: wss: ws: data: blob:; " +
+              "media-src 'self' data: blob: https: http:; " +
+              "object-src 'none'; " +
+              "frame-src 'self' https: http:; " +
+              "base-uri 'self'; " +
+              "form-action 'self' https: http:;",
             ],
           },
         });
@@ -124,9 +124,24 @@ app.on('web-contents-created', (event, contents) => {
 });
 
 // Handle app being opened from finder on macOS
-app.on('open-file', (event, path) => {
+app.on('open-file', (event, filePath) => {
   event.preventDefault();
-  // Handle file opening logic here
+
+  // Check if it's a Word document
+  const isWordDoc = filePath.toLowerCase().endsWith('.docx') || filePath.toLowerCase().endsWith('.doc');
+  if (isWordDoc) {
+    // Send to renderer for processing
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('open-word-file', filePath);
+    }
+  } else {
+    // Handle other file types or show error
+    dialog.showMessageBox(mainWindow, {
+      type: 'error',
+      title: 'Unsupported File Type',
+      message: 'AntWrite currently only supports opening Word documents (.docx, .doc) from the file system.',
+    });
+  }
 });
 
 app.on('open-url', (event, url) => {
@@ -154,11 +169,19 @@ const template = [
           dialog
             .showOpenDialog(mainWindow, {
               properties: ['openFile'],
-              filters: [{ name: 'All Files', extensions: ['*'] }],
+              filters: [
+                { name: 'Word Documents', extensions: ['docx', 'doc'] },
+                { name: 'All Files', extensions: ['*'] },
+              ],
             })
             .then((result) => {
               if (!result.canceled) {
-                mainWindow.webContents.send('open-file', result.filePaths[0]);
+                const filePath = result.filePaths[0];
+                if (filePath.toLowerCase().endsWith('.docx') || filePath.toLowerCase().endsWith('.doc')) {
+                  mainWindow.webContents.send('open-word-file', filePath);
+                } else {
+                  mainWindow.webContents.send('open-file', filePath);
+                }
               }
             });
         },
@@ -316,4 +339,30 @@ ipcMain.handle('dialog-save-file', async (event, content, defaultPath) => {
 
 ipcMain.handle('get-version', () => {
   return app.getVersion();
+});
+
+ipcMain.handle('read-file', async (event, filePath) => {
+  const fs = require('fs').promises;
+  try {
+    const buffer = await fs.readFile(filePath);
+    return buffer;
+  } catch (error) {
+    throw new Error(`Failed to read file: ${error.message}`);
+  }
+});
+
+ipcMain.handle('get-file-info', async (event, filePath) => {
+  const fs = require('fs').promises;
+  const path = require('path');
+
+  try {
+    const stats = await fs.stat(filePath);
+    return {
+      name: path.basename(filePath),
+      size: stats.size,
+      path: filePath,
+    };
+  } catch (error) {
+    throw new Error(`Failed to get file info: ${error.message}`);
+  }
 });
