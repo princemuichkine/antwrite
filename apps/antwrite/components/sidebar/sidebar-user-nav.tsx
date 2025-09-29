@@ -305,7 +305,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem
+              {/* <DropdownMenuItem
                 className="cursor-pointer w-full mb-0.5"
                 onSelect={() =>
                   window.open(
@@ -323,7 +323,7 @@ export function SidebarUserNav({ user }: { user: User | null }) {
                   initialFrame={0}
                 />
                 Open-source
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
 
               <DropdownMenuItem
                 className="cursor-pointer w-full mb-0.5"
