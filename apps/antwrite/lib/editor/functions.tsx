@@ -19,10 +19,21 @@ export const buildDocumentFromContent = (content: string) => {
 };
 
 const markdownSerializer = new MarkdownSerializer(
-  { ...defaultMarkdownSerializer.nodes },
+  {
+    ...defaultMarkdownSerializer.nodes,
+    image(state: any, node: any) {
+      state.write(`![${node.attrs.alt || ''}](${node.attrs.src}${node.attrs.title ? ` "${node.attrs.title}"` : ''})`);
+    },
+  },
   {
     ...defaultMarkdownSerializer.marks,
     diffMark: { open: '', close: '' },
+    // These marks are not supported by the Markdown renderer, so we strip them
+    fontFamily: { open: '', close: '' },
+    fontSize: { open: '', close: '' },
+    underline: { open: '', close: '' },
+    strike: { open: '', close: '' },
+    textColor: { open: '', close: '' },
   },
 );
 

@@ -1,11 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import * as Slider from '@radix-ui/react-slider';
-import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip as ReTooltip, ReferenceLine } from 'recharts';
-import { diff_match_patch, DIFF_INSERT, DIFF_DELETE } from 'diff-match-patch';
+import { AreaChart, Area, ResponsiveContainer, ReferenceLine, XAxis, YAxis } from 'recharts';
 import { formatDistanceToNow } from 'date-fns';
-import { Button } from '../ui/button';
 import type { DocumentVersionData } from '@/types/document-version';
 
 interface VersionRailProps {
@@ -17,296 +14,439 @@ interface VersionRailProps {
     refreshVersions?: () => void;
 }
 
-export function VersionRail({ versions, currentIndex, onIndexChange, baseDocumentId, isLoading, refreshVersions }: VersionRailProps) {
-    const [hoverIndex, setHoverIndex] = React.useState<number | null>(null);
-    const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
-    const [pressStart, setPressStart] = React.useState<number | null>(null);
-    const [lastClickTime, setLastClickTime] = React.useState<number>(0);
+export function VersionRail({ versions, currentIndex, onIndexChange, baseDocumentId, isLoading }: VersionRailProps) {
+    const [isExpanded, setIsExpanded] = React.useState(false);
+    const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
+    const [isDragging, setIsDragging] = React.useState(false);
+    const [localVersions, setLocalVersions] = React.useState<DocumentVersionData[]>([]);
+    const [currentContent, setCurrentContent] = React.useState<string>('');
+    const [isPreviewMode, setIsPreviewMode] = React.useState(false);
+    const [previewPosition, setPreviewPosition] = React.useState<number | null>(null);
 
-    const lastRefreshRef = React.useRef(0);
+    const expandTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+    const collapseTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+    const dragStartIndexRef = React.useRef<number | null>(null);
+    const lastSavedContentRef = React.useRef<string>('');
 
-    const maybeRefresh = React.useCallback(() => {
-        if (!refreshVersions) return;
-        const now = Date.now();
-        if (now - lastRefreshRef.current > 5000) {
-            refreshVersions();
-            lastRefreshRef.current = now;
-        }
-    }, [refreshVersions]);
+    // Create activity timeline data for the graph
+    const activityData = React.useMemo(() => {
+        const dataPoints: Array<{
+            time: number;
+            activity: number;
+            version?: DocumentVersionData;
+            timestamp: Date;
+        }> = [];
 
-    const data = React.useMemo(() => {
-        const dmp = new diff_match_patch();
-        return versions.map((v, i) => {
-            const prevContent = i === 0 ? '' : versions[i - 1].content || '';
-            const currContent = v.content || '';
-
-            const diffs = dmp.diff_main(prevContent, currContent);
-            // Quick cleanup to merge trivial diffs
-            dmp.diff_cleanupSemantic(diffs);
-            let additions = 0;
-            let deletions = 0;
-            for (const [op, text] of diffs) {
-                if (op === DIFF_INSERT) additions += text.length;
-                else if (op === DIFF_DELETE) deletions += text.length;
-            }
-
-            const timeField = (i === versions.length - 1)
-                ? (v as any).updatedAt ?? v.createdAt
-                : v.createdAt;
-
-            return {
-                x: i,
-                additions,
-                deletions: -deletions,
-                ts: typeof timeField === 'string' ? timeField : (timeField as Date).toISOString(),
-            };
+        // Start with server versions
+        versions.forEach((version, index) => {
+            dataPoints.push({
+                time: index,
+                activity: 10, // Base activity for saved versions
+                version,
+                timestamp: new Date(version.createdAt)
+            });
         });
-    }, [versions]);
-    React.useEffect(() => {
-        if (currentIndex === versions.length - 1) {
-            setSelectedIndex(currentIndex);
-        } else {
-            setSelectedIndex(currentIndex);
-        }
-    }, [currentIndex, versions.length]);
 
-    const isViewingHistory = selectedIndex !== null && selectedIndex < versions.length - 1;
-    if (isLoading || versions.length === 0) {
-        return <div className="w-full border-b bg-background h-1 group-hover:h-12 transition-all duration-200" />;
-    }
+        // Add local draft activity
+        localVersions.forEach((version, index) => {
+            const baseIndex = versions.length + index;
+            const prevContent = index === 0 ? (versions[versions.length - 1]?.content || '') : (localVersions[index - 1]?.content || '');
+            const activity = Math.min(50, Math.max(5, (version.content || '').length - prevContent.length));
 
-    const handleValueChange = (val: number[]) => {
-        const idx = val[0];
-        const v = versions[idx];
-        if (!v) return;
-        window.dispatchEvent(
-            new CustomEvent('preview-document-update', {
-                detail: { documentId: baseDocumentId, newContent: v.content },
-            })
-        );
-        setHoverIndex(idx);
-    };
-    const commitIndex = (idx: number) => {
-        setSelectedIndex(idx);
+            dataPoints.push({
+                time: baseIndex,
+                activity,
+                version,
+                timestamp: new Date(version.createdAt)
+            });
+        });
 
-        onIndexChange(idx);
+        // Add current position if we have content
+        if (currentContent.trim()) {
+            const prevContent = localVersions[localVersions.length - 1]?.content || versions[versions.length - 1]?.content || '';
+            const activity = Math.min(50, Math.max(5, currentContent.length - prevContent.length));
 
-        if (idx >= versions.length - 1) {
-            window.dispatchEvent(
-                new CustomEvent('cancel-document-update', {
-                    detail: { documentId: baseDocumentId },
-                })
-            );
-        } else {
-            const v = versions[idx];
-            if (v) {
-                window.dispatchEvent(
-                    new CustomEvent('preview-document-update', {
-                        detail: { documentId: baseDocumentId, newContent: v.content },
-                    })
-                );
-            }
-        }
-    };
-
-    const handleCommit = (val: number[]) => {
-        commitIndex(val[0]);
-    };
-
-    const triggerFork = (idx: number) => {
-        const version = versions[idx];
-        if (!version) return;
-
-        window.dispatchEvent(
-            new CustomEvent('version-fork', {
-                detail: {
-                    originalDocumentId: baseDocumentId,
-                    versionIndex: idx,
-                    forkFromTimestamp: version.createdAt,
+            dataPoints.push({
+                time: dataPoints.length,
+                activity,
+                version: {
+                    id: 'current-draft',
+                    title: 'Current Draft',
+                    content: currentContent,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    version: 0
                 },
-            })
-        );
-    };
-
-    const handleClickArea = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        const now = Date.now();
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const fraction = x / rect.width;
-        const idx = Math.min(Math.max(Math.round(fraction * (versions.length - 1)), 0), versions.length - 1);
-
-        if (now - lastClickTime < 300) {
-            triggerFork(idx);
-        } else {
-            commitIndex(idx);
+                timestamp: new Date()
+            });
         }
 
-        setLastClickTime(now);
-    };
+        return dataPoints;
+    }, [versions, localVersions, currentContent]);
 
-    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-        maybeRefresh();
-        if (!versions.length) return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const idx = Math.min(Math.max(Math.round((x / rect.width) * (versions.length - 1)), 0), versions.length - 1);
-        if (idx < 0 || idx >= versions.length) return;
-        if (idx === hoverIndex) return;
+    // Find the current position in the timeline
+    const currentPosition = activityData.length - 1;
 
-        const v = versions[idx];
-        window.dispatchEvent(
-            new CustomEvent('preview-document-update', {
-                detail: { documentId: baseDocumentId, newContent: v.content },
-            })
-        );
-        setHoverIndex(idx);
-    };
 
-    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-        maybeRefresh();
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const fraction = x / rect.width;
-        const idx = Math.min(Math.max(Math.round(fraction * (versions.length - 1)), 0), versions.length - 1);
+    // Track editor changes for offline versioning
+    React.useEffect(() => {
+        let versionCreationTimeout: NodeJS.Timeout | null = null;
 
-        setPressStart(Date.now());
+        const handleEditorChange = (event: CustomEvent) => {
+            const { documentId: changedDocId, content } = event.detail;
+            if (changedDocId === baseDocumentId && content !== lastSavedContentRef.current) {
+                // Debounce version creation to avoid too many versions
+                if (versionCreationTimeout) {
+                    clearTimeout(versionCreationTimeout);
+                }
 
-        setTimeout(() => {
-            if (pressStart !== null && Date.now() - pressStart >= 800) {
-                triggerFork(idx);
-                setPressStart(null);
+                versionCreationTimeout = setTimeout(() => {
+                    // Create a local version snapshot
+                    const now = new Date();
+                    const localVersion: DocumentVersionData = {
+                        id: `local-${Date.now()}`,
+                        title: 'Current Draft',
+                        content,
+                        createdAt: now,
+                        updatedAt: now,
+                        version: 0, // Local drafts don't have a version number
+                    };
+
+                    setLocalVersions(prev => {
+                        // Keep only the last 10 local versions to avoid clutter
+                        const newVersions = [localVersion, ...prev.slice(0, 9)];
+                        // Save to localStorage for offline persistence
+                        try {
+                            localStorage.setItem(`versions-${baseDocumentId}`, JSON.stringify(newVersions));
+                        } catch (error) {
+                            console.warn('Failed to save local versions:', error);
+                        }
+                        return newVersions;
+                    });
+
+                    lastSavedContentRef.current = content;
+                }, 2000); // Create version every 2 seconds of typing pauses
             }
-        }, 800);
-    };
+        };
 
-    const handlePointerUp = () => {
-        setPressStart(null);
-    };
-
-    const handlePointerLeave = () => {
-        setPressStart(null);
-        if (hoverIndex !== null) {
-            if (isViewingHistory && selectedIndex !== null && selectedIndex < versions.length - 1) {
-                const v = versions[selectedIndex];
-                window.dispatchEvent(
-                    new CustomEvent('preview-document-update', {
-                        detail: { documentId: baseDocumentId, newContent: v.content },
-                    })
-                );
-            } else {
-                window.dispatchEvent(
-                    new CustomEvent('cancel-document-update', {
-                        detail: { documentId: baseDocumentId },
-                    })
-                );
+        // Load saved local versions on mount
+        try {
+            const saved = localStorage.getItem(`versions-${baseDocumentId}`);
+            if (saved) {
+                setLocalVersions(JSON.parse(saved));
             }
-            setHoverIndex(null);
+        } catch (error) {
+            console.warn('Failed to load local versions:', error);
         }
 
-    };
+        const handleContentUpdate = (event: CustomEvent) => {
+            const { documentId: docId, content } = event.detail;
+            if (docId === baseDocumentId) {
+                setCurrentContent(content || '');
+            }
+        };
 
-    const Tooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { ts: string; additions: number; deletions: number } }> }) => {
-        if (active && payload && payload.length) {
-            const d = payload[0].payload;
-            return (
-                <div className="bg-background border px-2 py-1 text-xs rounded shadow">
-                    <div>{formatDistanceToNow(new Date(d.ts), { addSuffix: true })}</div>
-                    <div className="flex items-center gap-1">
-                        <span className="text-green-500">+{d.additions}</span>
-                        <span className="text-red-500">-{Math.abs(d.deletions)}</span>
+        window.addEventListener('editor:content-changed', handleEditorChange as EventListener);
+        window.addEventListener('editor:content-changed', handleContentUpdate as EventListener);
+
+        return () => {
+            window.removeEventListener('editor:content-changed', handleEditorChange as EventListener);
+            window.removeEventListener('editor:content-changed', handleContentUpdate as EventListener);
+            if (versionCreationTimeout) {
+                clearTimeout(versionCreationTimeout);
+            }
+            if (expandTimeoutRef.current) {
+                clearTimeout(expandTimeoutRef.current);
+            }
+            if (collapseTimeoutRef.current) {
+                clearTimeout(collapseTimeoutRef.current);
+            }
+        };
+    }, [baseDocumentId]);
+
+
+    // Cleanup timeout on unmount
+    React.useEffect(() => {
+        return () => {
+            if (expandTimeoutRef.current) {
+                clearTimeout(expandTimeoutRef.current);
+            }
+            if (collapseTimeoutRef.current) {
+                clearTimeout(collapseTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    const navigateToPosition = React.useCallback(
+        (position: number) => {
+            if (position < 0 || position >= activityData.length) return;
+
+            const dataPoint = activityData[position];
+            if (dataPoint?.version) {
+                // If it's the current position, cancel preview mode
+                if (position === currentPosition) {
+                    setIsPreviewMode(false);
+                    setPreviewPosition(null);
+                    window.dispatchEvent(
+                        new CustomEvent('cancel-document-update', {
+                            detail: { documentId: baseDocumentId },
+                        })
+                    );
+                } else {
+                    // Show preview of the selected version
+                    setIsPreviewMode(true);
+                    setPreviewPosition(position);
+                    window.dispatchEvent(
+                        new CustomEvent('preview-document-update', {
+                            detail: { documentId: baseDocumentId, newContent: dataPoint.version.content },
+                        })
+                    );
+                }
+            }
+        },
+        [activityData, baseDocumentId, currentPosition]
+    );
+
+    const confirmDestructiveChange = React.useCallback(() => {
+        if (previewPosition !== null) {
+            const dataPoint = activityData[previewPosition];
+            if (dataPoint?.version) {
+                const revertedContent = dataPoint.version.content || '';
+
+                // Update the editor content directly by dispatching an event that the editor listens for
+                window.dispatchEvent(new CustomEvent('editor:force-content-update', {
+                    detail: { documentId: baseDocumentId, content: revertedContent }
+                }));
+
+                // Clear local versions and update current content
+                setLocalVersions([]);
+                setCurrentContent(revertedContent);
+                lastSavedContentRef.current = revertedContent;
+
+                // Save to server
+                fetch('/api/document', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: baseDocumentId,
+                        content: revertedContent,
+                    }),
+                }).catch(error => {
+                    console.error('Failed to save destructive change:', error);
+                });
+            }
+        }
+        setIsPreviewMode(false);
+        setPreviewPosition(null);
+    }, [previewPosition, activityData, baseDocumentId]);
+
+    const cancelPreview = React.useCallback(() => {
+        setIsPreviewMode(false);
+        setPreviewPosition(null);
+        navigateToPosition(currentPosition);
+    }, [currentPosition, navigateToPosition]);
+
+    // Render confirmation overlay globally when in preview mode
+    React.useEffect(() => {
+        const overlayContainer = document.getElementById('preview-confirmation-overlay');
+        if (!overlayContainer) return;
+
+        if (isPreviewMode) {
+            overlayContainer.innerHTML = `
+                <div class="absolute inset-0 pointer-events-none">
+                    <div class="absolute bottom-16 right-1 bg-background border rounded-sm shadow-lg px-2 py-1.5 flex items-center gap-2 text-xs pointer-events-auto">
+                        <span class="font-medium">Revert to this version?</span>
+                        <button id="cancel-preview" class="px-2 py-1 bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded">
+                            ✕
+                        </button>
+                        <button id="confirm-destructive-change" class="px-2 py-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:text-green-800 dark:hover:text-green-200 border border-green-200 dark:border-green-800 transition-colors duration-200 rounded font-medium">
+                            ✓
+                        </button>
                     </div>
                 </div>
-            );
+            `;
+
+            // Add event listeners
+            const confirmBtn = document.getElementById('confirm-destructive-change');
+            const cancelBtn = document.getElementById('cancel-preview');
+
+            if (confirmBtn) {
+                confirmBtn.onclick = confirmDestructiveChange;
+            }
+            if (cancelBtn) {
+                cancelBtn.onclick = cancelPreview;
+            }
+        } else {
+            overlayContainer.innerHTML = '';
         }
-        return null;
+
+        return () => {
+            if (overlayContainer) {
+                overlayContainer.innerHTML = '';
+            }
+        };
+    }, [isPreviewMode, confirmDestructiveChange, cancelPreview]);
+
+    const handlePointerEnter = React.useCallback(() => {
+        // Clear any pending collapse timeout
+        if (collapseTimeoutRef.current) {
+            clearTimeout(collapseTimeoutRef.current);
+            collapseTimeoutRef.current = null;
+        }
+        // Set expand timeout (only if not already expanded)
+        if (!isExpanded && !expandTimeoutRef.current) {
+            expandTimeoutRef.current = setTimeout(() => {
+                setIsExpanded(true);
+                expandTimeoutRef.current = null;
+            }, 200); // Small delay to prevent flickering
+        }
+    }, [isExpanded]);
+
+    const handlePointerLeave = React.useCallback(() => {
+        // Clear any pending expand timeout
+        if (expandTimeoutRef.current) {
+            clearTimeout(expandTimeoutRef.current);
+            expandTimeoutRef.current = null;
+        }
+        // Set collapse timeout
+        collapseTimeoutRef.current = setTimeout(() => {
+            setIsExpanded(false);
+            setHoveredIndex(null);
+            collapseTimeoutRef.current = null;
+        }, 1000); // Longer delay before collapsing for smoother UX
+    }, []);
+
+
+    const getPositionFromMousePosition = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const fraction = x / rect.width;
+        return Math.min(Math.max(Math.round(fraction * (activityData.length - 1)), 0), activityData.length - 1);
     };
 
-    const goToLatest = () => {
-        const latestIndex = versions.length - 1;
-        setSelectedIndex(latestIndex);
-        onIndexChange(latestIndex);
-        window.dispatchEvent(
-            new CustomEvent('cancel-document-update', {
-                detail: { documentId: baseDocumentId },
-            })
-        );
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        const position = getPositionFromMousePosition(e);
+        setIsDragging(true);
+        dragStartIndexRef.current = position;
+        navigateToPosition(position);
     };
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (isDragging) {
+            const position = getPositionFromMousePosition(e);
+            navigateToPosition(position);
+        } else if (isExpanded && activityData.length > 0) {
+            const position = getPositionFromMousePosition(e);
+            setHoveredIndex(position);
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+        dragStartIndexRef.current = null;
+    };
+
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        // Only handle click if we didn't just finish dragging
+        if (!isDragging && dragStartIndexRef.current === null) {
+            const position = getPositionFromMousePosition(e);
+            navigateToPosition(position);
+        }
+    };
+
+    if (isLoading || activityData.length === 0) {
+        return <div className="w-full border-b bg-background h-1" />;
+    }
+
 
     return (
         <div className="w-full">
+            {/* Timeline container */}
             <div
-                className={`w-full border-b bg-background transition-all duration-200 group ${isViewingHistory ? 'h-12' : 'hover:h-12 h-1'}`}
+                className={`version-rail-container w-full border-b bg-background transition-all duration-300 relative ${isExpanded ? 'h-12' : 'h-1'} ${isDragging ? 'cursor-grabbing' : 'cursor-pointer'}`}
+                onPointerEnter={handlePointerEnter}
                 onPointerLeave={handlePointerLeave}
-                onPointerMove={handlePointerMove}
-                onPointerDown={handlePointerDown}
-                onPointerUp={(e) => {
-                    maybeRefresh();
-                    handlePointerUp();
-                    handleClickArea(e as any);
-                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
             >
-                <Slider.Root
-                    className="relative size-full flex items-center"
-                    value={[selectedIndex ?? currentIndex]}
-                    max={versions.length - 1}
-                    step={1}
-                    onValueChange={handleValueChange}
-                    onValueCommit={handleCommit}
-                >
-                    <Slider.Track className="absolute inset-0">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                                <ReferenceLine y={0} stroke="#d4d4d8" strokeWidth={1} />
-                                <XAxis dataKey="x" hide />
-                                <YAxis hide domain={['dataMin', 'dataMax']} />
-                                <Area
-                                    type="monotone"
-                                    dataKey="additions"
-                                    stroke="#16a34a"
-                                    fill="#16a34a"
-                                    fillOpacity={0.25}
-                                    strokeWidth={1}
-                                    isAnimationActive={false}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="deletions"
-                                    stroke="#dc2626"
-                                    fill="#dc2626"
-                                    fillOpacity={0.25}
-                                    strokeWidth={1}
-                                    isAnimationActive={false}
-                                />
-                                <ReTooltip content={<Tooltip />} cursor={{ stroke: '#888', strokeWidth: 1 }} wrapperStyle={{ outline: 'none' }} />
-                            </AreaChart>
-                        </ResponsiveContainer>
-
-                        {isViewingHistory && (
-                            <div
-                                className="absolute top-0 h-full w-0.5 bg-blue-500 shadow-lg"
-                                style={{
-                                    left: `${((selectedIndex || 0) / (versions.length - 1)) * 100}%`,
-                                    transform: 'translateX(-50%)'
-                                }}
+                {/* Activity waveform graph */}
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={activityData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                        <XAxis dataKey="time" hide />
+                        <YAxis hide domain={[0, 'dataMax']} />
+                        <Area
+                            type="monotone"
+                            dataKey="activity"
+                            stroke="#3b82f6"
+                            fill="#3b82f6"
+                            fillOpacity={0.3}
+                            strokeWidth={2}
+                            isAnimationActive={false}
+                        />
+                        {/* Current position indicator - fixed at end */}
+                        <ReferenceLine
+                            x={activityData.length - 1}
+                            stroke="#10b981"
+                            strokeWidth={3}
+                            strokeDasharray="5,5"
+                        />
+                        {/* Preview position indicator */}
+                        {isPreviewMode && previewPosition !== null && (
+                            <ReferenceLine
+                                x={previewPosition}
+                                stroke="#1d4ed8"
+                                strokeWidth={2}
                             />
                         )}
-                    </Slider.Track>
-                    <Slider.Thumb className="hidden" />
-                </Slider.Root>
-            </div>
+                    </AreaChart>
+                </ResponsiveContainer>
 
-            {isViewingHistory && (
-                <div className="flex items-center justify-center py-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={goToLatest}
-                        className="h-7 px-3 text-xs"
-                    >
-                        Return to latest
-                    </Button>
-                </div>
-            )}
+                {/* Interactive overlay for tooltips and clicks */}
+                {isExpanded && (
+                    <div className="absolute inset-0">
+                        {activityData.map((dataPoint, index) => {
+                            const isHovered = hoveredIndex === index;
+                            const isCurrent = index === currentPosition;
+
+                            return (
+                                <div
+                                    key={index}
+                                    className="absolute inset-y-0 cursor-pointer"
+                                    style={{
+                                        left: `${(index / Math.max(activityData.length - 1, 1)) * 100}%`,
+                                        width: `${100 / Math.max(activityData.length, 1)}%`,
+                                    }}
+                                    onMouseEnter={() => setHoveredIndex(index)}
+                                    onMouseLeave={() => setHoveredIndex(null)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigateToPosition(index);
+                                    }}
+                                >
+                                    {/* Tooltip */}
+                                    {isHovered && dataPoint.version && (
+                                        <div
+                                            className={`absolute bg-background border px-2 py-1 text-xs rounded shadow-md z-20 whitespace-nowrap ${index === 0
+                                                ? 'left-0 -bottom-10'
+                                                : index === activityData.length - 1
+                                                    ? 'right-0 -bottom-10'
+                                                    : 'left-1/2 -translate-x-1/2 -bottom-10'
+                                                }`}
+                                        >
+                                            <div className="text-xs">
+                                                {formatDistanceToNow(dataPoint.timestamp, { addSuffix: true })}
+                                                {isCurrent && <span className="ml-1 text-green-500">(now)</span>}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

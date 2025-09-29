@@ -83,7 +83,7 @@ export function createSaveFunction(
 
 export function savePlugin({
   saveFunction,
-  debounceMs = 1500,
+  debounceMs = 500, // Reduced from 1500ms to 500ms for more frequent saves
   initialLastSaved = null,
   documentId,
 }: SavePluginOptions): Plugin<SaveState> {

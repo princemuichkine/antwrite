@@ -12,6 +12,11 @@ export interface FormatState {
   orderedList: boolean;
   bold: boolean;
   italic: boolean;
+  underline: boolean;
+  strike: boolean;
+  fontFamily: string;
+  fontSize: string;
+  textColor: string;
 }
 
 export const formatPluginKey = new PluginKey<FormatState>('format');
@@ -45,6 +50,29 @@ function isListActive(state: EditorState, type: any): boolean {
   return false;
 }
 
+function getMarkAttribute<T>(state: EditorState, markType: any, attrName: string): T | undefined {
+    const { from, to, empty } = state.selection;
+    let value: T | undefined;
+
+    state.doc.nodesBetween(from, to, (node) => {
+        if (value) return false;
+        const mark = markType.isInSet(node.marks);
+        if (mark) {
+            value = mark.attrs[attrName];
+        }
+    });
+
+    if (value === undefined && empty) {
+        const storedMark = (state.storedMarks || []).find(m => m.type === markType);
+        if (storedMark) {
+            value = storedMark.attrs[attrName];
+        }
+    }
+
+    return value;
+}
+
+
 function getActiveFormats(state: EditorState): FormatState {
   return {
     h1: isBlockActive(state, nodes.heading, { level: 1 }),
@@ -54,6 +82,11 @@ function getActiveFormats(state: EditorState): FormatState {
     orderedList: isListActive(state, nodes.ordered_list),
     bold: isMarkActive(state, marks.strong),
     italic: isMarkActive(state, marks.em),
+    underline: isMarkActive(state, marks.underline),
+    strike: isMarkActive(state, marks.strike),
+    fontFamily: getMarkAttribute(state, marks.fontFamily, 'fontFamily') || 'Arial',
+    fontSize: getMarkAttribute(state, marks.fontSize, 'fontSize') || '11px',
+    textColor: getMarkAttribute(state, marks.textColor, 'color') || '#000000',
   };
 }
 

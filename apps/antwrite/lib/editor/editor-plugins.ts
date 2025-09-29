@@ -13,37 +13,44 @@ import { formatPlugin } from './format-plugin';
 import { savePlugin } from './save-plugin';
 import { emojiPlugin } from './emoji-plugin';
 
-export interface EditorPluginOptions {
+type EditorPluginsConfig = {
   documentId: string;
   initialLastSaved: Date | null;
   placeholder?: string;
-  performSave: (content: string) => Promise<any>;
+  performSave: (content: string) => Promise<{ updatedAt: string } | null>;
   requestInlineSuggestion: (state: any) => void;
   setActiveFormats: (formats: any) => void;
-}
+};
 
-export function createEditorPlugins(opts: EditorPluginOptions): Plugin[] {
+export function createEditorPlugins({
+  documentId,
+  initialLastSaved,
+  placeholder,
+  performSave,
+  requestInlineSuggestion,
+  setActiveFormats,
+}: EditorPluginsConfig): Plugin[] {
   return [
-    creationStreamingPlugin(opts.documentId),
+    creationStreamingPlugin(documentId),
     placeholderPlugin(
-      opts.placeholder ??
-        (opts.documentId === 'init' ? 'Start typing' : 'Start typing...'),
+      placeholder ??
+        (documentId === 'init' ? 'Start typing' : 'Start typing...'),
     ),
     ...exampleSetup({ schema: documentSchema, menuBar: false }),
     inputRules({
       rules: [1, 2, 3, 4, 5, 6].map((level) => headingRule(level)),
     }),
-    inlineSuggestionPlugin({ requestSuggestion: opts.requestInlineSuggestion }),
-    selectionContextPlugin(opts.documentId),
+    inlineSuggestionPlugin({ requestSuggestion: requestInlineSuggestion }),
+    selectionContextPlugin(documentId),
     synonymsPlugin(),
-    diffPlugin(opts.documentId),
-    formatPlugin(opts.setActiveFormats),
+    diffPlugin(documentId),
+    formatPlugin(setActiveFormats),
     emojiPlugin(),
     savePlugin({
-      saveFunction: opts.performSave,
-      initialLastSaved: opts.initialLastSaved,
+      saveFunction: performSave,
+      initialLastSaved: initialLastSaved,
       debounceMs: 200,
-      documentId: opts.documentId,
+      documentId: documentId,
     }),
   ];
 }

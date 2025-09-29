@@ -20,6 +20,7 @@ import {
 } from '@/lib/editor/functions';
 import { setActiveEditorView } from '@/lib/editor/editor-state';
 import { EditorToolbar } from '@/components/document/editor-toolbar';
+import { EditorContextMenu } from '@/components/document/editor-context-menu';
 import {
   savePluginKey,
   setSaveStatus,
@@ -33,6 +34,46 @@ import {
   createInlineSuggestionCallback,
 } from '@/lib/editor/inline-suggestion-plugin';
 
+const PAGE_HEIGHT = 1056;
+const PAGE_GAP = 24;
+const PAGE_PADDING = 96;
+
+// Image drop handler
+async function handleImageDrop(view: EditorView, file: File) {
+  // Validate file size (max 5MB for base64)
+  if (file.size > 5 * 1024 * 1024) {
+    console.error('Image too large. Max 5MB allowed.');
+    return;
+  }
+
+  try {
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64Data = reader.result as string;
+
+      const { state } = view;
+      const { schema } = state;
+      const imageNode = schema.nodes.image.create({
+        src: base64Data,
+        alt: file.name,
+      });
+
+      const tr = state.tr.replaceSelectionWith(imageNode);
+      view.dispatch(tr);
+      view.focus();
+    };
+
+    reader.onerror = () => {
+      console.error('Failed to read image file');
+    };
+
+    reader.readAsDataURL(file);
+  } catch (error) {
+    console.error('Image processing failed:', error);
+  }
+}
+
 type EditorProps = {
   content: string;
   status: 'streaming' | 'idle';
@@ -40,6 +81,7 @@ type EditorProps = {
   currentVersionIndex: number;
   documentId: string;
   initialLastSaved: Date | null;
+  zoom: number;
   onStatusChange?: (status: SaveState) => void;
   onCreateDocumentRequest?: (initialContent: string) => void;
 };
@@ -51,6 +93,7 @@ function PureEditor({
   currentVersionIndex,
   documentId,
   initialLastSaved,
+  zoom,
   onStatusChange,
   onCreateDocumentRequest,
 }: EditorProps) {
@@ -58,6 +101,8 @@ function PureEditor({
   const editorRef = useRef<EditorView | null>(null);
   const currentDocumentIdRef = useRef(documentId);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const [pages, setPages] = useState(1);
 
   const [activeFormats, setActiveFormats] = useState<FormatState>({
     h1: false,
@@ -67,7 +112,14 @@ function PureEditor({
     orderedList: false,
     bold: false,
     italic: false,
+    underline: false,
+    strike: false,
+    fontFamily: 'Arial',
+    fontSize: '11px',
+    textColor: '#000000',
   });
+
+  const [contextMenuSelection, setContextMenuSelection] = useState<{ from: number; to: number } | null>(null);
 
   useEffect(() => {
     currentDocumentIdRef.current = documentId;
@@ -173,6 +225,59 @@ function PureEditor({
             }
             return false;
           },
+          drop: (view, event) => {
+            view.dom.parentElement?.classList.remove('drag-over');
+            const files = event.dataTransfer?.files;
+            if (files && files.length > 0) {
+              event.preventDefault();
+              const file = files[0];
+              if (file.type.startsWith('image/')) {
+                handleImageDrop(view, file);
+                return true;
+              }
+            }
+            return false;
+          },
+          dragover: (view, event) => {
+            const files = event.dataTransfer?.files;
+            if (files && files.length > 0 && files[0].type.startsWith('image/')) {
+              event.preventDefault();
+              view.dom.parentElement?.classList.add('drag-over');
+              return true;
+            }
+            view.dom.parentElement?.classList.remove('drag-over');
+            return false;
+          },
+          dragleave: (view, event) => {
+            // Only remove the class if we're actually leaving the editor area
+            const rect = view.dom.parentElement?.getBoundingClientRect();
+            if (rect) {
+              const { clientX, clientY } = event;
+              if (clientX < rect.left || clientX > rect.right ||
+                clientY < rect.top || clientY > rect.bottom) {
+                view.dom.parentElement?.classList.remove('drag-over');
+              }
+            }
+            return false;
+          },
+          paste: (view, event) => {
+            const files = event.clipboardData?.files;
+            if (files && files.length > 0) {
+              const file = files[0];
+              if (file.type.startsWith('image/')) {
+                event.preventDefault();
+                handleImageDrop(view, file);
+                return true;
+              }
+            }
+            return false;
+          },
+          contextmenu: (view, event) => {
+            // Capture the current selection for the context menu
+            const { from, to } = view.state.selection;
+            setContextMenuSelection({ from, to });
+            return true;
+          },
         },
         dispatchTransaction: (transaction: Transaction) => {
           if (!editorRef.current) return;
@@ -186,6 +291,14 @@ function PureEditor({
           const newSaveState = savePluginKey.getState(newState);
           if (onStatusChange && newSaveState && newSaveState !== oldSaveState) {
             onStatusChange(newSaveState);
+          }
+
+          // Dispatch content change event for offline versioning
+          if (transaction.docChanged) {
+            const newContent = buildContentFromDocument(newState.doc);
+            window.dispatchEvent(new CustomEvent('editor:content-changed', {
+              detail: { documentId, content: newContent }
+            }));
           }
 
           if (
@@ -205,6 +318,19 @@ function PureEditor({
 
       editorRef.current = view;
       setActiveEditorView(view);
+
+      // Set up a resize observer to detect content height changes
+      resizeObserverRef.current = new ResizeObserver(() => {
+        if (editorRef.current) {
+          const editorHeight = editorRef.current.dom.scrollHeight;
+          const newPages = Math.max(
+            1,
+            Math.ceil(editorHeight / PAGE_HEIGHT),
+          );
+          setPages((p) => (newPages !== p ? newPages : p));
+        }
+      });
+      resizeObserverRef.current.observe(view.dom);
 
       const initialSaveState = savePluginKey.getState(view.state);
       if (onStatusChange && initialSaveState) {
@@ -271,6 +397,9 @@ function PureEditor({
         abortControllerRef.current.abort();
         abortControllerRef.current = null;
       }
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
     };
   }, [
     content,
@@ -325,6 +454,24 @@ function PureEditor({
       }
     };
 
+    const handleForceContentUpdate = (event: CustomEvent) => {
+      const { documentId: targetDocId, content } = event.detail;
+      if (targetDocId === documentId && content !== undefined) {
+        // Force update the editor content
+        if (editorRef.current) {
+          const newDoc = buildDocumentFromContent(content);
+          const transaction = editorRef.current.state.tr.replaceWith(
+            0,
+            editorRef.current.state.doc.content.size,
+            newDoc.content
+          );
+          transaction.setMeta('external', true);
+          transaction.setMeta('addToHistory', false);
+          editorRef.current.dispatch(transaction);
+        }
+      }
+    };
+
     window.addEventListener(
       'editor:creation-stream-finished',
       handleCreationStreamFinished as EventListener,
@@ -332,6 +479,10 @@ function PureEditor({
     window.addEventListener(
       'editor:force-save-document',
       wrappedForceSave as unknown as EventListener,
+    );
+    window.addEventListener(
+      'editor:force-content-update',
+      handleForceContentUpdate as EventListener,
     );
 
     return () => {
@@ -343,20 +494,53 @@ function PureEditor({
         'editor:force-save-document',
         wrappedForceSave as unknown as EventListener,
       );
+      window.removeEventListener(
+        'editor:force-content-update',
+        handleForceContentUpdate as EventListener,
+      );
     };
   }, [documentId]);
 
   return (
-    <>
-      {isCurrentVersion && documentId !== 'init' && (
-        <EditorToolbar
-          activeFormats={activeFormats as unknown as Record<string, boolean>}
-        />
-      )}
-      <div
-        className="editor-area bg-background text-foreground dark:bg-black dark:text-white prose prose-slate dark:prose-invert pt-4 min-h-[400px] cursor-text"
-        ref={containerRef}
-      />
+    <div
+      className="transition-transform duration-150 ease-in-out"
+      style={{
+        transform: `scale(${zoom})`,
+        transformOrigin: 'top center',
+      }}
+    >
+      <div className="w-[816px] mx-auto relative">
+        <div
+          className="absolute top-0 inset-x-0 pointer-events-none"
+          aria-hidden="true"
+        >
+          {Array.from({ length: pages }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-gray-950 shadow-lg rounded-sm"
+              style={{
+                height: `${PAGE_HEIGHT}px`,
+                marginBottom: `${PAGE_GAP}px`,
+              }}
+            />
+          ))}
+        </div>
+        <div className="relative">
+          {isCurrentVersion && documentId !== 'init' && (
+            <EditorToolbar activeFormats={activeFormats} />
+          )}
+          <EditorContextMenu
+            selection={contextMenuSelection || undefined}
+            onSelectionClear={() => setContextMenuSelection(null)}
+          >
+            <div
+              className="editor-area bg-transparent text-foreground dark:text-white prose prose-slate dark:prose-invert pt-4 min-h-[400px] cursor-text"
+              style={{ padding: `${PAGE_PADDING}px` }}
+              ref={containerRef}
+            />
+          </EditorContextMenu>
+        </div>
+      </div>
       <style jsx global>{`
         .suggestion-decoration-inline::after {
           content: attr(data-suggestion);
@@ -442,13 +626,14 @@ function PureEditor({
           max-height: 0;
         }
 
-        .editor-area, .toolbar {
-          max-width: 720px;
+        .editor-area,
+        .toolbar {
+          max-width: 100%;
           margin: 0 auto;
         }
 
         .editor-area {
-          min-height: 400px;
+          min-height: ${PAGE_HEIGHT - PAGE_PADDING * 2}px;
           position: relative;
           cursor: text;
         }
@@ -473,20 +658,23 @@ function PureEditor({
         }
 
         @media (min-width: 1024px) {
-          .editor-area, .toolbar {
-            max-width: 900px;
+          .editor-area,
+          .toolbar {
+            max-width: 100%;
           }
         }
 
         @media (min-width: 1280px) {
-          .editor-area, .toolbar {
-            max-width: 1000px;
+          .editor-area,
+          .toolbar {
+            max-width: 100%;
           }
         }
 
         @media (min-width: 1536px) {
-          .editor-area, .toolbar {
-            max-width: 1100px;
+          .editor-area,
+          .toolbar {
+            max-width: 100%;
           }
         }
 
@@ -551,6 +739,25 @@ function PureEditor({
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
         }
 
+        /* Image styles */
+        .ProseMirror img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 6px;
+          margin: 8px 0;
+          display: block;
+        }
+
+        .ProseMirror img.ProseMirror-selectednode {
+          outline: 3px solid #68CEF8;
+        }
+
+        /* Drag and drop styles */
+        .editor-area.drag-over {
+          background-color: rgba(104, 206, 248, 0.1);
+          border: 2px dashed #68CEF8;
+        }
+
         /* Emoji suggestion panel styles */
         .emoji-suggestion-panel {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -603,7 +810,7 @@ function PureEditor({
           background: #9ca3af;
         }
       `}</style>
-    </>
+    </div>
   );
 }
 
@@ -613,7 +820,8 @@ function areEqual(prevProps: EditorProps, nextProps: EditorProps) {
     prevProps.currentVersionIndex === nextProps.currentVersionIndex &&
     prevProps.isCurrentVersion === nextProps.isCurrentVersion &&
     !(prevProps.status === 'streaming' && nextProps.status === 'streaming') &&
-    prevProps.content === nextProps.content
+    prevProps.content === nextProps.content &&
+    prevProps.zoom === nextProps.zoom
   );
 }
 

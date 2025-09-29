@@ -255,3 +255,10 @@
         scroll-behavior: smooth;
         white-space: nowrap;
     }
+
+    /* Hide focus outline for version rail */
+    .version-rail-container:focus,
+    .version-rail-container:focus-visible {
+        outline: none !important;
+        box-shadow: none !important;
+    }

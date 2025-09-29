@@ -35,6 +35,14 @@ import { TextSelection } from 'prosemirror-state';
 import { useDocumentVersions } from '@/hooks/use-document-versions';
 import { VersionRail } from '@/components/document/version-rail';
 import { DocumentActions } from './document/actions';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ZOOM_LEVELS } from '@/lib/utils/zoom';
 
 const Editor = dynamic(
   () => import('@/components/document/text-editor').then((mod) => mod.Editor),
@@ -100,6 +108,7 @@ export function AlwaysVisibleArtifact({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<'edit' | 'diff'>('edit');
   const [saveStatus, setSaveStatus] = useState<'saving' | 'idle'>('idle');
+  const [zoom, setZoom] = useState('1');
 
   const { versions, isLoading: versionsLoading, mutate: mutateVersions, refresh: refreshVersions } = useDocumentVersions(initialDocumentId, user?.id);
 
@@ -534,6 +543,10 @@ export function AlwaysVisibleArtifact({
     setSaveStatus(newSaveState.status === 'saving' ? 'saving' : 'idle');
   }, []);
 
+  const handleZoomChange = useCallback((value: string) => {
+    setZoom(value);
+  }, []);
+
   const isCurrentVersion = useMemo(
     () => currentVersionIndex === documents.length - 1,
     [currentVersionIndex, documents],
@@ -673,7 +686,7 @@ export function AlwaysVisibleArtifact({
         </div>
       </div>
 
-      <div className="bg-background text-foreground dark:bg-black dark:text-white h-full overflow-y-auto !max-w-full items-center relative group">
+      <div className="bg-gray-100 dark:bg-background h-full overflow-y-auto overflow-x-hidden relative group">
         <VersionRail
           versions={versions}
           currentIndex={currentVersionIndex}
@@ -691,7 +704,10 @@ export function AlwaysVisibleArtifact({
           />
         )}
 
-        <div className="px-8 py-6 mx-auto max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
+        {/* Global preview confirmation overlay */}
+        <div id="preview-confirmation-overlay" className="absolute inset-0 pointer-events-none z-50"></div>
+
+        <div className="px-8 py-6 mx-auto max-w-full">
           {isPending ? (
             <EditorSkeleton />
           ) : (
@@ -708,9 +724,24 @@ export function AlwaysVisibleArtifact({
                 }
                 onStatusChange={handleStatusChange}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
+                zoom={parseFloat(zoom)}
               />
             </Suspense>
           )}
+        </div>
+        <div className="fixed bottom-4 right-4 z-10">
+          <Select onValueChange={handleZoomChange} value={zoom}>
+            <SelectTrigger className="w-[100px]">
+              <SelectValue placeholder="Zoom" />
+            </SelectTrigger>
+            <SelectContent>
+              {ZOOM_LEVELS.map((level) => (
+                <SelectItem key={level.label} value={String(level.value)}>
+                  {level.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>
