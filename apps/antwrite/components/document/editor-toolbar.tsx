@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { toggleMark, setBlockType } from 'prosemirror-commands';
 import { wrapInList, liftListItem } from 'prosemirror-schema-list';
-import { List, ListOrdered, Bold, Italic, Underline, ChevronDown, Palette, Image } from 'lucide-react';
+import { addColumnAfter, addColumnBefore, deleteColumn, addRowAfter, addRowBefore, deleteRow, mergeCells, splitCell, setCellAttr, toggleHeaderRow, toggleHeaderColumn, deleteTable } from 'prosemirror-tables';
+import { List, ListOrdered, Bold, Italic, Underline, ChevronDown, Palette, Image, Table, Plus, Minus, Merge, Split, AlignLeft, AlignCenter, AlignRight, AlignJustify, MoveVertical } from 'lucide-react';
 import { documentSchema } from '@/lib/editor/config';
 import { getActiveEditorView } from '@/lib/editor/editor-state';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,26 @@ function runCommand(command: (state: any, dispatch?: any) => boolean) {
   if (!view) return;
   command(view.state, view.dispatch);
   view.focus();
+}
+
+function createTable(state: any, dispatch: any) {
+  const { schema } = state;
+  const table = schema.nodes.table.create(null, [
+    schema.nodes.table_row.create(null, [
+      schema.nodes.table_cell.create(null, schema.nodes.paragraph.create()),
+      schema.nodes.table_cell.create(null, schema.nodes.paragraph.create()),
+      schema.nodes.table_cell.create(null, schema.nodes.paragraph.create()),
+    ]),
+    schema.nodes.table_row.create(null, [
+      schema.nodes.table_cell.create(null, schema.nodes.paragraph.create()),
+      schema.nodes.table_cell.create(null, schema.nodes.paragraph.create()),
+      schema.nodes.table_cell.create(null, schema.nodes.paragraph.create()),
+    ]),
+  ]);
+
+  const tr = state.tr.replaceSelectionWith(table);
+  dispatch(tr);
+  return true;
 }
 
 interface EditorToolbarProps {
@@ -116,6 +137,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
             'transition-none',
           )}
           onClick={onClick}
+          onMouseDown={(e) => e.preventDefault()}
           type="button"
           aria-label={label}
         >
@@ -127,13 +149,14 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
   );
 
   return (
-    <div className="toolbar sticky top-4 z-20 w-full h-[45px] flex items-center gap-2 px-3 py-0 overflow-x-auto whitespace-nowrap rounded-xs bg-background border-[0.5px] border-border">
+    <div className="toolbar sticky top-4 z-20 w-full h-[45px] flex items-center gap-2 px-3 py-0 overflow-x-auto whitespace-nowrap rounded-sm bg-background border-[0.5px] border-border">
       {/* Toolbar left side */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
             className="h-8 px-3 min-w-28 flex items-center justify-between gap-2 text-sm rounded-sm border border-border bg-background text-foreground shrink-0"
+            onMouseDown={(e) => e.preventDefault()}
             tabIndex={0}
           >
             <span className="truncate text-sm font-medium">
@@ -175,6 +198,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
           <Button
             variant="outline"
             className="h-8 px-3 min-w-28 flex items-center justify-between gap-2 text-sm rounded-sm border border-border bg-background text-foreground shrink-0"
+            onMouseDown={(e) => e.preventDefault()}
           >
             <span style={{ fontFamily: activeFormats.fontFamily }}>{activeFormats.fontFamily}</span>
             <ChevronDown className="size-4 ml-1 text-muted-foreground" />
@@ -200,6 +224,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
           <Button
             variant="outline"
             className="h-8 px-3 min-w-16 flex items-center justify-between gap-2 text-sm rounded-sm border border-border bg-background text-foreground shrink-0"
+            onMouseDown={(e) => e.preventDefault()}
           >
             <span>{activeFormats.fontSize?.replace('px', '')}</span>
             <ChevronDown className="size-4 ml-1 text-muted-foreground" />
@@ -228,6 +253,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
               'h-8 w-8 min-w-8 max-w-8 p-0 flex items-center justify-center rounded-sm border border-border bg-background text-foreground shrink-0',
               'transition-none',
             )}
+            onMouseDown={(e) => e.preventDefault()}
             type="button"
             aria-label="Text color"
           >
@@ -247,6 +273,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
                   )}
                   style={{ backgroundColor: color }}
                   onClick={() => runCommand(applyTextColor(color))}
+                  onMouseDown={(e) => e.preventDefault()}
                   type="button"
                   aria-label={`Text color ${color}`}
                 />
@@ -261,6 +288,7 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
                   const input = e.currentTarget.querySelector('input[type="color"]') as HTMLInputElement;
                   input?.click();
                 }}
+                onMouseDown={(e) => e.preventDefault()}
                 aria-label="Custom text color"
               >
                 <input
@@ -276,6 +304,64 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
           </div>
         </PopoverContent>
       </Popover>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 px-3 min-w-8 flex items-center justify-center rounded-sm border border-border bg-background text-foreground shrink-0"
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            {activeFormats.textAlign === 'left' && <AlignLeft className="size-4" />}
+            {activeFormats.textAlign === 'center' && <AlignCenter className="size-4" />}
+            {activeFormats.textAlign === 'right' && <AlignRight className="size-4" />}
+            {activeFormats.textAlign === 'justify' && <AlignJustify className="size-4" />}
+            <ChevronDown className="size-3 ml-1" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-32 p-1 shadow-lg rounded-sm border bg-popover">
+          <DropdownMenuItem onSelect={() => runCommand(applyMark(marks.textAlign, { align: 'left' }))}>
+            <AlignLeft className="size-4 mr-2" />
+            Left
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(applyMark(marks.textAlign, { align: 'center' }))}>
+            <AlignCenter className="size-4 mr-2" />
+            Center
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(applyMark(marks.textAlign, { align: 'right' }))}>
+            <AlignRight className="size-4 mr-2" />
+            Right
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(applyMark(marks.textAlign, { align: 'justify' }))}>
+            <AlignJustify className="size-4 mr-2" />
+            Justify
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 px-3 min-w-16 flex items-center justify-between gap-2 text-sm rounded-sm border border-border bg-background text-foreground shrink-0"
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <MoveVertical className="size-4" />
+            <span>{activeFormats.lineHeight}</span>
+            <ChevronDown className="size-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-20 p-1 shadow-lg rounded-sm border bg-popover">
+          {['1.0', '1.2', '1.5', '1.8', '2.0'].map((height) => (
+            <DropdownMenuItem
+              key={height}
+              onSelect={() => runCommand(applyMark(marks.lineHeight, { lineHeight: height }))}
+            >
+              {height}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <ButtonWithTooltip
         label="Insert image"
@@ -379,6 +465,66 @@ export function EditorToolbar({ activeFormats }: EditorToolbarProps) {
       >
         <ListOrdered className="size-5 text-foreground" />
       </ButtonWithTooltip>
+
+      <Separator orientation="vertical" className="mx-2 h-6" />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-8 px-3 min-w-8 flex items-center justify-center rounded-sm border border-border bg-background text-foreground shrink-0"
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <Table className="size-5 text-foreground" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-48 p-1 shadow-lg rounded-sm border bg-popover">
+          <DropdownMenuItem onSelect={() => runCommand(createTable)}>
+            <Plus className="size-4 mr-2" />
+            Insert Table
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(addRowAfter)}>
+            <Plus className="size-4 mr-2" />
+            Add Row After
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(addRowBefore)}>
+            <Plus className="size-4 mr-2" />
+            Add Row Before
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(addColumnAfter)}>
+            <Plus className="size-4 mr-2" />
+            Add Column After
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(addColumnBefore)}>
+            <Plus className="size-4 mr-2" />
+            Add Column Before
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(deleteRow)}>
+            <Minus className="size-4 mr-2" />
+            Delete Row
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(deleteColumn)}>
+            <Minus className="size-4 mr-2" />
+            Delete Column
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(mergeCells)}>
+            <Merge className="size-4 mr-2" />
+            Merge Cells
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(splitCell)}>
+            <Split className="size-4 mr-2" />
+            Split Cell
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(toggleHeaderRow)}>
+            <Table className="size-4 mr-2" />
+            Toggle Header Row
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => runCommand(deleteTable)}>
+            <Minus className="size-4 mr-2" />
+            Delete Table
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Separator orientation="vertical" className="mx-2 h-6" />
 

@@ -17,6 +17,8 @@ export interface FormatState {
   fontFamily: string;
   fontSize: string;
   textColor: string;
+  textAlign: string;
+  lineHeight: string;
 }
 
 export const formatPluginKey = new PluginKey<FormatState>('format');
@@ -85,8 +87,10 @@ function getActiveFormats(state: EditorState): FormatState {
     underline: isMarkActive(state, marks.underline),
     strike: isMarkActive(state, marks.strike),
     fontFamily: getMarkAttribute(state, marks.fontFamily, 'fontFamily') || 'Arial',
-    fontSize: getMarkAttribute(state, marks.fontSize, 'fontSize') || '11px',
+    fontSize: getMarkAttribute(state, marks.fontSize, 'fontSize') || '8px',
     textColor: getMarkAttribute(state, marks.textColor, 'color') || '#000000',
+    textAlign: getMarkAttribute(state, marks.textAlign, 'align') || 'left',
+    lineHeight: getMarkAttribute(state, marks.lineHeight, 'lineHeight') || '1.5',
   };
 }
 

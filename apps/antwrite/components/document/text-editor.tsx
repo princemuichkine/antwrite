@@ -20,7 +20,6 @@ import {
 } from '@/lib/editor/functions';
 import { setActiveEditorView } from '@/lib/editor/editor-state';
 import { EditorToolbar } from '@/components/document/editor-toolbar';
-import { EditorContextMenu } from '@/components/document/editor-context-menu';
 import {
   savePluginKey,
   setSaveStatus,
@@ -33,10 +32,8 @@ import {
   inlineSuggestionPluginKey,
   createInlineSuggestionCallback,
 } from '@/lib/editor/inline-suggestion-plugin';
+import { EditorContextMenu } from './editor-context-menu';
 
-const PAGE_HEIGHT = 1056;
-const PAGE_GAP = 24;
-const PAGE_PADDING = 96;
 
 // Image drop handler
 async function handleImageDrop(view: EditorView, file: File) {
@@ -81,7 +78,6 @@ type EditorProps = {
   currentVersionIndex: number;
   documentId: string;
   initialLastSaved: Date | null;
-  zoom: number;
   onStatusChange?: (status: SaveState) => void;
   onCreateDocumentRequest?: (initialContent: string) => void;
 };
@@ -93,7 +89,6 @@ function PureEditor({
   currentVersionIndex,
   documentId,
   initialLastSaved,
-  zoom,
   onStatusChange,
   onCreateDocumentRequest,
 }: EditorProps) {
@@ -101,8 +96,6 @@ function PureEditor({
   const editorRef = useRef<EditorView | null>(null);
   const currentDocumentIdRef = useRef(documentId);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const resizeObserverRef = useRef<ResizeObserver | null>(null);
-  const [pages, setPages] = useState(1);
 
   const [activeFormats, setActiveFormats] = useState<FormatState>({
     h1: false,
@@ -117,9 +110,12 @@ function PureEditor({
     fontFamily: 'Arial',
     fontSize: '11px',
     textColor: '#000000',
+    textAlign: 'left',
+    lineHeight: '1.5',
   });
 
-  const [contextMenuSelection, setContextMenuSelection] = useState<{ from: number; to: number } | null>(null);
+  const [currentSelection, setCurrentSelection] = useState<{ from: number; to: number } | undefined>(undefined);
+
 
   useEffect(() => {
     currentDocumentIdRef.current = documentId;
@@ -272,12 +268,6 @@ function PureEditor({
             }
             return false;
           },
-          contextmenu: (view, event) => {
-            // Capture the current selection for the context menu
-            const { from, to } = view.state.selection;
-            setContextMenuSelection({ from, to });
-            return true;
-          },
         },
         dispatchTransaction: (transaction: Transaction) => {
           if (!editorRef.current) return;
@@ -292,6 +282,10 @@ function PureEditor({
           if (onStatusChange && newSaveState && newSaveState !== oldSaveState) {
             onStatusChange(newSaveState);
           }
+
+          // Update current selection for context menu
+          const { from, to } = newState.selection;
+          setCurrentSelection(from !== to ? { from, to } : undefined);
 
           // Dispatch content change event for offline versioning
           if (transaction.docChanged) {
@@ -318,19 +312,6 @@ function PureEditor({
 
       editorRef.current = view;
       setActiveEditorView(view);
-
-      // Set up a resize observer to detect content height changes
-      resizeObserverRef.current = new ResizeObserver(() => {
-        if (editorRef.current) {
-          const editorHeight = editorRef.current.dom.scrollHeight;
-          const newPages = Math.max(
-            1,
-            Math.ceil(editorHeight / PAGE_HEIGHT),
-          );
-          setPages((p) => (newPages !== p ? newPages : p));
-        }
-      });
-      resizeObserverRef.current.observe(view.dom);
 
       const initialSaveState = savePluginKey.getState(view.state);
       if (onStatusChange && initialSaveState) {
@@ -396,9 +377,6 @@ function PureEditor({
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
         abortControllerRef.current = null;
-      }
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.disconnect();
       }
     };
   }, [
@@ -501,46 +479,26 @@ function PureEditor({
     };
   }, [documentId]);
 
+  const handleSelectionClear = useCallback(() => {
+    setCurrentSelection(undefined);
+  }, []);
+
   return (
-    <div
-      className="transition-transform duration-150 ease-in-out"
-      style={{
-        transform: `scale(${zoom})`,
-        transformOrigin: 'top center',
-      }}
-    >
-      <div className="max-w-[816px] w-full mx-auto relative px-4 min-w-[400px]">
+    <>
+      {isCurrentVersion && documentId !== 'init' && (
+        <EditorToolbar
+          activeFormats={activeFormats}
+        />
+      )}
+      <EditorContextMenu
+        selection={currentSelection as { from: number; to: number } | undefined}
+        onSelectionClear={handleSelectionClear}
+      >
         <div
-          className="absolute top-0 inset-x-4 pointer-events-none"
-          aria-hidden="true"
-        >
-          {Array.from({ length: pages }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-white dark:bg-gray-950 shadow-lg rounded-sm"
-              style={{
-                height: `${PAGE_HEIGHT}px`,
-                marginBottom: `${PAGE_GAP}px`,
-              }}
-            />
-          ))}
-        </div>
-        <div className="relative">
-          {isCurrentVersion && documentId !== 'init' && (
-            <EditorToolbar activeFormats={activeFormats} />
-          )}
-          <EditorContextMenu
-            selection={contextMenuSelection || undefined}
-            onSelectionClear={() => setContextMenuSelection(null)}
-          >
-            <div
-              className="editor-area bg-transparent text-foreground dark:text-white prose prose-slate dark:prose-invert pt-4 min-h-[400px] cursor-text"
-              style={{ padding: `${PAGE_PADDING}px` }}
-              ref={containerRef}
-            />
-          </EditorContextMenu>
-        </div>
-      </div>
+          className="editor-area bg-background text-foreground dark:bg-black dark:text-white prose prose-slate dark:prose-invert pt-4 min-h-[400px] cursor-text"
+          ref={containerRef}
+        />
+      </EditorContextMenu>
       <style jsx global>{`
         .suggestion-decoration-inline::after {
           content: attr(data-suggestion);
@@ -626,14 +584,13 @@ function PureEditor({
           max-height: 0;
         }
 
-        .editor-area,
-        .toolbar {
-          max-width: 100%;
+        .editor-area, .toolbar {
+          max-width: 720px;
           margin: 0 auto;
         }
 
         .editor-area {
-          min-height: ${PAGE_HEIGHT - PAGE_PADDING * 2}px;
+          min-height: 400px;
           position: relative;
           cursor: text;
         }
@@ -658,23 +615,20 @@ function PureEditor({
         }
 
         @media (min-width: 1024px) {
-          .editor-area,
-          .toolbar {
-            max-width: 100%;
+          .editor-area, .toolbar {
+            max-width: 900px;
           }
         }
 
         @media (min-width: 1280px) {
-          .editor-area,
-          .toolbar {
-            max-width: 100%;
+          .editor-area, .toolbar {
+            max-width: 1000px;
           }
         }
 
         @media (min-width: 1536px) {
-          .editor-area,
-          .toolbar {
-            max-width: 100%;
+          .editor-area, .toolbar {
+            max-width: 1100px;
           }
         }
 
@@ -752,6 +706,90 @@ function PureEditor({
           outline: 3px solid #68CEF8;
         }
 
+        /* Table styles */
+        .ProseMirror table {
+          border-collapse: collapse;
+          table-layout: fixed;
+          width: 100%;
+          margin: 0;
+          overflow: hidden;
+        }
+
+        .ProseMirror table td,
+        .ProseMirror table th {
+          min-width: 1em;
+          border: 1px solid hsl(var(--border));
+          padding: 3px 5px;
+          vertical-align: top;
+          box-sizing: border-box;
+          position: relative;
+          background-color: hsl(var(--background));
+          color: hsl(var(--foreground));
+        }
+
+        .ProseMirror table th {
+          font-weight: bold;
+          text-align: left;
+          background-color: hsl(var(--muted));
+          color: hsl(var(--foreground));
+        }
+
+        .ProseMirror table .selectedCell {
+          background-color: hsl(var(--accent));
+          color: hsl(var(--accent-foreground));
+        }
+
+        .ProseMirror table .column-resize-handle {
+          position: absolute;
+          right: -2px;
+          top: 0;
+          bottom: -2px;
+          width: 4px;
+          background-color: #adf;
+          pointer-events: none;
+        }
+
+        .ProseMirror table p {
+          margin: 0;
+        }
+
+        /* Table controls */
+        table .grip-column {
+          display: none;
+          position: absolute;
+          top: -10px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 20px;
+          height: 20px;
+          background: #68CEF8;
+          border-radius: 50%;
+          cursor: pointer;
+          z-index: 10;
+        }
+
+        table:hover .grip-column {
+          display: block;
+        }
+
+        table .grip-row {
+          display: none;
+          position: absolute;
+          left: -10px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 20px;
+          height: 20px;
+          background: #68CEF8;
+          border-radius: 50%;
+          cursor: pointer;
+          z-index: 10;
+        }
+
+        table:hover .grip-row {
+          display: block;
+        }
+
         /* Drag and drop styles */
         .editor-area.drag-over {
           background-color: rgba(104, 206, 248, 0.1);
@@ -810,7 +848,7 @@ function PureEditor({
           background: #9ca3af;
         }
       `}</style>
-    </div>
+    </>
   );
 }
 
@@ -820,8 +858,7 @@ function areEqual(prevProps: EditorProps, nextProps: EditorProps) {
     prevProps.currentVersionIndex === nextProps.currentVersionIndex &&
     prevProps.isCurrentVersion === nextProps.isCurrentVersion &&
     !(prevProps.status === 'streaming' && nextProps.status === 'streaming') &&
-    prevProps.content === nextProps.content &&
-    prevProps.zoom === nextProps.zoom
+    prevProps.content === nextProps.content
   );
 }
 

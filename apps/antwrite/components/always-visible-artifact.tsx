@@ -42,14 +42,6 @@ import { TextSelection } from 'prosemirror-state';
 import { useDocumentVersions } from '@/hooks/use-document-versions';
 import { VersionRail } from '@/components/document/version-rail';
 import { DocumentActions } from './document/actions';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ZOOM_LEVELS } from '@/lib/utils/zoom';
 
 // Electron API types
 declare global {
@@ -127,7 +119,6 @@ export function AlwaysVisibleArtifact({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<'edit' | 'diff'>('edit');
   const [saveStatus, setSaveStatus] = useState<'saving' | 'idle'>('idle');
-  const [zoom, setZoom] = useState('1');
   const [isUploadHovered, setIsUploadHovered] = useState(false);
 
   const { versions, isLoading: versionsLoading, mutate: mutateVersions, refresh: refreshVersions } = useDocumentVersions(initialDocumentId, user?.id);
@@ -564,9 +555,6 @@ export function AlwaysVisibleArtifact({
     setSaveStatus(newSaveState.status === 'saving' ? 'saving' : 'idle');
   }, []);
 
-  const handleZoomChange = useCallback((value: string) => {
-    setZoom(value);
-  }, []);
 
   const handleImportWordDocument = useCallback(async (file: File) => {
     if (!file) return;
@@ -595,67 +583,26 @@ export function AlwaysVisibleArtifact({
         description: 'Converting document...',
       });
 
-      // Dynamically import the conversion libraries
-      const [{ default: mammoth }, { default: TurndownService }] = await Promise.all([
-        import('mammoth'),
-        import('turndown'),
-      ]);
-
       // Read file as array buffer
       const arrayBuffer = await file.arrayBuffer();
 
-      // Convert .docx to HTML
-      const result = await mammoth.convertToHtml({ arrayBuffer });
-      let htmlContent = result.value;
+      // Import the new DOCX converter
+      const { convertDocxToProseMirror } = await import('@/lib/utils/docx-import');
 
-      // Clean up HTML to remove problematic elements
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = htmlContent;
+      // Convert DOCX directly to ProseMirror document
+      const proseMirrorDoc = await convertDocxToProseMirror(arrayBuffer);
 
-      // Remove images with empty or invalid src attributes
-      const images = tempDiv.querySelectorAll('img');
-      images.forEach(img => {
-        const src = img.getAttribute('src');
-        if (!src || src.trim() === '') {
-          img.remove();
-        }
-      });
-
-      // Get cleaned HTML
-      htmlContent = tempDiv.innerHTML;
-
-      // Convert HTML to Markdown
-      const turndownService = new TurndownService({
-        headingStyle: 'atx',
-        codeBlockStyle: 'fenced',
-      });
-
-      // Custom rule to handle images - skip images without src
-      turndownService.addRule('images', {
-        filter: 'img',
-        replacement: function (content, node) {
-          const img = node as HTMLImageElement;
-          const src = img.getAttribute('src');
-          const alt = img.getAttribute('alt') || '';
-          if (src && src.trim() !== '') {
-            return `![${alt}](${src})`;
-          }
-          return ''; // Skip images without valid src
-        }
-      });
-
-      let markdownContent = turndownService.turndown(htmlContent);
-
-      // Clean up any remaining empty image references
-      markdownContent = markdownContent.replace(/!\[\]\([^)]*\)/g, '').replace(/\n{3,}/g, '\n\n');
+      // Build content from the ProseMirror document
+      const { buildContentFromDocument } = await import('@/lib/editor/functions');
+      const content = buildContentFromDocument(proseMirrorDoc);
 
       // Create document title from filename (remove extension)
       const title = file.name.replace(/\.docx?$/i, '') || 'Imported Document';
 
-      // Create new document
+      // Create new document with the converted content
       await createDocument({
         title,
-        content: markdownContent,
+        content,
         kind: 'text',
         chatId: null,
         navigateAfterCreate: true,
@@ -663,7 +610,7 @@ export function AlwaysVisibleArtifact({
 
       toast({
         type: 'success',
-        description: 'Document imported successfully',
+        description: 'Document imported successfully with formatting preserved',
       });
     } catch (error: any) {
       console.error('Error importing document:', error);
@@ -702,7 +649,7 @@ export function AlwaysVisibleArtifact({
           : 'application/msword',
       });
 
-      // Process the file
+      // Process the file with the improved import function
       await handleImportWordDocument(file);
     } catch (error: any) {
       console.error('Error handling Electron Word file:', error);
@@ -907,7 +854,7 @@ export function AlwaysVisibleArtifact({
         </div>
       </div>
 
-      <div className="bg-gray-100 dark:bg-background h-full overflow-y-auto overflow-x-hidden relative group">
+      <div className="bg-background text-foreground dark:bg-black dark:text-white h-full overflow-y-auto !max-w-full items-center relative">
         <VersionRail
           versions={versions}
           currentIndex={currentVersionIndex}
@@ -925,10 +872,7 @@ export function AlwaysVisibleArtifact({
           />
         )}
 
-        {/* Global preview confirmation overlay */}
-        <div id="preview-confirmation-overlay" className="absolute inset-0 pointer-events-none z-50"></div>
-
-        <div className="px-8 py-6 mx-auto max-w-full">
+        <div className="px-8 py-6 mx-auto max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
           {isPending ? (
             <EditorSkeleton />
           ) : (
@@ -945,29 +889,11 @@ export function AlwaysVisibleArtifact({
                 }
                 onStatusChange={handleStatusChange}
                 onCreateDocumentRequest={handleCreateDocumentFromEditor}
-                zoom={parseFloat(zoom)}
               />
             </Suspense>
           )}
         </div>
       </div>
-      {/* Only show zoom button when we have documents loaded and not in create mode */}
-      {documents && documents.length > 0 && !showCreateDocumentForId && (
-        <div className="absolute bottom-4 right-4 z-10">
-          <Select onValueChange={handleZoomChange} value={zoom}>
-            <SelectTrigger className="w-[100px]">
-              <SelectValue placeholder="Zoom" />
-            </SelectTrigger>
-            <SelectContent>
-              {ZOOM_LEVELS.map((level) => (
-                <SelectItem key={level.label} value={String(level.value)}>
-                  {level.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
     </div>
   );
 }

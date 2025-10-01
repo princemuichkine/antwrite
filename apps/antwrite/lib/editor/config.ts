@@ -2,6 +2,7 @@ import { textblockTypeInputRule } from 'prosemirror-inputrules';
 import { Schema } from 'prosemirror-model';
 import { schema } from 'prosemirror-schema-basic';
 import { addListNodes } from 'prosemirror-schema-list';
+import { tableNodes } from 'prosemirror-tables';
 import OrderedMap from 'orderedmap';
 import { DiffType } from './diff';
 
@@ -86,6 +87,40 @@ const textColorMarkSpec = {
   ],
 };
 
+const textAlignMarkSpec = {
+  attrs: {
+    align: { default: 'left' },
+  },
+  toDOM(mark: any) {
+    return ['div', { style: `text-align: ${mark.attrs.align}` }, 0];
+  },
+  parseDOM: [
+    {
+      style: 'text-align',
+      getAttrs(value: any) {
+        return { align: value };
+      },
+    },
+  ],
+};
+
+const lineHeightMarkSpec = {
+  attrs: {
+    lineHeight: { default: '1.5' },
+  },
+  toDOM(mark: any) {
+    return ['div', { style: `line-height: ${mark.attrs.lineHeight}` }, 0];
+  },
+  parseDOM: [
+    {
+      style: 'line-height',
+      getAttrs(value: any) {
+        return { lineHeight: value };
+      },
+    },
+  ],
+};
+
 const imageNodeSpec = {
   attrs: {
     src: {},
@@ -124,7 +159,23 @@ const imageNodeSpec = {
 };
 
 export const documentSchema = new Schema({
-  nodes: addListNodes(schema.spec.nodes.addToEnd('image', imageNodeSpec), 'paragraph block*', 'block'),
+  nodes: addListNodes(
+    schema.spec.nodes
+      .addToEnd('image', imageNodeSpec)
+      .append(tableNodes({
+        tableGroup: "block",
+        cellContent: "block+",
+        cellAttributes: {
+          background: {
+            default: null,
+            getFromDOM(dom) { return (dom as HTMLElement).style.backgroundColor || null },
+            setDOMAttr(value, attrs) { if (value) attrs.style = (attrs.style || "") + `background-color: ${value};` }
+          }
+        }
+      })),
+    'paragraph block*',
+    'block'
+  ),
   marks: OrderedMap.from({
     ...schema.spec.marks.toObject(),
     diffMark: diffMarkSpec as any,
@@ -133,6 +184,8 @@ export const documentSchema = new Schema({
     fontSize: fontSizeMarkSpec,
     fontFamily: fontFamilyMarkSpec,
     textColor: textColorMarkSpec,
+    textAlign: textAlignMarkSpec,
+    lineHeight: lineHeightMarkSpec,
   }),
 });
 

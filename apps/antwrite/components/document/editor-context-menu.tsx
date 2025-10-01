@@ -175,17 +175,23 @@ export function EditorContextMenu({ children, selection, onSelectionClear }: Edi
     const showImageAlignment = selection ? isImageSelected(selection) : false;
 
     return (
-        <ContextMenu onOpenChange={(open) => {
-            if (!open && onSelectionClear) {
-                onSelectionClear();
-            }
-        }}>
+        <ContextMenu
+            modal={false}
+            onOpenChange={(open) => {
+                if (!open && onSelectionClear) {
+                    onSelectionClear();
+                }
+            }}
+        >
             <ContextMenuTrigger asChild>
                 {children}
             </ContextMenuTrigger>
             <ContextMenuContent className="w-56">
                 {/* Selection & Clipboard Actions */}
-                <ContextMenuItem onSelect={() => handleClipboardCommand(() => document.execCommand('selectAll'))}>
+                <ContextMenuItem
+                    onSelect={() => handleClipboardCommand(() => document.execCommand('selectAll'))}
+                    onMouseDown={(e) => e.preventDefault()}
+                >
                     <MousePointer className="mr-2 size-4" />
                     <span>Select All</span>
                     <span className="ml-auto text-xs text-muted-foreground">Ctrl+A</span>
@@ -193,17 +199,26 @@ export function EditorContextMenu({ children, selection, onSelectionClear }: Edi
 
                 <ContextMenuSeparator />
 
-                <ContextMenuItem onSelect={() => handleClipboardCommand(handleCut)}>
+                <ContextMenuItem
+                    onSelect={() => handleClipboardCommand(handleCut)}
+                    onMouseDown={(e) => e.preventDefault()}
+                >
                     <Scissors className="mr-2 size-4" />
                     <span>Cut</span>
                     <span className="ml-auto text-xs text-muted-foreground">Ctrl+X</span>
                 </ContextMenuItem>
-                <ContextMenuItem onSelect={() => handleClipboardCommand(handleCopy)}>
+                <ContextMenuItem
+                    onSelect={() => handleClipboardCommand(handleCopy)}
+                    onMouseDown={(e) => e.preventDefault()}
+                >
                     <Copy className="mr-2 size-4" />
                     <span>Copy</span>
                     <span className="ml-auto text-xs text-muted-foreground">Ctrl+C</span>
                 </ContextMenuItem>
-                <ContextMenuItem onSelect={() => handleClipboardCommand(handlePaste)}>
+                <ContextMenuItem
+                    onSelect={() => handleClipboardCommand(handlePaste)}
+                    onMouseDown={(e) => e.preventDefault()}
+                >
                     <ClipboardPaste className="mr-2 size-4" />
                     <span>Paste</span>
                     <span className="ml-auto text-xs text-muted-foreground">Ctrl+V</span>
@@ -212,12 +227,18 @@ export function EditorContextMenu({ children, selection, onSelectionClear }: Edi
                 <ContextMenuSeparator />
 
                 {/* Links & Media */}
-                <ContextMenuItem onSelect={() => handleFormatCommand(() => console.log('Insert link'))}>
+                <ContextMenuItem
+                    onSelect={() => handleFormatCommand(() => console.log('Insert link'))}
+                    onMouseDown={(e) => e.preventDefault()}
+                >
                     <Link className="mr-2 size-4" />
                     <span>Link</span>
                     <span className="ml-auto text-xs text-muted-foreground">Ctrl+K</span>
                 </ContextMenuItem>
-                <ContextMenuItem onSelect={() => handleImageUpload()}>
+                <ContextMenuItem
+                    onSelect={() => handleImageUpload()}
+                    onMouseDown={(e) => e.preventDefault()}
+                >
                     {/* eslint-disable-next-line jsx-a11y/alt-text */}
                     <Image className="mr-2 size-4" />
                     <span>Image</span>
@@ -230,6 +251,7 @@ export function EditorContextMenu({ children, selection, onSelectionClear }: Edi
 
                         <ContextMenuItem
                             onSelect={() => setImageAlignment('left', selection)}
+                            onMouseDown={(e) => e.preventDefault()}
                             className={getSelectedImageAlign(selection) === 'left' ? 'bg-accent' : ''}
                         >
                             <AlignLeft className="mr-2 size-4" />
@@ -237,6 +259,7 @@ export function EditorContextMenu({ children, selection, onSelectionClear }: Edi
                         </ContextMenuItem>
                         <ContextMenuItem
                             onSelect={() => setImageAlignment('center', selection)}
+                            onMouseDown={(e) => e.preventDefault()}
                             className={getSelectedImageAlign(selection) === 'center' ? 'bg-accent' : ''}
                         >
                             <AlignCenter className="mr-2 size-4" />
@@ -244,6 +267,7 @@ export function EditorContextMenu({ children, selection, onSelectionClear }: Edi
                         </ContextMenuItem>
                         <ContextMenuItem
                             onSelect={() => setImageAlignment('right', selection)}
+                            onMouseDown={(e) => e.preventDefault()}
                             className={getSelectedImageAlign(selection) === 'right' ? 'bg-accent' : ''}
                         >
                             <AlignRight className="mr-2 size-4" />
@@ -255,22 +279,34 @@ export function EditorContextMenu({ children, selection, onSelectionClear }: Edi
                 <ContextMenuSeparator />
 
                 {/* Text Alignment */}
-                <ContextMenuItem onSelect={() => handleFormatCommand(() => console.log('Align left'))}>
+                <ContextMenuItem
+                    onSelect={() => handleFormatCommand(() => console.log('Align left'))}
+                    onMouseDown={(e) => e.preventDefault()}
+                >
                     <AlignLeft className="mr-2 size-4" />
                     <span>Align Left</span>
                 </ContextMenuItem>
-                <ContextMenuItem onSelect={() => handleFormatCommand(() => console.log('Align center'))}>
+                <ContextMenuItem
+                    onSelect={() => handleFormatCommand(() => console.log('Align center'))}
+                    onMouseDown={(e) => e.preventDefault()}
+                >
                     <AlignCenter className="mr-2 size-4" />
                     <span>Align Center</span>
                 </ContextMenuItem>
-                <ContextMenuItem onSelect={() => handleFormatCommand(() => console.log('Align right'))}>
+                <ContextMenuItem
+                    onSelect={() => handleFormatCommand(() => console.log('Align right'))}
+                    onMouseDown={(e) => e.preventDefault()}
+                >
                     <AlignRight className="mr-2 size-4" />
                     <span>Align Right</span>
                 </ContextMenuItem>
 
                 <ContextMenuSeparator />
 
-                <ContextMenuItem onSelect={() => handleClipboardCommand(handleDelete)}>
+                <ContextMenuItem
+                    onSelect={() => handleClipboardCommand(handleDelete)}
+                    onMouseDown={(e) => e.preventDefault()}
+                >
                     <Trash2 className="mr-2 size-4" />
                     <span>Delete</span>
                 </ContextMenuItem>
